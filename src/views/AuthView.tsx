@@ -220,7 +220,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
               }`}
             >
               <Phone size={13} />
-              <span>Numéro de téléphone (Recommandé)</span>
+              <span>Numéro de téléphone</span>
             </button>
 
             <button

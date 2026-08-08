@@ -10,12 +10,14 @@ import { MensurationsView } from './views/MensurationsView';
 import { CommandesView } from './views/CommandesView';
 import { AgendaView } from './views/AgendaView';
 import { MoiView } from './views/MoiView';
+import { AuthView } from './views/AuthView';
 import { NotificationsModal } from './components/common/NotificationsModal';
 import { MOCK_CLIENTS, MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from './data/mockData';
 import type { Client, Order, StatusType } from './types';
 import { OrderEngine } from './services/orderEngine';
 import { OrderService } from './services/orderService';
 import { SupabaseService } from './services/supabaseService';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { X, Ruler } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
@@ -23,9 +25,45 @@ export const AppContent: React.FC = () => {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [viewingMensurations, setViewingMensurations] = useState<boolean>(false);
 
+  // Auth state
+  const [user, setUser] = useState<any>(null);
+  const [isGuestMode, setIsGuestMode] = useState<boolean>(false);
+  const [loadingAuth, setLoadingAuth] = useState<boolean>(true);
+
   // Data state
   const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+
+  // Track Supabase Auth state
+  React.useEffect(() => {
+    async function checkAuth() {
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data } = await supabase.auth.getUser();
+          if (data.user) {
+            setUser(data.user);
+          }
+        } catch (e) {
+          console.error('Auth check error:', e);
+        }
+      }
+      setLoadingAuth(false);
+    }
+    checkAuth();
+
+    if (isSupabaseConfigured && supabase) {
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user || null);
+        setLoadingAuth(false);
+      });
+
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
+    } else {
+      setLoadingAuth(false);
+    }
+  }, []);
 
   // Load Full-Stack Supabase Data on startup
   React.useEffect(() => {
@@ -48,7 +86,7 @@ export const AppContent: React.FC = () => {
     });
 
     return unsubRealtime;
-  }, []);
+  }, [user]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -237,7 +275,7 @@ export const AppContent: React.FC = () => {
       case 'agenda':
         return <AgendaView onSelectClient={handleSelectClient} clients={clients} />;
       case 'moi':
-        return <MoiView />;
+        return <MoiView onSignOut={handleSignOut} />;
       default:
         return (
           <AccueilView
@@ -250,6 +288,32 @@ export const AppContent: React.FC = () => {
         );
     }
   };
+
+  const handleSignOut = async () => {
+    if (isSupabaseConfigured && supabase) {
+      await supabase.auth.signOut();
+    }
+    setUser(null);
+    setIsGuestMode(false);
+  };
+
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0C0A27] flex flex-col items-center justify-center text-white space-y-4">
+        <div className="w-12 h-12 rounded-full border-4 border-[#7C3AED] border-t-transparent animate-spin" />
+        <p className="text-sm font-semibold tracking-wide">Chargement de votre atelier Taylaxis...</p>
+      </div>
+    );
+  }
+
+  if (!user && !isGuestMode) {
+    return (
+      <AuthView
+        onAuthSuccess={(u) => setUser(u)}
+        onContinueAsGuest={() => setIsGuestMode(true)}
+      />
+    );
+  }
 
   const getHeaderProps = () => {
     if (selectedClientId && selectedClient) {

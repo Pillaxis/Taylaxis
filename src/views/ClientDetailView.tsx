@@ -21,6 +21,7 @@ import type { Client, Measurement, Order, StatusType } from '../types';
 import { StatusBadge } from '../components/common/StatusBadge';
 import { MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from '../data/mockData';
 import { Truck, DollarSign } from 'lucide-react';
+import { OrderDetailModal } from '../components/orders/OrderDetailModal';
 
 interface ClientDetailViewProps {
   client: Client;
@@ -46,6 +47,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
   const [activeTab, setActiveTab] = useState<'info' | 'mensurations' | 'commandes' | 'paiements'>(initialTab);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [payAmount, setPayAmount] = useState<number | ''>('');
+  const [selectedClientOrder, setSelectedClientOrder] = useState<Order | null>(null);
 
   // Edit Information state
   const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -575,6 +577,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                 return (
                   <div
                     key={order.id}
+                    onClick={() => setSelectedClientOrder(order)}
                     className={`p-4 space-y-2 cursor-pointer transition-all duration-300 ${
                       isHighlighted
                         ? 'bg-[#F3E8FF] border-2 border-[#7C3AED] shadow-md animate-pulse ring-4 ring-[#7C3AED]/25 relative overflow-hidden'
@@ -967,6 +970,17 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {selectedClientOrder && (
+        <OrderDetailModal
+          order={selectedClientOrder}
+          client={client}
+          onClose={() => setSelectedClientOrder(null)}
+          onOrderUpdated={(updated) => {
+            setSelectedClientOrder(updated);
+          }}
+        />
       )}
     </div>
   );

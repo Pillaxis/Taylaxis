@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ClipboardCheck,
   Clock,
@@ -6,17 +6,16 @@ import {
   AlertCircle,
   Truck,
   PackageCheck,
-  Sparkles,
-  MessageSquare,
-  DollarSign,
-  Check,
-  X,
 } from 'lucide-react';
-import type { Order, StatusType } from '../types';
+import type { Order, StatusType, ManufacturingStatus } from '../types';
+import { OrderEngine } from '../services/orderEngine';
+import type { ContextualAction } from '../services/orderEngine';
+import { OrderService } from '../services/orderService';
 import { StatusBadge } from '../components/common/StatusBadge';
+import { OrderDetailModal } from '../components/orders/OrderDetailModal';
 
 interface CommandesViewProps {
-  orders: Order[];
+  orders?: Order[];
   onSelectClient: (clientId: string, orderId?: string) => void;
   onOpenNewOrderModal?: () => void;
   onUpdateOrderStatus?: (orderId: string, status: StatusType) => void;
@@ -24,31 +23,72 @@ interface CommandesViewProps {
 }
 
 export const CommandesView: React.FC<CommandesViewProps> = ({
-  orders,
+  orders: propOrders,
   onSelectClient,
-  onUpdateOrderStatus,
-  onPayOrder,
 }) => {
-  const [activeTab, setActiveTab] = useState<StatusType | 'all'>('all');
-  const [payingOrder, setPayingOrder] = useState<Order | null>(null);
-  const [payAmount, setPayAmount] = useState<number | ''>('');
+  const [orders, setOrders] = useState<Order[]>(() => propOrders || OrderService.getOrders());
+  const [activeTab, setActiveTab] = useState<ManufacturingStatus | 'all' | 'late'>('all');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    if (propOrders) {
+      setOrders(propOrders);
+    } else {
+      setOrders(OrderService.getOrders());
+      const unsubscribe = OrderService.subscribe((updated) => setOrders(updated));
+      return unsubscribe;
+    }
+  }, [propOrders]);
 
   const filteredOrders = orders.filter((o) => {
+    const mfgStatus = o.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(o.status);
+    const dueDateStatus = o.dueDateStatus || OrderEngine.calculateDueDateStatus(o.deliveryDate, mfgStatus);
+
     if (activeTab === 'all') return true;
-    return o.status === activeTab;
+    if (activeTab === 'late') return dueDateStatus === 'EN_RETARD';
+    return mfgStatus === activeTab;
   });
 
-  const progressCount = orders.filter((o) => o.status === 'progress').length;
-  const readyCount = orders.filter((o) => o.status === 'ready').length;
-  const toDeliverCount = orders.filter((o) => o.status === 'to_deliver').length;
-  const doneCount = orders.filter((o) => o.status === 'done').length;
-  const lateCount = orders.filter((o) => o.status === 'late').length;
+  const progressCount = orders.filter((o) => (o.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(o.status)) === 'EN_COURS').length;
+  const readyCount = orders.filter((o) => (o.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(o.status)) === 'PRETE').length;
+  const toDeliverCount = orders.filter((o) => (o.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(o.status)) === 'A_LIVRER').length;
+  const doneCount = orders.filter((o) => (o.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(o.status)) === 'LIVREE').length;
+  const lateCount = orders.filter((o) => (o.dueDateStatus || OrderEngine.calculateDueDateStatus(o.deliveryDate, o.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(o.status))) === 'EN_RETARD').length;
+
+  const handleExecutePrimaryAction = (order: Order, action: ContextualAction, e: React.MouseEvent) => {
+    e.stopPropagation();
+    switch (action.actionKey) {
+      case 'CONFIRMER_COMMANDE':
+        OrderService.updateManufacturingStatus(order.id, 'CONFIRMEE');
+        break;
+      case 'DEMARRER_CONFECTION':
+        OrderService.updateManufacturingStatus(order.id, 'EN_COURS');
+        break;
+      case 'MARQUER_PRETE':
+        OrderService.updateManufacturingStatus(order.id, 'PRETE');
+        break;
+      case 'MARQUER_A_LIVRER':
+        OrderService.updateManufacturingStatus(order.id, 'A_LIVRER');
+        break;
+      case 'MARQUER_LIVREE':
+        OrderService.updateManufacturingStatus(order.id, 'LIVREE');
+        break;
+      case 'TERMINER_COMMANDE':
+        OrderService.updateManufacturingStatus(order.id, 'TERMINEE');
+        break;
+      case 'ENCAISSER_SOLDE':
+      case 'PREVENIR_CLIENT':
+      default:
+        setSelectedOrder(order);
+        break;
+    }
+  };
 
   return (
     <div className="-mt-3 pt-6 px-4 pb-mobile-safe bg-canvas rounded-t-[32px] space-y-5 max-w-md mx-auto md:max-w-2xl lg:max-w-4xl shadow-inner relative">
       {/* 6 Responsive Horizontal Rectangular Palettes Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-        {/* Card 1: Toutes (Purple Accent) */}
+        {/* Card 1: Toutes */}
         <div
           onClick={() => setActiveTab('all')}
           className={`p-2.5 sm:p-3 rounded-[16px] border flex items-center justify-between cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0 ${
@@ -66,14 +106,14 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#6B21A8] leading-none mt-0.5 truncate">Commandes</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums ml-1 flex-shrink-0">{orders.length || 78}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums ml-1 flex-shrink-0">{orders.length}</div>
         </div>
 
-        {/* Card 2: En cours (OR / Gold) */}
+        {/* Card 2: En cours */}
         <div
-          onClick={() => setActiveTab('progress')}
+          onClick={() => setActiveTab('EN_COURS')}
           className={`p-2.5 sm:p-3 rounded-[16px] border flex items-center justify-between cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0 ${
-            activeTab === 'progress'
+            activeTab === 'EN_COURS'
               ? 'bg-[#FEF3C7] border-[#FBBF24] shadow-sm ring-2 ring-[#FBBF24]/30'
               : 'bg-[#FEF3C7]/60 border-[#FDE68A] hover:bg-[#FEF3C7]'
           }`}
@@ -87,14 +127,14 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#B45309] leading-none mt-0.5 truncate">En atelier</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#78350F] tabular-nums ml-1 flex-shrink-0">{progressCount > 0 ? progressCount : 24}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#78350F] tabular-nums ml-1 flex-shrink-0">{progressCount}</div>
         </div>
 
-        {/* Card 3: Prêtes (BLEU / Blue) */}
+        {/* Card 3: Prêtes */}
         <div
-          onClick={() => setActiveTab('ready')}
+          onClick={() => setActiveTab('PRETE')}
           className={`p-2.5 sm:p-3 rounded-[16px] border flex items-center justify-between cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0 ${
-            activeTab === 'ready'
+            activeTab === 'PRETE'
               ? 'bg-[#DBEAFE] border-[#2563EB] shadow-sm ring-2 ring-[#2563EB]/20'
               : 'bg-[#DBEAFE]/60 border-[#BFDBFE] hover:bg-[#DBEAFE]'
           }`}
@@ -108,14 +148,14 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#1D4ED8] leading-none mt-0.5 truncate">Finalisées</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#1E3A8A] tabular-nums ml-1 flex-shrink-0">{readyCount > 0 ? readyCount : 18}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#1E3A8A] tabular-nums ml-1 flex-shrink-0">{readyCount}</div>
         </div>
 
-        {/* Card 4: À livrer (VIOLET / Indigo) */}
+        {/* Card 4: À livrer */}
         <div
-          onClick={() => setActiveTab('to_deliver')}
+          onClick={() => setActiveTab('A_LIVRER')}
           className={`p-2.5 sm:p-3 rounded-[16px] border flex items-center justify-between cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0 ${
-            activeTab === 'to_deliver'
+            activeTab === 'A_LIVRER'
               ? 'bg-[#EDE9FE] border-[#7C3AED] shadow-sm ring-2 ring-[#7C3AED]/20'
               : 'bg-[#EDE9FE]/60 border-[#DDD6FE] hover:bg-[#EDE9FE]'
           }`}
@@ -129,14 +169,14 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#6D28D9] leading-none mt-0.5 truncate">Expéditions</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums ml-1 flex-shrink-0">{toDeliverCount > 0 ? toDeliverCount : 14}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums ml-1 flex-shrink-0">{toDeliverCount}</div>
         </div>
 
-        {/* Card 5: Livrées (VERT / Emerald) */}
+        {/* Card 5: Livrées */}
         <div
-          onClick={() => setActiveTab('done')}
+          onClick={() => setActiveTab('LIVREE')}
           className={`p-2.5 sm:p-3 rounded-[16px] border flex items-center justify-between cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0 ${
-            activeTab === 'done'
+            activeTab === 'LIVREE'
               ? 'bg-[#D1FAE5] border-[#10B981] shadow-sm ring-2 ring-[#10B981]/20'
               : 'bg-[#D1FAE5]/60 border-[#A7F3D0] hover:bg-[#D1FAE5]'
           }`}
@@ -150,10 +190,10 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#047857] leading-none mt-0.5 truncate">Terminées</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#064E3B] tabular-nums ml-1 flex-shrink-0">{doneCount > 0 ? doneCount : 10}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#064E3B] tabular-nums ml-1 flex-shrink-0">{doneCount}</div>
         </div>
 
-        {/* Card 6: En retard (ROUGE / Red) */}
+        {/* Card 6: En retard */}
         <div
           onClick={() => setActiveTab('late')}
           className={`p-2.5 sm:p-3 rounded-[16px] border flex items-center justify-between cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0 ${
@@ -171,98 +211,74 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#B91C1C] leading-none mt-0.5 truncate">Hors délai</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#7F1D1D] tabular-nums ml-1 flex-shrink-0">{lateCount > 0 ? lateCount : 12}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#7F1D1D] tabular-nums ml-1 flex-shrink-0">{lateCount}</div>
         </div>
       </div>
 
       {/* Order Cards List */}
       <div className="space-y-3">
         {filteredOrders.map((order) => {
-          const waMessage = `Bonjour ${order.clientName}, votre commande "${order.title}" (${order.orderNumber}) est prête à l'atelier ! Vous pouvez passer la récupérer.`;
-          const waUrl = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+          const mfgStatus = order.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(order.status);
+          const dueDateStatus = order.dueDateStatus || OrderEngine.calculateDueDateStatus(order.deliveryDate, mfgStatus);
+          const nextActions = OrderEngine.getNextActions(order);
 
           return (
             <div
               key={order.id}
-              onClick={() => onSelectClient(order.clientId, order.id)}
-              className="p-4 rounded-[20px] bg-white cursor-pointer space-y-3 shadow-xs white-element-hover border border-[#EDE9F6]"
+              onClick={() => setSelectedOrder(order)}
+              className="p-4 rounded-[20px] bg-surface cursor-pointer space-y-3 shadow-xs white-element-hover border border-subtle"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-caption font-bold text-[#7C3AED] block mb-0.5">
-                    {order.orderNumber}
-                  </span>
+                  <div className="flex items-center space-x-2 mb-0.5">
+                    <span className="text-caption font-bold text-[#7C3AED]">
+                      {order.orderNumber}
+                    </span>
+                    {dueDateStatus === 'EN_RETARD' && (
+                      <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 text-[10px] font-extrabold flex items-center gap-0.5 animate-pulse">
+                        <AlertCircle size={10} />
+                        EN RETARD
+                      </span>
+                    )}
+                  </div>
                   <h4 className="text-body-strong font-bold text-primary">{order.title}</h4>
                   <p className="text-caption text-secondary font-medium mt-0.5">Client : {order.clientName}</p>
                 </div>
 
-                <StatusBadge status={order.status} />
+                <StatusBadge status={mfgStatus} />
               </div>
 
-              {/* Action Buttons Bar for Tailor Lifecycle Workflow */}
-              <div className="flex items-center justify-between pt-2 border-t border-[#EDE9F6]/60 flex-wrap gap-2">
-                <div className="flex items-center space-x-1.5">
-                  {(order.status === 'progress' || order.status === 'late') && (
+              {/* Order Card Action Bar */}
+              <div className="flex items-center justify-between pt-2.5 border-t border-subtle flex-wrap gap-2">
+                <div>
+                  {nextActions.primaryAction && (
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onUpdateOrderStatus?.(order.id, 'ready');
-                      }}
-                      className="px-2.5 py-1 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full text-[11px] font-bold shadow-xs active:scale-95 flex items-center space-x-1 cursor-pointer"
-                      title="Changer le statut en Prête"
+                      onClick={(e) => handleExecutePrimaryAction(order, nextActions.primaryAction!, e)}
+                      className={`px-3 py-1.5 rounded-full text-caption font-bold text-white shadow-xs flex items-center space-x-1.5 cursor-pointer transition-all active:scale-95 ${
+                        nextActions.primaryAction.intent === 'danger'
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : nextActions.primaryAction.intent === 'warning'
+                          ? 'bg-[#D97B1F] hover:bg-amber-600'
+                          : nextActions.primaryAction.intent === 'success'
+                          ? 'bg-[#10B981] hover:bg-emerald-600'
+                          : nextActions.primaryAction.intent === 'info'
+                          ? 'bg-[#2563EB] hover:bg-blue-600'
+                          : 'bg-[#7C3AED] hover:bg-[#6D28D9]'
+                      }`}
                     >
-                      <Sparkles size={12} />
-                      <span>Marquer Prête</span>
+                      <span>{nextActions.primaryAction.label}</span>
                     </button>
-                  )}
-
-                  {(order.status === 'ready' || order.status === 'to_deliver') && (
-                    <>
-                      <a
-                        href={waUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="px-2.5 py-1 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-full text-[11px] font-bold shadow-xs active:scale-95 flex items-center space-x-1 cursor-pointer"
-                        title="Envoyer un message WhatsApp au client"
-                      >
-                        <MessageSquare size={12} />
-                        <span>Message Client</span>
-                      </a>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onUpdateOrderStatus?.(order.id, 'done');
-                          if (order.balanceFCFA > 0) {
-                            setPayingOrder(order);
-                            setPayAmount(order.balanceFCFA);
-                          }
-                        }}
-                        className="px-2.5 py-1 bg-[#10B981] hover:bg-[#059669] text-white rounded-full text-[11px] font-bold shadow-xs active:scale-95 flex items-center space-x-1 cursor-pointer"
-                        title="Confirmer la livraison"
-                      >
-                        <Truck size={12} />
-                        <span>Marquer Livrée</span>
-                      </button>
-                    </>
-                  )}
-
-                  {order.status === 'done' && (
-                    <span className="text-[11px] font-semibold text-[#059669] bg-[#D1FAE5] px-2.5 py-0.5 rounded-full flex items-center space-x-1">
-                      <CheckCircle2 size={12} />
-                      <span>Livrée & Terminée</span>
-                    </span>
                   )}
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <div className="text-right">
-                    <span className="text-primary font-bold tabular-nums">
+                <div className="flex items-center space-x-2 text-right">
+                  <div>
+                    <span className="text-primary font-bold tabular-nums text-caption block">
                       {order.priceFCFA.toLocaleString('fr-FR')} FCFA
                     </span>
                     {order.balanceFCFA > 0 ? (
                       <span className="text-[11px] text-[#EF4444] font-semibold block">
-                        Reste : {order.balanceFCFA.toLocaleString('fr-FR')} FCFA
+                        Reste : {order.balanceFCFA.toLocaleString('fr-FR')} F
                       </span>
                     ) : (
                       <span className="text-[10px] text-[#059669] font-bold block">
@@ -270,21 +286,6 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
                       </span>
                     )}
                   </div>
-
-                  {order.balanceFCFA > 0 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPayingOrder(order);
-                        setPayAmount(order.balanceFCFA);
-                      }}
-                      className="px-2 py-1 bg-[#FEF3C7] border border-[#FBBF24] text-[#78350F] hover:bg-[#FDE68A] rounded-full text-[11px] font-bold shadow-xs active:scale-95 flex items-center space-x-1 cursor-pointer"
-                      title="Encaisser un acompte ou le solde"
-                    >
-                      <DollarSign size={12} />
-                      <span>Encaisser</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -292,72 +293,17 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
         })}
       </div>
 
-      {/* Modal: Encaisser un acompte / solde */}
-      {payingOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-surface text-primary rounded-[24px] border border-subtle w-full max-w-sm shadow-2xl p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-subtle pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full bg-[#10B981]/10 text-[#10B981] flex items-center justify-center">
-                  <DollarSign size={18} />
-                </div>
-                <h3 className="text-body-strong font-bold text-primary">
-                  Encaisser un règlement
-                </h3>
-              </div>
-              <button
-                onClick={() => setPayingOrder(null)}
-                className="p-1 text-tertiary hover:text-primary rounded-full cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div className="p-3 rounded-[14px] bg-[#F3E8FF] border border-[#E9D5FF] text-caption font-semibold text-[#5B21B6]">
-                Commande : <strong>{payingOrder.orderNumber} ({payingOrder.title})</strong>
-                <br />
-                Reste à payer : <strong className="text-[#EF4444]">{payingOrder.balanceFCFA.toLocaleString('fr-FR')} FCFA</strong>
-              </div>
-
-              <div>
-                <label className="text-caption text-secondary font-semibold block mb-1">
-                  Montant encaissé (FCFA)
-                </label>
-                <input
-                  type="number"
-                  placeholder="ex: 15000"
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-4 py-2.5 bg-surface border border-subtle rounded-[14px] text-lg font-bold text-primary focus:outline-none focus:border-[#7C3AED] tabular-nums"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setPayingOrder(null)}
-                className="flex-1 py-2.5 bg-surface-alt text-secondary hover:text-primary rounded-[14px] text-caption font-bold transition-all cursor-pointer"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (onPayOrder && typeof payAmount === 'number' && payAmount > 0) {
-                    onPayOrder(payingOrder.id, payAmount);
-                  }
-                  setPayingOrder(null);
-                }}
-                className="flex-1 py-2.5 bg-[#10B981] hover:bg-[#059669] text-white rounded-[14px] text-caption font-bold transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center space-x-1.5"
-              >
-                <Check size={16} />
-                <span>Valider l'encaissement</span>
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Full Order Detail Modal */}
+      {selectedOrder && (
+        <OrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          onSelectClient={onSelectClient}
+          onOrderUpdated={(updated) => {
+            setSelectedOrder(updated);
+            setOrders(OrderService.getOrders());
+          }}
+        />
       )}
     </div>
   );

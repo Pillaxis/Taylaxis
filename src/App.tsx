@@ -13,6 +13,8 @@ import { MoiView } from './views/MoiView';
 import { NotificationsModal } from './components/common/NotificationsModal';
 import { MOCK_CLIENTS, MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from './data/mockData';
 import type { Client, Order, StatusType } from './types';
+import { OrderEngine } from './services/orderEngine';
+import { OrderService } from './services/orderService';
 import { X, Ruler } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
@@ -116,23 +118,22 @@ export const AppContent: React.FC = () => {
 
     const price = parseInt(newOrderPrice, 10) || 0;
     const matchedClient = clients.find((c) => c.name === newOrderClient) || clients[0];
+    const clientMeasurements = matchedClient.customMeasurements || MOCK_MEASUREMENTS_COSTUME;
 
-    const newOrder: Order = {
-      id: `ord_${Date.now()}`,
-      orderNumber: `#${Math.floor(100 + Math.random() * 900)}`,
-      clientName: matchedClient.name,
-      clientId: matchedClient.id,
-      title: newOrderTitle,
-      priceFCFA: price,
-      paidFCFA: 0,
-      balanceFCFA: price,
-      orderDate: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
-      deliveryDate: 'Dans 7 jours',
-      status: 'progress',
-      progressPercent: 10,
-    };
+    OrderService.createOrder(
+      {
+        clientName: matchedClient.name,
+        clientId: matchedClient.id,
+        title: newOrderTitle,
+        priceFCFA: price,
+        paidFCFA: 0,
+        orderDate: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+        deliveryDate: 'Dans 7 jours',
+      },
+      clientMeasurements
+    );
 
-    setOrders([newOrder, ...orders]);
+    setOrders(OrderService.getOrders());
     setNewOrderTitle('');
     setNewOrderPrice('');
     setShowNewOrderModal(false);
@@ -143,37 +144,14 @@ export const AppContent: React.FC = () => {
   };
 
   const handleUpdateOrderStatus = (orderId: string, newStatus: StatusType) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((o) => {
-        if (o.id === orderId || o.orderNumber === orderId) {
-          const updated = { ...o, status: newStatus };
-          if (newStatus === 'done') {
-            updated.progressPercent = 100;
-          } else if (newStatus === 'ready') {
-            updated.progressPercent = 90;
-          }
-          return updated;
-        }
-        return o;
-      })
-    );
+    const mfgStatus = OrderEngine.mapLegacyToManufacturingStatus(newStatus);
+    OrderService.updateManufacturingStatus(orderId, mfgStatus);
+    setOrders(OrderService.getOrders());
   };
 
   const handlePayOrder = (orderId: string, amount: number) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((o) => {
-        if (o.id === orderId || o.orderNumber === orderId) {
-          const newPaid = Math.min(o.priceFCFA, o.paidFCFA + amount);
-          const newBalance = Math.max(0, o.priceFCFA - newPaid);
-          return {
-            ...o,
-            paidFCFA: newPaid,
-            balanceFCFA: newBalance,
-          };
-        }
-        return o;
-      })
-    );
+    OrderService.addPayment(orderId, amount);
+    setOrders(OrderService.getOrders());
   };
 
   const renderScreen = () => {

@@ -3,6 +3,46 @@ export type TextScale = 'small' | 'medium' | 'large';
 
 export type StatusType = 'new' | 'progress' | 'review' | 'ready' | 'done' | 'cancelled' | 'late' | 'to_deliver' | 'upcoming';
 
+export type ManufacturingStatus =
+  | 'BROUILLON'
+  | 'CONFIRMEE'
+  | 'EN_COURS'
+  | 'PRETE'
+  | 'A_LIVRER'
+  | 'LIVREE'
+  | 'TERMINEE';
+
+export type PaymentStatus = 'NON_PAYEE' | 'PARTIELLEMENT_PAYEE' | 'PAYEE';
+
+export type DueDateStatus = 'A_TEMPS' | 'AUJOURD_HUI' | 'BIENTOT' | 'EN_RETARD';
+
+export type OrderPriority = 'CRITIQUE' | 'HAUTE' | 'MOYENNE' | 'NORMALE';
+
+export interface OrderPaymentRecord {
+  id: string;
+  orderId: string;
+  amountFCFA: number;
+  date: string;
+  paymentMethod: 'ESPECES' | 'MOBILE_MONEY' | 'VIREMENT' | 'CARTE' | 'AUTRE';
+  reference?: string;
+  note?: string;
+}
+
+export interface OrderHistoryEvent {
+  id: string;
+  orderId: string;
+  timestamp: string;
+  type: string;
+  title: string;
+  description: string;
+  performedBy?: string;
+}
+
+export interface OrderMeasurementSnapshot {
+  takenAt: string;
+  measurements: Measurement[];
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -46,6 +86,17 @@ export interface Order {
   deliveryDate: string;
   status: StatusType;
   progressPercent?: number;
+
+  // Taylaxis V1 Order Engine Multi-Dimensional Properties
+  manufacturingStatus?: ManufacturingStatus;
+  paymentStatus?: PaymentStatus;
+  dueDateStatus?: DueDateStatus;
+  priority?: OrderPriority;
+  paymentHistory?: OrderPaymentRecord[];
+  eventTimeline?: OrderHistoryEvent[];
+  measurementSnapshot?: OrderMeasurementSnapshot;
+  garmentType?: string;
+  fabricNotes?: string;
 }
 
 export interface Appointment {

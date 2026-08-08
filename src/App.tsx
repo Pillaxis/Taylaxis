@@ -281,7 +281,7 @@ export const AppContent: React.FC = () => {
           onSearchChange: setSearchQuery,
         };
       case 'moi':
-        return { title: 'Apparence' };
+        return { title: 'Mon Profil' };
     }
   };
 

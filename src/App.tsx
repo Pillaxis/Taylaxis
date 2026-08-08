@@ -15,6 +15,7 @@ import { MOCK_CLIENTS, MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from './data/moc
 import type { Client, Order, StatusType } from './types';
 import { OrderEngine } from './services/orderEngine';
 import { OrderService } from './services/orderService';
+import { SupabaseService } from './services/supabaseService';
 import { X, Ruler } from 'lucide-react';
 
 export const AppContent: React.FC = () => {
@@ -25,6 +26,29 @@ export const AppContent: React.FC = () => {
   // Data state
   const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+
+  // Load Full-Stack Supabase Data on startup
+  React.useEffect(() => {
+    async function loadCloudData() {
+      if (SupabaseService.isReady()) {
+        const cloudClients = await SupabaseService.fetchClients();
+        if (cloudClients.length > 0) {
+          setClients(cloudClients);
+        }
+        const cloudOrders = await SupabaseService.fetchOrders();
+        if (cloudOrders.length > 0) {
+          setOrders(cloudOrders);
+        }
+      }
+    }
+    loadCloudData();
+
+    const unsubRealtime = SupabaseService.subscribeToOrders(() => {
+      loadCloudData();
+    });
+
+    return unsubRealtime;
+  }, []);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -104,6 +128,10 @@ export const AppContent: React.FC = () => {
       totalSpentFCFA: 0,
       customMeasurements: customM,
     };
+
+    if (SupabaseService.isReady()) {
+      SupabaseService.saveClient(newClient);
+    }
 
     setClients([newClient, ...clients]);
     setNewClientName('');

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scissors, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Scissors, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { userService } from '../services/userService';
 
@@ -155,20 +155,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
 
       <div className="w-full max-w-md mx-auto space-y-6 relative z-10">
         {/* Brand Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-xs font-semibold shadow-xs">
-            <Sparkles size={14} className="text-[#7C3AED]" />
-            <span>Taylaxis SaaS Atelier</span>
+        <div className="text-center flex flex-col items-center space-y-2">
+          <div className="w-14 h-14 rounded-[22px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white shadow-xl shadow-[#7C3AED]/40 border border-white/20">
+            <Scissors size={30} className="rotate-45" />
           </div>
 
-          <div className="flex items-center justify-center space-x-3">
-            <div className="w-12 h-12 rounded-[18px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white shadow-lg shadow-[#7C3AED]/30">
-              <Scissors size={26} className="rotate-45" />
-            </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">Taylaxis</h1>
-          </div>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight pt-1">Taylaxis</h1>
 
-          <p className="text-sm text-white/70 font-medium">
+          <p className="text-sm text-white/70 font-medium max-w-xs">
             Gestion professionnelle de vos confections, clients et finances d'atelier.
           </p>
         </div>

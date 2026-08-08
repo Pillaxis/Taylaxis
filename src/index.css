@@ -7,7 +7,7 @@
     --brand-100: #F3E8FF;
     --brand-900: #2E1065;
 
-    /* Single Unified Taylaxis Theme */
+    /* Default Light Theme Tokens */
     --bg-header: #0C0A27;
     --bg-canvas: #FAF9FE;
     --bg-surface: #FFFFFF;
@@ -19,6 +19,19 @@
     --text-tertiary: #928DAA;
 
     --font-scale: 1;
+  }
+
+  /* Dark Theme Overrides */
+  .dark {
+    --bg-header: #060517;
+    --bg-canvas: #09071B;
+    --bg-surface: #141133;
+    --bg-surface-alt: #1E1A47;
+    --border-subtle: #2C265E;
+    
+    --text-primary: #F4F2FC;
+    --text-secondary: #B0A9D2;
+    --text-tertiary: #837CA8;
   }
 
   body {

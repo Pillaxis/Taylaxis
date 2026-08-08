@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { TextScale } from '../types';
+import type { TextScale, ThemeMode } from '../types';
 
 interface ThemeContextType {
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
   textScale: TextScale;
   setTextScale: (scale: TextScale) => void;
   brandColor: string;
@@ -11,9 +13,63 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [textScale, setTextScale] = useState<TextScale>('medium');
-  const [brandColor, setBrandColor] = useState<string>('#7C3AED');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
+    return (localStorage.getItem('taylaxis_theme_mode') as ThemeMode) || 'system';
+  });
 
+  const [textScale, setTextScaleState] = useState<TextScale>(() => {
+    return (localStorage.getItem('taylaxis_text_scale') as TextScale) || 'medium';
+  });
+
+  const [brandColor, setBrandColorState] = useState<string>(() => {
+    return localStorage.getItem('taylaxis_brand_color') || '#7C3AED';
+  });
+
+  const setThemeMode = (mode: ThemeMode) => {
+    setThemeModeState(mode);
+    localStorage.setItem('taylaxis_theme_mode', mode);
+  };
+
+  const setTextScale = (scale: TextScale) => {
+    setTextScaleState(scale);
+    localStorage.setItem('taylaxis_text_scale', scale);
+  };
+
+  const setBrandColor = (color: string) => {
+    setBrandColorState(color);
+    localStorage.setItem('taylaxis_brand_color', color);
+  };
+
+  // Effect for light / dark / system theme
+  useEffect(() => {
+    const root = document.documentElement;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyTheme = () => {
+      const isDark =
+        themeMode === 'dark' ||
+        (themeMode === 'system' && mediaQuery.matches);
+
+      if (isDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+
+    applyTheme();
+
+    const handleChange = () => {
+      if (themeMode === 'system') {
+        applyTheme();
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [themeMode]);
+
+  // Effect for font scale
   useEffect(() => {
     const root = document.documentElement;
     let scaleVal = '1';
@@ -22,6 +78,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--font-scale', scaleVal);
   }, [textScale]);
 
+  // Effect for brand color
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--brand-500', brandColor);
@@ -30,6 +87,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ThemeContext.Provider
       value={{
+        themeMode,
+        setThemeMode,
         textScale,
         setTextScale,
         brandColor,

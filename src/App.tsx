@@ -9,7 +9,7 @@ import { ClientDetailView } from './views/ClientDetailView';
 import { MensurationsView } from './views/MensurationsView';
 import { CommandesView } from './views/CommandesView';
 import { AgendaView } from './views/AgendaView';
-import { ApparenceView } from './views/ApparenceView';
+import { MoiView } from './views/MoiView';
 import { NotificationsModal } from './components/common/NotificationsModal';
 import { MOCK_CLIENTS, MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from './data/mockData';
 import type { Client, Order, StatusType } from './types';
@@ -231,7 +231,7 @@ export const AppContent: React.FC = () => {
       case 'agenda':
         return <AgendaView onSelectClient={handleSelectClient} clients={clients} />;
       case 'moi':
-        return <ApparenceView />;
+        return <MoiView />;
       default:
         return (
           <AccueilView

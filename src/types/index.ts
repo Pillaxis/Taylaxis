@@ -59,3 +59,68 @@ export interface Appointment {
   colorCategory: 'purple' | 'orange' | 'red' | 'blue';
   date: string; // e.g. "2024-05-14"
 }
+
+export interface UserProfile {
+  id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  avatarUrl?: string;
+  role: string;
+  isVerified: boolean;
+  language: string;
+}
+
+export interface WorkshopProfile {
+  id: string;
+  name: string;
+  logoUrl?: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
+  openingHours: string;
+  description: string;
+  nifRccm?: string;
+}
+
+export type SubscriptionPlanType = 'FREE' | 'PRO' | 'PREMIUM';
+
+export interface SubscriptionPlan {
+  id: SubscriptionPlanType;
+  name: string;
+  priceFCFA: number;
+  status: 'active' | 'expired' | 'canceled' | 'trial';
+  period: 'mensuel' | 'annuel';
+  startDate?: string;
+  nextBillingDate?: string;
+  features: string[];
+  maxClients?: number;
+  maxOrdersMonth?: number;
+}
+
+export interface TaylaxisPayment {
+  id: string;
+  amountFCFA: number;
+  date: string;
+  planName: string;
+  status: 'succeeded' | 'pending' | 'failed' | 'refunded';
+  reference: string;
+  paymentMethod: string;
+}
+
+export interface NotificationSettings {
+  ordersCreated: boolean;
+  ordersStatusChange: boolean;
+  ordersReady: boolean;
+  ordersDeliveryNear: boolean;
+  appointmentsFitting: boolean;
+  appointmentsDelivery: boolean;
+  paymentsReceived: boolean;
+  paymentsBalance: boolean;
+  systemSecurity: boolean;
+  systemNews: boolean;
+}
+

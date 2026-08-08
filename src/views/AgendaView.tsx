@@ -96,15 +96,25 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
 
   const handlePrevMonth = () => {
     if (currentMonthIdx > 0) {
-      setCurrentMonthIdx(currentMonthIdx - 1);
-      setSelectedDay(1);
+      const nextIdx = currentMonthIdx - 1;
+      setCurrentMonthIdx(nextIdx);
+      if (nextIdx === 3) {
+        setSelectedDay(currentRealDay);
+      } else {
+        setSelectedDay(1);
+      }
     }
   };
 
   const handleNextMonth = () => {
     if (currentMonthIdx < MONTH_OFFSETS.length - 1) {
-      setCurrentMonthIdx(currentMonthIdx + 1);
-      setSelectedDay(1);
+      const nextIdx = currentMonthIdx + 1;
+      setCurrentMonthIdx(nextIdx);
+      if (nextIdx === 3) {
+        setSelectedDay(currentRealDay);
+      } else {
+        setSelectedDay(1);
+      }
     }
   };
 

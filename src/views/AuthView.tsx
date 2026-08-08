@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Scissors, Mail, Lock, User, ArrowRight, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Scissors, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { userService } from '../services/userService';
 
 interface AuthViewProps {
   onAuthSuccess: (user: any) => void;
@@ -9,9 +10,14 @@ interface AuthViewProps {
 
 export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsGuest }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
+
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [workshopName, setWorkshopName] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -21,21 +27,49 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!email || !password) {
-      setErrorMsg('Veuillez remplir l’adresse email et le mot de passe.');
+    const credentialIdentifier = authMethod === 'email' ? email.trim() : phone.trim();
+
+    if (!credentialIdentifier) {
+      setErrorMsg(`Veuillez renseigner votre ${authMethod === 'email' ? 'adresse email' : 'numéro de téléphone'}.`);
       return;
     }
 
-    if (mode === 'register' && password.length < 6) {
-      setErrorMsg('Le mot de passe doit contenir au moins 6 caractères.');
+    if (!password) {
+      setErrorMsg('Veuillez renseigner votre mot de passe.');
       return;
     }
+
+    if (mode === 'register') {
+      if (password.length < 6) {
+        setErrorMsg('Le mot de passe doit contenir au moins 6 caractères.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setErrorMsg('La confirmation du mot de passe ne correspond pas.');
+        return;
+      }
+    }
+
+    // Save profile details to local userService state
+    userService.saveUserProfile({
+      ...userService.getUserProfile(),
+      fullName: workshopName ? `Atelier ${workshopName}` : 'Tailleur Taylaxis',
+      phone: phone || '',
+      email: authMethod === 'email' ? email : '',
+    });
+
+    userService.saveWorkshopProfile({
+      ...userService.getWorkshopProfile(),
+      name: workshopName || 'Mon Atelier de Couture',
+      phone: phone || '',
+    });
 
     if (!isSupabaseConfigured || !supabase) {
-      // Fallback local guest auth if Supabase credentials are not connected
       onAuthSuccess({
         id: 'local_user',
-        email,
+        email: authMethod === 'email' ? email : undefined,
+        phone: authMethod === 'phone' ? phone : undefined,
         user_metadata: { workshop_name: workshopName || 'Mon Atelier' },
       });
       return;
@@ -45,41 +79,64 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
 
     try {
       if (mode === 'login') {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        let authResult;
 
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            setErrorMsg('Email ou mot de passe incorrect.');
+        if (authMethod === 'phone') {
+          authResult = await supabase.auth.signInWithPassword({
+            phone,
+            password,
+          });
+        } else {
+          authResult = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+        }
+
+        if (authResult.error) {
+          if (authResult.error.message.includes('Invalid login credentials')) {
+            setErrorMsg('Identifiant ou mot de passe incorrect.');
           } else {
-            setErrorMsg(error.message);
+            setErrorMsg(authResult.error.message);
           }
-        } else if (data.user) {
-          onAuthSuccess(data.user);
+        } else if (authResult.data.user) {
+          onAuthSuccess(authResult.data.user);
         }
       } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              workshop_name: workshopName || 'Atelier Taylaxis',
-            },
-          },
-        });
+        let signUpResult;
 
-        if (error) {
-          setErrorMsg(error.message);
-        } else if (data.user) {
-          if (data.session) {
-            onAuthSuccess(data.user);
+        if (authMethod === 'phone') {
+          signUpResult = await supabase.auth.signUp({
+            phone,
+            password,
+            options: {
+              data: {
+                workshop_name: workshopName || 'Atelier Taylaxis',
+              },
+            },
+          });
+        } else {
+          signUpResult = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                workshop_name: workshopName || 'Atelier Taylaxis',
+              },
+            },
+          });
+        }
+
+        if (signUpResult.error) {
+          setErrorMsg(signUpResult.error.message);
+        } else if (signUpResult.data.user) {
+          if (signUpResult.data.session) {
+            onAuthSuccess(signUpResult.data.user);
           } else {
-            setSuccessMsg('Compte créé avec succès ! Si la confirmation par email est activée, vérifiez votre boîte de réception.');
+            setSuccessMsg('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
             setTimeout(() => {
               setMode('login');
-            }, 3000);
+            }, 2500);
           }
         }
       }
@@ -101,7 +158,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
         <div className="text-center space-y-3">
           <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/90 text-xs font-semibold shadow-xs">
             <Sparkles size={14} className="text-[#7C3AED]" />
-            <span>Taylaxis SaaS Atelier V1</span>
+            <span>Taylaxis SaaS Atelier</span>
           </div>
 
           <div className="flex items-center justify-center space-x-3">
@@ -112,13 +169,13 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
           </div>
 
           <p className="text-sm text-white/70 font-medium">
-            Pilotez votre atelier de couture, vos confections et vos paiements clients en toute sérénité.
+            Gestion professionnelle de vos confections, clients et finances d'atelier.
           </p>
         </div>
 
         {/* Auth Form Card */}
         <div className="p-6 rounded-[28px] bg-white/10 backdrop-blur-xl border border-white/15 shadow-2xl space-y-5">
-          {/* Mode Switcher Tabs */}
+          {/* Mode Switcher Tabs (Se connecter / Créer un compte) */}
           <div className="grid grid-cols-2 gap-1.5 p-1 bg-black/20 rounded-[16px]">
             <button
               type="button"
@@ -148,6 +205,35 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
               }`}
             >
               Créer un compte
+            </button>
+          </div>
+
+          {/* Identifier Toggle (Email ou Téléphone) */}
+          <div className="flex items-center justify-center space-x-4 pt-1">
+            <button
+              type="button"
+              onClick={() => setAuthMethod('email')}
+              className={`text-xs font-semibold px-3 py-1 rounded-full transition-all flex items-center space-x-1.5 cursor-pointer ${
+                authMethod === 'email'
+                  ? 'bg-white/20 text-white border border-white/30'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              <Mail size={13} />
+              <span>Avec Email</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAuthMethod('phone')}
+              className={`text-xs font-semibold px-3 py-1 rounded-full transition-all flex items-center space-x-1.5 cursor-pointer ${
+                authMethod === 'phone'
+                  ? 'bg-white/20 text-white border border-white/30'
+                  : 'text-white/50 hover:text-white/80'
+              }`}
+            >
+              <Phone size={13} />
+              <span>Avec Téléphone</span>
             </button>
           </div>
 
@@ -185,20 +271,37 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-white/90 block">Adresse Email</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-                <input
-                  type="email"
-                  required
-                  placeholder="tailleur@exemple.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-black/20 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#7C3AED] transition-all"
-                />
+            {authMethod === 'email' ? (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-white/90 block">Adresse Email</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="tailleur@exemple.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-black/20 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#7C3AED] transition-all"
+                  />
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-white/90 block">Numéro de Téléphone</label>
+                <div className="relative">
+                  <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+228 90 12 34 56"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-black/20 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#7C3AED] transition-all"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-white/90 block">Mot de passe</label>
@@ -214,6 +317,23 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
                 />
               </div>
             </div>
+
+            {mode === 'register' && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-white/90 block">Confirmer le mot de passe</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-black/20 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#7C3AED] transition-all"
+                  />
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"

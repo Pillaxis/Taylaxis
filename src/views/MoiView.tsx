@@ -352,8 +352,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
               />
             ) : (
               <div className="w-16 h-16 rounded-full bg-[#7C3AED]/15 text-[#7C3AED] font-extrabold text-2xl flex items-center justify-center flex-shrink-0 border border-[#7C3AED]/30">
-                {userProfile.firstName[0]}
-                {userProfile.lastName[0]}
+                {userProfile.fullName ? userProfile.fullName[0].toUpperCase() : 'T'}
               </div>
             )}
             <button

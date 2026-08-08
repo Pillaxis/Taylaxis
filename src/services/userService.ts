@@ -7,80 +7,50 @@ import type {
 } from '../types';
 
 export const DEFAULT_USER_PROFILE: UserProfile = {
-  id: 'usr_nasser_01',
-  firstName: 'Nasser',
-  lastName: 'Diallo',
-  fullName: 'Nasser Diallo',
-  phone: '+228 90 12 34 56',
-  email: 'nasser.tailleur@taylaxis.app',
+  id: 'usr_new',
+  firstName: '',
+  lastName: '',
+  fullName: 'Tailleur Taylaxis',
+  phone: '',
+  email: '',
   avatarUrl: '',
   role: 'Maître Tailleur',
-  isVerified: true,
+  isVerified: false,
   language: 'Français (FR)',
 };
 
 export const DEFAULT_WORKSHOP_PROFILE: WorkshopProfile = {
-  id: 'wks_01',
-  name: 'Atelier Nasser Haute Couture',
+  id: 'wks_new',
+  name: 'Mon Atelier de Couture',
   logoUrl: '',
-  phone: '+228 98 76 54 32',
-  address: 'Rue des Nîmes, Quartier Bè Boulevard',
+  phone: '',
+  address: '',
   city: 'Lomé',
   country: 'Togo',
   openingHours: 'Lun - Sam : 08h00 - 19h00',
-  description: 'Atelier de couture haut de gamme spécialisé en costumes sur-mesure, boubous traditionnels et robes d\'apparat.',
-  nifRccm: 'NIF 100234598 / RCCM TG-LOM-2023-B-89',
+  description: '',
+  nifRccm: '',
 };
 
 export const DEFAULT_SUBSCRIPTION_PLAN: SubscriptionPlan = {
-  id: 'PRO',
-  name: 'Taylaxis Pro',
-  priceFCFA: 5000,
+  id: 'FREE',
+  name: 'Plan Démarrage Gratuit',
+  priceFCFA: 0,
   status: 'active',
   period: 'mensuel',
-  startDate: '01 Août 2026',
-  nextBillingDate: '01 Septembre 2026',
+  startDate: "Aujourd'hui",
+  nextBillingDate: 'Dans 30 jours',
   features: [
     'Clients illimités',
     'Catalogues de mensurations personnalisés',
-    'Rappels SMS & WhatsApp clients',
-    'Impression de reçus & factures PDF',
-    'Gestion de l\'agenda & rendez-vous d\'essayage',
+    'Suivi des commandes & versements',
     'Sauvegarde automatique Cloud',
   ],
   maxClients: 999,
   maxOrdersMonth: 999,
 };
 
-export const MOCK_PAYMENTS: TaylaxisPayment[] = [
-  {
-    id: 'pay_1092',
-    amountFCFA: 5000,
-    date: '01 Août 2026',
-    planName: 'Abonnement Taylaxis Pro (1 mois)',
-    status: 'succeeded',
-    reference: 'TAY-20260801-889',
-    paymentMethod: 'T-Money / Mobile Money (+228 90**34)',
-  },
-  {
-    id: 'pay_0984',
-    amountFCFA: 5000,
-    date: '01 Juillet 2026',
-    planName: 'Abonnement Taylaxis Pro (1 mois)',
-    status: 'succeeded',
-    reference: 'TAY-20260701-441',
-    paymentMethod: 'T-Money / Mobile Money (+228 90**34)',
-  },
-  {
-    id: 'pay_0821',
-    amountFCFA: 5000,
-    date: '01 Juin 2026',
-    planName: 'Abonnement Taylaxis Pro (1 mois)',
-    status: 'succeeded',
-    reference: 'TAY-20260601-112',
-    paymentMethod: 'Carte Visa (*4242)',
-  },
-];
+export const MOCK_PAYMENTS: TaylaxisPayment[] = [];
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   ordersCreated: true,
@@ -95,72 +65,73 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   systemNews: false,
 };
 
-class UserService {
-  private USER_KEY = 'taylaxis_user_profile';
-  private WORKSHOP_KEY = 'taylaxis_workshop_profile';
-  private SUBSCRIPTION_KEY = 'taylaxis_subscription_plan';
-  private NOTIFICATIONS_KEY = 'taylaxis_notification_settings';
+const STORAGE_KEY_PROFILE = 'taylaxis_user_profile';
+const STORAGE_KEY_WORKSHOP = 'taylaxis_workshop_profile';
+const STORAGE_KEY_SUB = 'taylaxis_sub_plan';
+const STORAGE_KEY_NOTIFS = 'taylaxis_notif_settings';
 
+export const userService = {
   getUserProfile(): UserProfile {
+    const raw = localStorage.getItem(STORAGE_KEY_PROFILE);
+    if (!raw) return DEFAULT_USER_PROFILE;
     try {
-      const saved = localStorage.getItem(this.USER_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_USER_PROFILE;
+      return JSON.parse(raw);
     } catch {
       return DEFAULT_USER_PROFILE;
     }
-  }
+  },
 
   saveUserProfile(profile: UserProfile): UserProfile {
-    profile.fullName = `${profile.firstName} ${profile.lastName}`.trim();
-    localStorage.setItem(this.USER_KEY, JSON.stringify(profile));
+    localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(profile));
     return profile;
-  }
+  },
 
   getWorkshopProfile(): WorkshopProfile {
+    const raw = localStorage.getItem(STORAGE_KEY_WORKSHOP);
+    if (!raw) return DEFAULT_WORKSHOP_PROFILE;
     try {
-      const saved = localStorage.getItem(this.WORKSHOP_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_WORKSHOP_PROFILE;
+      return JSON.parse(raw);
     } catch {
       return DEFAULT_WORKSHOP_PROFILE;
     }
-  }
+  },
 
   saveWorkshopProfile(workshop: WorkshopProfile): WorkshopProfile {
-    localStorage.setItem(this.WORKSHOP_KEY, JSON.stringify(workshop));
+    localStorage.setItem(STORAGE_KEY_WORKSHOP, JSON.stringify(workshop));
     return workshop;
-  }
+  },
 
   getSubscriptionPlan(): SubscriptionPlan {
+    const raw = localStorage.getItem(STORAGE_KEY_SUB);
+    if (!raw) return DEFAULT_SUBSCRIPTION_PLAN;
     try {
-      const saved = localStorage.getItem(this.SUBSCRIPTION_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_SUBSCRIPTION_PLAN;
+      return JSON.parse(raw);
     } catch {
       return DEFAULT_SUBSCRIPTION_PLAN;
     }
-  }
+  },
 
   saveSubscriptionPlan(plan: SubscriptionPlan): SubscriptionPlan {
-    localStorage.setItem(this.SUBSCRIPTION_KEY, JSON.stringify(plan));
+    localStorage.setItem(STORAGE_KEY_SUB, JSON.stringify(plan));
     return plan;
-  }
+  },
 
   getPayments(): TaylaxisPayment[] {
     return MOCK_PAYMENTS;
-  }
+  },
 
   getNotificationSettings(): NotificationSettings {
+    const raw = localStorage.getItem(STORAGE_KEY_NOTIFS);
+    if (!raw) return DEFAULT_NOTIFICATION_SETTINGS;
     try {
-      const saved = localStorage.getItem(this.NOTIFICATIONS_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_NOTIFICATION_SETTINGS;
+      return JSON.parse(raw);
     } catch {
       return DEFAULT_NOTIFICATION_SETTINGS;
     }
-  }
+  },
 
-  saveNotificationSettings(settings: NotificationSettings): NotificationSettings {
-    localStorage.setItem(this.NOTIFICATIONS_KEY, JSON.stringify(settings));
-    return settings;
-  }
-}
-
-export const userService = new UserService();
+  saveNotificationSettings(notifs: NotificationSettings): NotificationSettings {
+    localStorage.setItem(STORAGE_KEY_NOTIFS, JSON.stringify(notifs));
+    return notifs;
+  },
+};

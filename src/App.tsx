@@ -288,8 +288,8 @@ export const AppContent: React.FC = () => {
   const headerProps = getHeaderProps();
 
   return (
-    <div className="min-h-screen bg-[#0C0A27] text-primary transition-colors flex flex-col justify-between selection:bg-[#7C3AED]/20">
-      <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto min-h-screen flex flex-col bg-[#0C0A27] shadow-2xl">
+    <div className="min-h-screen bg-canvas text-primary transition-colors flex flex-col justify-between selection:bg-[#7C3AED]/20">
+      <div className="w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto min-h-screen flex flex-col bg-canvas shadow-2xl">
         {/* Dark Purple Header */}
         <Header
           {...headerProps}

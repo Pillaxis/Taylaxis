@@ -18,9 +18,6 @@ import {
   Camera,
   Check,
   X,
-  Sun,
-  Moon,
-  Laptop,
   AlertTriangle,
   Send,
   MessageCircle,
@@ -42,7 +39,7 @@ interface MoiViewProps {
 }
 
 export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
-  const { themeMode, setThemeMode, textScale, setTextScale, brandColor, setBrandColor } = useTheme();
+  const { textScale, setTextScale, brandColor, setBrandColor } = useTheme();
 
   // State data
   const [userProfile, setUserProfile] = useState<UserProfile>(() => userService.getUserProfile());
@@ -492,56 +489,15 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       </div>
 
-      {/* SECTION 3: APPARENCE (CLAIR / SOMBRE / SYSTÈME) */}
+      {/* SECTION 3: APPARENCE & PERSONNALISATION */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
           <label className="text-micro font-bold text-secondary tracking-wider block">
-            Apparence de l'application
+            Apparence & Personnalisation
           </label>
-          <span className="text-caption text-[#7C3AED] font-mono font-bold capitalize">
-            {themeMode === 'light' ? 'Mode Clair' : themeMode === 'dark' ? 'Mode Sombre' : 'Mode Système'}
-          </span>
         </div>
 
         <div className="bg-surface rounded-[24px] p-4 border border-subtle space-y-4 shadow-xs">
-          {/* Theme Selector 3-Way Buttons */}
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setThemeMode('light')}
-              className={`p-3 rounded-[16px] border flex flex-col items-center justify-center space-y-1.5 transition-all cursor-pointer ${
-                themeMode === 'light'
-                  ? 'border-[#7C3AED] bg-[#7C3AED]/10 text-[#7C3AED] shadow-xs'
-                  : 'border-subtle bg-surface-alt text-secondary hover:text-primary'
-              }`}
-            >
-              <Sun size={20} />
-              <span className="text-caption font-bold">Clair</span>
-            </button>
-
-            <button
-              onClick={() => setThemeMode('dark')}
-              className={`p-3 rounded-[16px] border flex flex-col items-center justify-center space-y-1.5 transition-all cursor-pointer ${
-                themeMode === 'dark'
-                  ? 'border-[#7C3AED] bg-[#7C3AED]/10 text-[#7C3AED] shadow-xs'
-                  : 'border-subtle bg-surface-alt text-secondary hover:text-primary'
-              }`}
-            >
-              <Moon size={20} />
-              <span className="text-caption font-bold">Sombre</span>
-            </button>
-
-            <button
-              onClick={() => setThemeMode('system')}
-              className={`p-3 rounded-[16px] border flex flex-col items-center justify-center space-y-1.5 transition-all cursor-pointer ${
-                themeMode === 'system'
-                  ? 'border-[#7C3AED] bg-[#7C3AED]/10 text-[#7C3AED] shadow-xs'
-                  : 'border-subtle bg-surface-alt text-secondary hover:text-primary'
-              }`}
-            >
-              <Laptop size={20} />
-              <span className="text-caption font-bold">Système</span>
-            </button>
-          </div>
 
           {/* Text Scale Selector */}
           <div className="pt-2 border-t border-subtle flex items-center justify-between">

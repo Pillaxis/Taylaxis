@@ -12,44 +12,7 @@ export interface NotificationItem {
   targetClientId?: string;
 }
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'n1',
-    type: 'late',
-    title: 'Commande en retard !',
-    description: 'La commande #024 (Kossi A.) dépasse la date de livraison prévue.',
-    time: 'Il y a 10 min',
-    isRead: false,
-    targetView: 'commandes',
-  },
-  {
-    id: 'n2',
-    type: 'appointment',
-    title: 'Rappel d’essayage',
-    description: 'Essayage avec Kossi A. prévu aujourd’hui à 10:00 dans votre atelier.',
-    time: 'Il y a 35 min',
-    isRead: false,
-    targetView: 'agenda',
-  },
-  {
-    id: 'n3',
-    type: 'payment',
-    title: 'Acompte enregistré',
-    description: '20 000 FCFA encaissés pour la commande #028 (Akouvi E.).',
-    time: 'Il y a 2h',
-    isRead: false,
-    targetView: 'commandes',
-  },
-  {
-    id: 'n4',
-    type: 'appointment',
-    title: 'Prise de mesures planifiée',
-    description: 'Rendez-vous de prise de mesures avec Komlan D. aujourd’hui à 17:00.',
-    time: 'Il y a 3h',
-    isRead: false,
-    targetView: 'agenda',
-  },
-];
+const INITIAL_NOTIFICATIONS: NotificationItem[] = [];
 
 interface NotificationsModalProps {
   isOpen: boolean;

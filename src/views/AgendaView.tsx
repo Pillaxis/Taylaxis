@@ -18,7 +18,6 @@ import {
   Plus,
   ExternalLink,
 } from 'lucide-react';
-import { MOCK_APPOINTMENTS_14_MAY, MOCK_UPCOMING_EVENTS } from '../data/mockData';
 import { StatusBadge } from '../components/common/StatusBadge';
 import type { Client } from '../types';
 
@@ -39,57 +38,7 @@ interface AppointmentItem {
   notes?: string;
 }
 
-const INITIAL_APPOINTMENTS: AppointmentItem[] = [
-  ...MOCK_APPOINTMENTS_14_MAY.map((apt) => ({
-    ...apt,
-    clientId: 'c1',
-    phone: '90 12 34 56',
-    dayNumber: 14,
-    monthIndex: 4,
-  })),
-  {
-    id: 'apt_may_2',
-    time: '09:00',
-    duration: '01:00',
-    clientName: 'Afiwa B.',
-    clientId: 'c5',
-    phone: '92 11 22 33',
-    type: 'Prise de mesures',
-    badgeLabel: 'RDV',
-    colorCategory: 'blue',
-    date: '2024-05-02',
-    dayNumber: 2,
-    monthIndex: 4,
-  },
-  {
-    id: 'apt_may_8',
-    time: '14:30',
-    duration: '00:45',
-    clientName: 'Yaovi M.',
-    clientId: 'c6',
-    phone: '96 88 77 66',
-    type: 'Essayage Boubou',
-    badgeLabel: 'RDV',
-    colorCategory: 'purple',
-    date: '2024-05-08',
-    dayNumber: 8,
-    monthIndex: 4,
-  },
-  {
-    id: 'apt_may_18',
-    time: '11:00',
-    duration: '00:30',
-    clientName: 'Kossi A.',
-    clientId: 'c1',
-    phone: '90 12 34 56',
-    type: 'Livraison Costume',
-    badgeLabel: 'Livraison',
-    colorCategory: 'orange',
-    date: '2024-05-18',
-    dayNumber: 18,
-    monthIndex: 4,
-  },
-];
+const INITIAL_APPOINTMENTS: AppointmentItem[] = [];
 
 interface AgendaViewProps {
   onSelectClient?: (clientId: string) => void;
@@ -384,41 +333,47 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
         <h3 className="text-body-strong font-bold text-primary px-0.5">À venir ce mois-ci</h3>
 
         <div className="space-y-2">
-          {MOCK_UPCOMING_EVENTS.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => {
-                const client = clients?.find((c) => c.name === item.clientName);
-                if (client && onSelectClient) {
-                  onSelectClient(client.id);
-                }
-              }}
-              className="p-2.5 px-3 rounded-[16px] bg-white flex items-center justify-between cursor-pointer white-element-hover active:scale-98 transition-all shadow-xs"
-            >
-              <div className="flex items-center space-x-2.5 min-w-0">
-                <div className="text-center min-w-[32px] bg-[#7C3AED]/10 px-1.5 py-1 rounded-[10px] flex-shrink-0">
-                  <div className="text-caption font-bold text-[#7C3AED] tabular-nums leading-tight">
-                    {item.date.split(' ')[0]}
-                  </div>
-                  <div className="text-[9px] text-[#7C3AED] font-medium leading-none">{item.date.split(' ')[1]}</div>
-                </div>
-
-                <div className="text-caption font-bold text-secondary tabular-nums flex-shrink-0">
-                  {item.time}
-                </div>
-
-                <div className="min-w-0">
-                  <div className="text-caption text-secondary font-medium truncate">{item.garment || item.type}</div>
-                  <div className="text-body-strong font-bold text-primary truncate">{item.clientName}</div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
-                <StatusBadge status={item.badgeLabel || 'RDV'} />
-                <ChevronRight size={16} className="text-tertiary" />
-              </div>
+          {appointments.length === 0 ? (
+            <div className="py-4 text-center px-4 bg-surface rounded-[16px] border border-subtle">
+              <p className="text-caption text-secondary font-medium">Aucun événement à venir ce mois-ci.</p>
             </div>
-          ))}
+          ) : (
+            appointments.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  const client = clients?.find((c) => c.name === item.clientName);
+                  if (client && onSelectClient) {
+                    onSelectClient(client.id);
+                  }
+                }}
+                className="p-2.5 px-3 rounded-[16px] bg-white flex items-center justify-between cursor-pointer white-element-hover active:scale-98 transition-all shadow-xs"
+              >
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <div className="text-center min-w-[32px] bg-[#7C3AED]/10 px-1.5 py-1 rounded-[10px] flex-shrink-0">
+                    <div className="text-caption font-bold text-[#7C3AED] tabular-nums leading-tight">
+                      {item.date.split('-')[2] || item.dayNumber}
+                    </div>
+                    <div className="text-[9px] text-[#7C3AED] font-medium leading-none">Mai</div>
+                  </div>
+
+                  <div className="text-caption font-bold text-secondary tabular-nums flex-shrink-0">
+                    {item.time}
+                  </div>
+
+                  <div className="min-w-0">
+                    <div className="text-caption text-secondary font-medium truncate">{item.garment || item.type}</div>
+                    <div className="text-body-strong font-bold text-primary truncate">{item.clientName}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
+                  <StatusBadge status={item.badgeLabel || 'RDV'} />
+                  <ChevronRight size={16} className="text-tertiary" />
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 

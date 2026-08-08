@@ -4,70 +4,9 @@ export const MOCK_CLIENTS: Client[] = [];
 
 export const MOCK_ORDERS: Order[] = [];
 
-export const MOCK_APPOINTMENTS_14_MAY: Appointment[] = [
-  {
-    id: 'apt1',
-    time: '10:00',
-    duration: '00:45',
-    clientName: 'Kossi A.',
-    type: 'Essayage',
-    badgeLabel: 'RDV',
-    colorCategory: 'purple',
-    date: '2024-05-14',
-  },
-  {
-    id: 'apt2',
-    time: '12:00',
-    duration: '01:00',
-    clientName: 'Akouvi E.',
-    type: 'Livraison',
-    badgeLabel: 'Livraison',
-    colorCategory: 'orange',
-    date: '2024-05-14',
-  },
-  {
-    id: 'apt3',
-    time: '15:00',
-    duration: '01:00',
-    clientName: 'Jean P.',
-    type: 'Rendez-vous',
-    badgeLabel: 'RDV',
-    colorCategory: 'red',
-    date: '2024-05-14',
-  },
-  {
-    id: 'apt4',
-    time: '17:00',
-    duration: '00:30',
-    clientName: 'Komlan D.',
-    type: 'Prise de mesures',
-    badgeLabel: 'RDV',
-    colorCategory: 'blue',
-    date: '2024-05-14',
-  },
-];
+export const MOCK_APPOINTMENTS_14_MAY: Appointment[] = [];
 
-export const MOCK_UPCOMING_EVENTS: Appointment[] = [
-  {
-    id: 'up1',
-    time: '10:00',
-    clientName: 'Afiwa B.',
-    type: 'Essayage',
-    garment: 'Chemise homme',
-    badgeLabel: 'En cours',
-    colorCategory: 'purple',
-    date: '15 Mai',
-  },
-  {
-    id: 'up2',
-    time: '11:00',
-    clientName: 'Yaovi M.',
-    type: 'Rendez-vous',
-    badgeLabel: 'RDV',
-    colorCategory: 'purple',
-    date: '16 Mai',
-  },
-];
+export const MOCK_UPCOMING_EVENTS: Appointment[] = [];
 
 export const MOCK_MEASUREMENTS_COSTUME: Measurement[] = [
   { id: 'm1', label: 'Tour de poitrine', valueCm: 102, iconName: 'Shirt' },

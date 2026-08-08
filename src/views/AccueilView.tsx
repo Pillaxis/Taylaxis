@@ -108,8 +108,10 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
                 <TrendingUp size={13} className="text-white" />
               </div>
             </div>
-            <div className="text-body-strong font-bold text-base tabular-nums">85 000 FCFA</div>
-            <div className="text-[10px] font-medium opacity-85">↗ +12% vs hier</div>
+            <div className="text-body-strong font-bold text-base tabular-nums">
+              {orders.length === 0 ? '0 FCFA' : `${orders.reduce((s, o) => s + (o.paidFCFA || 0), 0).toLocaleString('fr-FR')} FCFA`}
+            </div>
+            <div className="text-[10px] font-medium opacity-85">Aujourd'hui</div>
           </div>
 
           {/* Card 2: CA du mois */}
@@ -120,8 +122,10 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
                 <Wallet size={13} className="text-white" />
               </div>
             </div>
-            <div className="text-body-strong font-bold text-base tabular-nums">1 240 000 FCFA</div>
-            <div className="text-[10px] font-medium opacity-85">↗ +18% vs mois dernier</div>
+            <div className="text-body-strong font-bold text-base tabular-nums">
+              {orders.length === 0 ? '0 FCFA' : `${orders.reduce((s, o) => s + (o.paidFCFA || 0), 0).toLocaleString('fr-FR')} FCFA`}
+            </div>
+            <div className="text-[10px] font-medium opacity-85">Ce mois-ci</div>
           </div>
 
           {/* Card 3: Commandes en cours */}
@@ -135,7 +139,7 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
                 <ClipboardList size={13} className="text-white" />
               </div>
             </div>
-            <div className="text-lg font-bold tabular-nums">{activeOrders.length || 18}</div>
+            <div className="text-lg font-bold tabular-nums">{activeOrders.length}</div>
             <div className="text-[10px] font-medium opacity-85">
               🕒 {lateOrders.length} en retard
             </div>

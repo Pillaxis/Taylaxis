@@ -57,7 +57,7 @@ export const AppContent: React.FC = () => {
   const [showNewClientModal, setShowNewClientModal] = useState(false);
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(4);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   // Form states
   const [newClientName, setNewClientName] = useState('');

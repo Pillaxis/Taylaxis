@@ -1,0 +1,18 @@
+{
+  "short_name": "Taylaxis",
+  "name": "Taylaxis — SaaS Atelier de Couture",
+  "description": "Pilotez votre atelier de couture, vos confections et vos paiements clients en toute sérénité.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0C0A27",
+  "theme_color": "#7C3AED",
+  "display": "standalone",
+  "orientation": "portrait"
+}

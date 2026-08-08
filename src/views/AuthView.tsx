@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Scissors, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Scissors, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle, Download, Smartphone, Share, X } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { userService } from '../services/userService';
 
@@ -45,6 +45,41 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Mobile PWA App installation state
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    if (/iphone|ipad|ipod/.test(userAgent)) {
+      setIsIOS(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choiceResult = await deferredPrompt.userChoice;
+      if (choiceResult.outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowInstallGuideModal(true);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -407,7 +442,79 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
             </button>
           </form>
         </div>
+
+        {/* Button to Download Mobile App */}
+        <div className="pt-1 text-center space-y-2">
+          <button
+            type="button"
+            onClick={handleInstallApp}
+            className="w-full py-3 px-4 rounded-[18px] bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-bold text-xs flex items-center justify-center space-x-2.5 cursor-pointer transition-all active:scale-98 shadow-md"
+          >
+            <Download size={16} className="text-[#7C3AED]" />
+            <span>Télécharger l'application Taylaxis sur Mobile</span>
+            <Smartphone size={16} className="text-white/80" />
+          </button>
+        </div>
       </div>
+
+      {/* PWA Mobile Installation Guide Modal */}
+      {showInstallGuideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#120F38] border border-white/20 rounded-[28px] max-w-md w-full p-6 text-white space-y-5 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => setShowInstallGuideModal(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white p-1 rounded-full bg-white/10 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-[16px] bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#7C3AED]">
+                <Smartphone size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Installer Taylaxis sur Mobile</h3>
+                <p className="text-xs text-white/70">Utilisez l'application en plein écran comme sur les stores</p>
+              </div>
+            </div>
+
+            {isIOS ? (
+              <div className="p-4 rounded-[18px] bg-white/5 border border-white/10 space-y-3 text-xs">
+                <p className="font-bold text-[#7C3AED] flex items-center space-x-1.5">
+                  <Share size={15} />
+                  <span>Sur iPhone / iPad (Safari) :</span>
+                </p>
+                <ol className="list-decimal pl-4 space-y-2 text-white/90 leading-relaxed font-medium">
+                  <li>Appuyez sur le bouton <strong>Partager</strong> en bas de votre navigateur Safari.</li>
+                  <li>Faites défiler le menu puis appuyez sur <strong>"Sur l'écran d'accueil"</strong>.</li>
+                  <li>Validez en appuyant sur <strong>Ajouter</strong> en haut à droite.</li>
+                </ol>
+              </div>
+            ) : (
+              <div className="p-4 rounded-[18px] bg-white/5 border border-white/10 space-y-3 text-xs">
+                <p className="font-bold text-[#7C3AED] flex items-center space-x-1.5">
+                  <Download size={15} />
+                  <span>Sur Android / Chrome :</span>
+                </p>
+                <ol className="list-decimal pl-4 space-y-2 text-white/90 leading-relaxed font-medium">
+                  <li>Appuyez sur le menu <strong>Options (⋮)</strong> en haut à droite de Chrome.</li>
+                  <li>Sélectionnez <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong>.</li>
+                  <li>Confirmez l'installation pour avoir l'icône Taylaxis sur votre téléphone.</li>
+                </ol>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowInstallGuideModal(false)}
+              className="w-full py-2.5 rounded-[14px] bg-[#7C3AED] text-white font-bold text-xs hover:bg-[#6D28D9] cursor-pointer transition-colors"
+            >
+              Compris, j'installe maintenant
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

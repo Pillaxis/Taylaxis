@@ -7,6 +7,31 @@ interface AuthViewProps {
   onAuthSuccess: (user: any) => void;
 }
 
+interface RegisteredAccount {
+  identifier: string;
+  passwordHash: string;
+  workshopName: string;
+}
+
+const STORAGE_KEY_REGISTRY = 'taylaxis_registered_accounts_v1';
+
+const getRegisteredAccounts = (): RegisteredAccount[] => {
+  const raw = localStorage.getItem(STORAGE_KEY_REGISTRY);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+};
+
+const saveRegisteredAccount = (account: RegisteredAccount) => {
+  const list = getRegisteredAccounts();
+  const filtered = list.filter((a) => a.identifier.toLowerCase() !== account.identifier.toLowerCase());
+  filtered.push(account);
+  localStorage.setItem(STORAGE_KEY_REGISTRY, JSON.stringify(filtered));
+};
+
 export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('phone');
@@ -48,6 +73,41 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
         setErrorMsg('La confirmation du mot de passe ne correspond pas.');
         return;
       }
+
+      // Check if account already exists locally
+      const existingAccounts = getRegisteredAccounts();
+      const alreadyRegistered = existingAccounts.some(
+        (a) => a.identifier.toLowerCase() === credentialIdentifier.toLowerCase()
+      );
+
+      if (alreadyRegistered) {
+        setErrorMsg('Un compte existe déjà avec ce numéro ou cet email. Allez sur "Se connecter".');
+        return;
+      }
+
+      // Save to local accounts registry
+      saveRegisteredAccount({
+        identifier: credentialIdentifier,
+        passwordHash: password,
+        workshopName: workshopName || 'Mon Atelier',
+      });
+    }
+
+    if (mode === 'login') {
+      const existingAccounts = getRegisteredAccounts();
+      const matchedAccount = existingAccounts.find(
+        (a) => a.identifier.toLowerCase() === credentialIdentifier.toLowerCase()
+      );
+
+      if (!matchedAccount && (!isSupabaseConfigured || !supabase)) {
+        setErrorMsg('Ce numéro de téléphone ou email n’est pas enregistré. Cliquez sur "Créer un compte" d’abord.');
+        return;
+      }
+
+      if (matchedAccount && matchedAccount.passwordHash !== password && (!isSupabaseConfigured || !supabase)) {
+        setErrorMsg('Mot de passe incorrect. Veuillez vérifier vos identifiants.');
+        return;
+      }
     }
 
     // Save profile details to local userService state
@@ -66,7 +126,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
 
     if (!isSupabaseConfigured || !supabase) {
       onAuthSuccess({
-        id: 'local_user',
+        id: `usr_${Date.now()}`,
         email: authMethod === 'email' ? email : undefined,
         phone: authMethod === 'phone' ? phone : undefined,
         user_metadata: { workshop_name: workshopName || 'Mon Atelier' },
@@ -93,8 +153,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
         }
 
         if (authResult.error) {
-          if (authResult.error.message.includes('Invalid login credentials')) {
-            setErrorMsg('Identifiant ou mot de passe incorrect.');
+          if (
+            authResult.error.message.includes('Invalid login credentials') ||
+            authResult.error.message.includes('User not found')
+          ) {
+            setErrorMsg('Identifiant ou mot de passe incorrect. Si vous n’avez pas encore de compte, veuillez cliquer sur "Créer un compte".');
           } else {
             setErrorMsg(authResult.error.message);
           }

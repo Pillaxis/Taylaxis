@@ -16,7 +16,6 @@ import {
   Clock,
   Calendar as CalendarIcon,
   Plus,
-  ExternalLink,
 } from 'lucide-react';
 import { StatusBadge } from '../components/common/StatusBadge';
 import type { Client } from '../types';
@@ -45,13 +44,31 @@ interface AgendaViewProps {
   clients?: Client[];
 }
 
-const MONTH_NAMES = ['Avril 2024', 'Mai 2024', 'Juin 2024'];
-const MONTH_DAYS = [30, 31, 30];
-const MONTH_START_OFFSET = [6, 2, 5];
+const now = new Date();
+const currentRealYear = now.getFullYear();
+const currentRealMonth = now.getMonth();
+const currentRealDay = now.getDate();
+
+const MONTH_OFFSETS = [-3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
+
+const getMonthInfo = (offset: number) => {
+  const d = new Date(currentRealYear, currentRealMonth + offset, 1);
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const name = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const monthNameCapitalized = name.charAt(0).toUpperCase() + name.slice(1);
+  const shortMonthName = d.toLocaleDateString('fr-FR', { month: 'short' });
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7;
+
+  return { year, month, name: monthNameCapitalized, shortMonthName, daysInMonth, firstDayOfWeek, offset };
+};
 
 export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients }) => {
-  const [currentMonthIdx, setCurrentMonthIdx] = useState<number>(1);
-  const [selectedDay, setSelectedDay] = useState<number>(14);
+  // Index 3 corresponds to offset 0 (Current real month)
+  const [currentMonthIdx, setCurrentMonthIdx] = useState<number>(3);
+  const [selectedDay, setSelectedDay] = useState<number>(currentRealDay);
   const [appointments, setAppointments] = useState<AppointmentItem[]>(INITIAL_APPOINTMENTS);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
@@ -61,18 +78,18 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
   const [newTime, setNewTime] = useState('14:00');
   const [newNotes, setNewNotes] = useState('');
 
-  const currentDaysInMonth = MONTH_DAYS[currentMonthIdx];
-  const daysArray = Array.from({ length: currentDaysInMonth }, (_, i) => i + 1);
-  const startOffset = MONTH_START_OFFSET[currentMonthIdx];
+  const currentMonthInfo = getMonthInfo(MONTH_OFFSETS[currentMonthIdx]);
+  const daysArray = Array.from({ length: currentMonthInfo.daysInMonth }, (_, i) => i + 1);
+  const startOffset = currentMonthInfo.firstDayOfWeek;
 
   const selectedDayAppointments = appointments.filter(
-    (apt) => apt.monthIndex === currentMonthIdx + 3 && apt.dayNumber === selectedDay
+    (apt) => apt.monthIndex === currentMonthInfo.month && apt.dayNumber === selectedDay
   );
 
   const eventDaysInMonth = Array.from(
     new Set(
       appointments
-        .filter((apt) => apt.monthIndex === currentMonthIdx + 3)
+        .filter((apt) => apt.monthIndex === currentMonthInfo.month)
         .map((apt) => apt.dayNumber)
     )
   );
@@ -85,15 +102,15 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
   };
 
   const handleNextMonth = () => {
-    if (currentMonthIdx < MONTH_NAMES.length - 1) {
+    if (currentMonthIdx < MONTH_OFFSETS.length - 1) {
       setCurrentMonthIdx(currentMonthIdx + 1);
       setSelectedDay(1);
     }
   };
 
   const handleJumpToToday = () => {
-    setCurrentMonthIdx(1);
-    setSelectedDay(14);
+    setCurrentMonthIdx(3); // Offset 0 = Current month
+    setSelectedDay(currentRealDay);
   };
 
   const handleCreateAppointment = (e: React.FormEvent) => {
@@ -105,6 +122,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
     if (newType === 'Prise de mesures') category = 'blue';
     if (newType === 'Consultation') category = 'red';
 
+    const formattedDay = selectedDay < 10 ? `0${selectedDay}` : `${selectedDay}`;
+    const formattedMonth = currentMonthInfo.month + 1 < 10 ? `0${currentMonthInfo.month + 1}` : `${currentMonthInfo.month + 1}`;
+
     const newApt: AppointmentItem = {
       id: `apt_${Date.now()}`,
       time: newTime || '10:00',
@@ -113,9 +133,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
       type: newType,
       badgeLabel: newType === 'Livraison' ? 'Livraison' : 'RDV',
       colorCategory: category,
-      date: `2024-05-${selectedDay < 10 ? '0' + selectedDay : selectedDay}`,
+      date: `${currentMonthInfo.year}-${formattedMonth}-${formattedDay}`,
       dayNumber: selectedDay,
-      monthIndex: currentMonthIdx + 3,
+      monthIndex: currentMonthInfo.month,
       notes: newNotes,
     };
 
@@ -177,11 +197,11 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
               <ChevronLeft size={18} />
             </button>
             <h3 className="text-body-strong font-bold text-primary tabular-nums">
-              {MONTH_NAMES[currentMonthIdx]}
+              {currentMonthInfo.name}
             </h3>
             <button
               onClick={handleNextMonth}
-              disabled={currentMonthIdx === MONTH_NAMES.length - 1}
+              disabled={currentMonthIdx === MONTH_OFFSETS.length - 1}
               className="p-1 text-secondary hover:text-primary hover:bg-surface-alt rounded-full transition-colors disabled:opacity-40 cursor-pointer"
               aria-label="Mois suivant"
             >
@@ -252,7 +272,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
       <div className="space-y-2.5">
         <div className="flex items-center justify-between px-0.5">
           <h3 className="text-body-strong font-bold text-primary flex items-center gap-1.5">
-            <span>Événements du {selectedDay} {MONTH_NAMES[currentMonthIdx].split(' ')[0]}</span>
+            <span>Événements du {selectedDay} {currentMonthInfo.name.split(' ')[0]}</span>
             <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] font-bold">
               {selectedDayAppointments.length}
             </span>
@@ -277,7 +297,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
               <div className="space-y-0.5">
                 <p className="text-caption font-bold text-primary">Aucun rendez-vous ce jour-ci</p>
                 <p className="text-[11px] text-secondary">
-                  Votre journée du {selectedDay} {MONTH_NAMES[currentMonthIdx].split(' ')[0]} est libre.
+                  Votre journée du {selectedDay} {currentMonthInfo.name.split(' ')[0]} est libre.
                 </p>
               </div>
               <button
@@ -297,26 +317,20 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
               >
                 <div className="flex items-center space-x-3 min-w-0">
                   <div className="px-2 py-1 bg-surface-alt rounded-[10px] text-caption font-bold text-primary tabular-nums text-center flex-shrink-0">
-                    <div>{apt.time}</div>
-                    {apt.duration && (
-                      <div className="text-[9px] text-tertiary font-normal">{apt.duration}</div>
-                    )}
-                  </div>
-
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getCategoryIconBg(apt.colorCategory)}`}>
-                    {getCategoryIcon(apt.colorCategory)}
+                    {apt.time}
                   </div>
 
                   <div className="min-w-0">
-                    <div className="text-body-strong font-bold text-primary flex items-center gap-1 truncate">
-                      <span>{apt.type}</span>
-                      <ExternalLink size={11} className="text-[#7C3AED] opacity-70" />
+                    <div className="text-caption text-secondary font-medium truncate">
+                      {apt.type} • {apt.clientName}
                     </div>
-                    <div className="text-caption text-secondary font-medium truncate">{apt.clientName}</div>
+                    <div className="text-body-strong font-bold text-primary truncate">
+                      {apt.notes || apt.type}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-1.5 flex-shrink-0 ml-2">
+                <div className="flex items-center space-x-1 flex-shrink-0">
                   <StatusBadge status={apt.badgeLabel || 'RDV'} />
                   <button className="p-1 text-tertiary hover:text-primary rounded-full cursor-pointer">
                     <MoreVertical size={16} />
@@ -354,7 +368,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
                     <div className="text-caption font-bold text-[#7C3AED] tabular-nums leading-tight">
                       {item.date.split('-')[2] || item.dayNumber}
                     </div>
-                    <div className="text-[9px] text-[#7C3AED] font-medium leading-none">Mai</div>
+                    <div className="text-[9px] text-[#7C3AED] font-medium leading-none">{currentMonthInfo.shortMonthName}</div>
                   </div>
 
                   <div className="text-caption font-bold text-secondary tabular-nums flex-shrink-0">

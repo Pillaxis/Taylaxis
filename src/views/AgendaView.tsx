@@ -16,6 +16,7 @@ import {
   Clock,
   Calendar as CalendarIcon,
   Plus,
+  Trash2,
 } from 'lucide-react';
 import { StatusBadge } from '../components/common/StatusBadge';
 import type { Client } from '../types';
@@ -37,7 +38,17 @@ interface AppointmentItem {
   notes?: string;
 }
 
-const INITIAL_APPOINTMENTS: AppointmentItem[] = [];
+const STORAGE_KEY_APPOINTMENTS = 'taylaxis_agenda_appointments_v1';
+
+const getStoredAppointments = (): AppointmentItem[] => {
+  const raw = localStorage.getItem(STORAGE_KEY_APPOINTMENTS);
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+};
 
 interface AgendaViewProps {
   onSelectClient?: (clientId: string) => void;
@@ -69,9 +80,14 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
   // Index 3 corresponds to offset 0 (Current real month)
   const [currentMonthIdx, setCurrentMonthIdx] = useState<number>(3);
   const [selectedDay, setSelectedDay] = useState<number>(currentRealDay);
-  const [appointments, setAppointments] = useState<AppointmentItem[]>(INITIAL_APPOINTMENTS);
+  const [appointments, setAppointments] = useState<AppointmentItem[]>(getStoredAppointments);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
+
+  const saveAppointments = (newApts: AppointmentItem[]) => {
+    setAppointments(newApts);
+    localStorage.setItem(STORAGE_KEY_APPOINTMENTS, JSON.stringify(newApts));
+  };
 
   const [newClientName, setNewClientName] = useState('');
   const [newType, setNewType] = useState('Essayage');
@@ -149,7 +165,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
       notes: newNotes,
     };
 
-    setAppointments([...appointments, newApt]);
+    saveAppointments([...appointments, newApt]);
     setShowNewModal(false);
     setNewClientName('');
     setNewNotes('');
@@ -490,9 +506,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
             <div className="pt-1 space-y-2">
               <button
                 onClick={() => {
-                  setAppointments(
+                  saveAppointments(
                     appointments.map((a) =>
-                      a.id === selectedAppointment.id ? { ...a, badgeLabel: 'Done' } : a
+                      a.id === selectedAppointment.id ? { ...a, badgeLabel: 'Terminé' } : a
                     )
                   );
                   setSelectedAppointment(null);
@@ -501,6 +517,17 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
               >
                 <CheckCircle2 size={16} />
                 <span>Marquer comme terminé</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  saveAppointments(appointments.filter((a) => a.id !== selectedAppointment.id));
+                  setSelectedAppointment(null);
+                }}
+                className="w-full py-2 bg-red-500/10 border border-red-500/20 text-red-600 rounded-[12px] text-caption font-bold flex items-center justify-center space-x-2 hover:bg-red-500/20 cursor-pointer active:scale-98 transition-all"
+              >
+                <Trash2 size={16} />
+                <span>Supprimer ce rendez-vous</span>
               </button>
 
               <button

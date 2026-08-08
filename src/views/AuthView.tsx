@@ -10,7 +10,7 @@ interface AuthViewProps {
 
 export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsGuest }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
+  const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('phone');
 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -208,32 +208,32 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
             </button>
           </div>
 
-          {/* Identifier Toggle (Email ou Téléphone) */}
-          <div className="flex items-center justify-center space-x-4 pt-1">
+          {/* Identifier Toggle (Téléphone en 1er, Email en option) */}
+          <div className="flex items-center justify-center space-x-3 pt-1">
             <button
               type="button"
-              onClick={() => setAuthMethod('email')}
-              className={`text-xs font-semibold px-3 py-1 rounded-full transition-all flex items-center space-x-1.5 cursor-pointer ${
-                authMethod === 'email'
-                  ? 'bg-white/20 text-white border border-white/30'
-                  : 'text-white/50 hover:text-white/80'
+              onClick={() => setAuthMethod('phone')}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all flex items-center space-x-1.5 cursor-pointer ${
+                authMethod === 'phone'
+                  ? 'bg-[#7C3AED] text-white shadow-xs border border-white/20'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
-              <Mail size={13} />
-              <span>Avec Email</span>
+              <Phone size={13} />
+              <span>Numéro de téléphone (Recommandé)</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setAuthMethod('phone')}
-              className={`text-xs font-semibold px-3 py-1 rounded-full transition-all flex items-center space-x-1.5 cursor-pointer ${
-                authMethod === 'phone'
+              onClick={() => setAuthMethod('email')}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all flex items-center space-x-1.5 cursor-pointer ${
+                authMethod === 'email'
                   ? 'bg-white/20 text-white border border-white/30'
-                  : 'text-white/50 hover:text-white/80'
+                  : 'text-white/60 hover:text-white hover:bg-white/10'
               }`}
             >
-              <Phone size={13} />
-              <span>Avec Téléphone</span>
+              <Mail size={13} />
+              <span>Email</span>
             </button>
           </div>
 

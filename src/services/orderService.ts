@@ -96,9 +96,7 @@ export class OrderService {
     try {
       const stored = localStorage.getItem(ORDERS_KEY);
       if (!stored) {
-        const seeded = this.seedInitialOrders(MOCK_ORDERS);
-        localStorage.setItem(ORDERS_KEY, JSON.stringify(seeded));
-        return seeded;
+        return [];
       }
       const parsed: Order[] = JSON.parse(stored);
       // Re-hydrate dynamically calculated statuses (due date status depends on real clock)

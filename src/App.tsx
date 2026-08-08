@@ -70,7 +70,7 @@ export const AppContent: React.FC = () => {
 
   const [newOrderTitle, setNewOrderTitle] = useState('');
   const [newOrderPrice, setNewOrderPrice] = useState('');
-  const [newOrderClient, setNewOrderClient] = useState(MOCK_CLIENTS[0].name);
+  const [newOrderClient, setNewOrderClient] = useState(MOCK_CLIENTS[0]?.name || '');
 
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
   const [initialClientTab, setInitialClientTab] = useState<'info' | 'mensurations' | 'commandes' | 'paiements'>('info');
@@ -145,7 +145,7 @@ export const AppContent: React.FC = () => {
     if (!newOrderTitle || !newOrderPrice) return;
 
     const price = parseInt(newOrderPrice, 10) || 0;
-    const matchedClient = clients.find((c) => c.name === newOrderClient) || clients[0];
+    const matchedClient = clients.find((c) => c.name === newOrderClient) || clients[0] || { name: newOrderClient || 'Client atelier', id: `c_${Date.now()}`, customMeasurements: MOCK_MEASUREMENTS_COSTUME };
     const clientMeasurements = matchedClient.customMeasurements || MOCK_MEASUREMENTS_COSTUME;
 
     OrderService.createOrder(

@@ -65,7 +65,7 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#6B21A8] leading-none mt-0.5 truncate">Tous vos clients</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums ml-1 flex-shrink-0">128</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums ml-1 flex-shrink-0">{clients.length}</div>
         </div>
 
         {/* Palette 2: Nouveau client (BLEU) */}
@@ -86,7 +86,7 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#1D4ED8] leading-none mt-0.5 truncate">Ce mois-ci</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#1E3A8A] tabular-nums ml-1 flex-shrink-0">{newCount > 0 ? newCount : 12}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#1E3A8A] tabular-nums ml-1 flex-shrink-0">{newCount}</div>
         </div>
 
         {/* Palette 3: Client actif (VERT) */}
@@ -107,7 +107,7 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#047857] leading-none mt-0.5 truncate">Avec commande</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#064E3B] tabular-nums ml-1 flex-shrink-0">{activeCount > 0 ? activeCount : 96}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#064E3B] tabular-nums ml-1 flex-shrink-0">{activeCount}</div>
         </div>
 
         {/* Palette 4: Client inactif (ROUGE) */}
@@ -128,7 +128,7 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
               <div className="text-[8.5px] sm:text-[9px] text-[#B91C1C] leading-none mt-0.5 truncate">Sans commande</div>
             </div>
           </div>
-          <div className="text-base sm:text-lg font-extrabold text-[#7F1D1D] tabular-nums ml-1 flex-shrink-0">{inactiveCount > 0 ? inactiveCount : 32}</div>
+          <div className="text-base sm:text-lg font-extrabold text-[#7F1D1D] tabular-nums ml-1 flex-shrink-0">{inactiveCount}</div>
         </div>
       </div>
 
@@ -167,7 +167,8 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
         {filteredClients.length === 0 ? (
           <div className="py-12 text-center text-caption text-tertiary space-y-2 bg-surface rounded-[20px] border border-subtle">
             <Users size={32} className="mx-auto text-tertiary/50" />
-            <p>Aucun client trouvé pour ce filtre.</p>
+            <p className="font-medium text-secondary">Aucun client enregistré pour le moment.</p>
+            <p className="text-xs text-tertiary">Cliquez sur le bouton + en haut à droite pour ajouter votre premier client.</p>
           </div>
         ) : (
           filteredClients.map((client) => (

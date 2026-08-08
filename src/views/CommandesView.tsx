@@ -6,6 +6,8 @@ import {
   AlertCircle,
   Truck,
   PackageCheck,
+  Plus,
+  ClipboardList,
 } from 'lucide-react';
 import type { Order, StatusType, ManufacturingStatus } from '../types';
 import { OrderEngine } from '../services/orderEngine';
@@ -25,6 +27,7 @@ interface CommandesViewProps {
 export const CommandesView: React.FC<CommandesViewProps> = ({
   orders: propOrders,
   onSelectClient,
+  onOpenNewOrderModal,
 }) => {
   const [orders, setOrders] = useState<Order[]>(() => propOrders || OrderService.getOrders());
   const [activeTab, setActiveTab] = useState<ManufacturingStatus | 'all' | 'late'>('all');
@@ -217,7 +220,25 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
 
       {/* Order Cards List */}
       <div className="space-y-3">
-        {filteredOrders.map((order) => {
+        {filteredOrders.length === 0 ? (
+          <div className="p-8 rounded-[24px] bg-surface border border-subtle text-center space-y-3 shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] mx-auto flex items-center justify-center">
+              <ClipboardList size={24} />
+            </div>
+            <div>
+              <h4 className="text-body-strong font-bold text-primary">Aucune commande trouvée</h4>
+              <p className="text-caption text-secondary mt-1">Créez votre première commande pour suivre les confections, paiements et livraisons d'atelier.</p>
+            </div>
+            <button
+              onClick={onOpenNewOrderModal}
+              className="px-4 py-2 rounded-full bg-[#7C3AED] text-white font-bold text-xs hover:bg-[#6D28D9] transition-all shadow-xs cursor-pointer inline-flex items-center space-x-2"
+            >
+              <Plus size={14} />
+              <span>Créer une commande</span>
+            </button>
+          </div>
+        ) : (
+          filteredOrders.map((order) => {
           const mfgStatus = order.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(order.status);
           const dueDateStatus = order.dueDateStatus || OrderEngine.calculateDueDateStatus(order.deliveryDate, mfgStatus);
           const nextActions = OrderEngine.getNextActions(order);
@@ -290,7 +311,7 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
 
       {/* Full Order Detail Modal */}

@@ -200,67 +200,86 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
           </div>
 
           <div className="space-y-2.5">
-            {orders.slice(0, 4).map((order) => {
-              const mfgStatus = order.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(order.status);
-              const nextActions = OrderEngine.getNextActions(order);
-
-              return (
-                <div
-                  key={order.id}
-                  onClick={() => setSelectedOrder(order)}
-                  className="p-3.5 rounded-[20px] bg-surface border border-subtle space-y-2 cursor-pointer white-element-hover active:scale-98 transition-all shadow-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3.5">
-                      <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] font-bold text-sm flex items-center justify-center flex-shrink-0">
-                        {order.clientName
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')}
-                      </div>
-                      <div>
-                        <div className="text-body-strong text-primary font-bold">
-                          Commande {order.orderNumber} • {order.title}
-                        </div>
-                        <div className="text-caption text-secondary">{order.clientName}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <div className="text-right text-caption text-secondary flex items-center space-x-1">
-                        <Calendar size={13} className="text-[#7C3AED]" />
-                        <span className="font-medium text-primary text-[11px]">
-                          {order.deliveryDate.split(' ')[0]}
-                        </span>
-                      </div>
-                      <StatusBadge status={mfgStatus} />
-                    </div>
-                  </div>
-
-                  {/* Dynamic Action Button Bar */}
-                  <div className="flex items-center justify-end space-x-2 pt-1 border-t border-subtle">
-                    {nextActions.primaryAction && (
-                      <button
-                        onClick={(e) => handleExecutePrimaryAction(order, nextActions.primaryAction!, e)}
-                        className={`px-3 py-1 rounded-full text-[11px] font-bold text-white shadow-xs flex items-center space-x-1.5 cursor-pointer active:scale-95 transition-all ${
-                          nextActions.primaryAction.intent === 'danger'
-                            ? 'bg-red-600 hover:bg-red-700'
-                            : nextActions.primaryAction.intent === 'warning'
-                            ? 'bg-[#D97B1F] hover:bg-amber-600'
-                            : nextActions.primaryAction.intent === 'success'
-                            ? 'bg-[#10B981] hover:bg-emerald-600'
-                            : nextActions.primaryAction.intent === 'info'
-                            ? 'bg-[#2563EB] hover:bg-blue-600'
-                            : 'bg-[#7C3AED] hover:bg-[#6D28D9]'
-                        }`}
-                      >
-                        <span>{nextActions.primaryAction.label}</span>
-                      </button>
-                    )}
-                  </div>
+            {orders.length === 0 ? (
+              <div className="p-6 rounded-[24px] bg-surface border border-subtle text-center space-y-3 shadow-xs">
+                <div className="w-12 h-12 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] mx-auto flex items-center justify-center">
+                  <Briefcase size={24} />
                 </div>
-              );
-            })}
+                <div>
+                  <h4 className="text-body-strong font-bold text-primary">Bienvenue sur Taylaxis !</h4>
+                  <p className="text-caption text-secondary mt-1">Aucune commande pour le moment. Créez votre première commande d'atelier pour démarrer.</p>
+                </div>
+                <button
+                  onClick={onOpenNewOrderModal}
+                  className="px-4 py-2 rounded-full bg-[#7C3AED] text-white font-bold text-xs hover:bg-[#6D28D9] transition-all shadow-xs cursor-pointer inline-flex items-center space-x-2"
+                >
+                  <CalendarPlus size={14} />
+                  <span>Nouvelle commande</span>
+                </button>
+              </div>
+            ) : (
+              orders.slice(0, 4).map((order) => {
+                const mfgStatus = order.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(order.status);
+                const nextActions = OrderEngine.getNextActions(order);
+
+                return (
+                  <div
+                    key={order.id}
+                    onClick={() => setSelectedOrder(order)}
+                    className="p-3.5 rounded-[20px] bg-surface border border-subtle space-y-2 cursor-pointer white-element-hover active:scale-98 transition-all shadow-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3.5">
+                        <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] font-bold text-sm flex items-center justify-center flex-shrink-0">
+                          {order.clientName
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')}
+                        </div>
+                        <div>
+                          <div className="text-body-strong text-primary font-bold">
+                            Commande {order.orderNumber} • {order.title}
+                          </div>
+                          <div className="text-caption text-secondary">{order.clientName}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <div className="text-right text-caption text-secondary flex items-center space-x-1">
+                          <Calendar size={13} className="text-[#7C3AED]" />
+                          <span className="font-medium text-primary text-[11px]">
+                            {order.deliveryDate.split(' ')[0]}
+                          </span>
+                        </div>
+                        <StatusBadge status={mfgStatus} />
+                      </div>
+                    </div>
+
+                    {/* Dynamic Action Button Bar */}
+                    <div className="flex items-center justify-end space-x-2 pt-1 border-t border-subtle">
+                      {nextActions.primaryAction && (
+                        <button
+                          onClick={(e) => handleExecutePrimaryAction(order, nextActions.primaryAction!, e)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-bold text-white shadow-xs flex items-center space-x-1.5 cursor-pointer active:scale-95 transition-all ${
+                            nextActions.primaryAction.intent === 'danger'
+                              ? 'bg-red-600 hover:bg-red-700'
+                              : nextActions.primaryAction.intent === 'warning'
+                              ? 'bg-[#D97B1F] hover:bg-amber-600'
+                              : nextActions.primaryAction.intent === 'success'
+                              ? 'bg-[#10B981] hover:bg-emerald-600'
+                              : nextActions.primaryAction.intent === 'info'
+                              ? 'bg-[#2563EB] hover:bg-blue-600'
+                              : 'bg-[#7C3AED] hover:bg-[#6D28D9]'
+                          }`}
+                        >
+                          <span>{nextActions.primaryAction.label}</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 

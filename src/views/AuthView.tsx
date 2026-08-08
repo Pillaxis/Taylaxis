@@ -5,10 +5,9 @@ import { userService } from '../services/userService';
 
 interface AuthViewProps {
   onAuthSuccess: (user: any) => void;
-  onContinueAsGuest?: () => void;
 }
 
-export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsGuest }) => {
+export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('phone');
 
@@ -344,19 +343,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onContinueAsG
               )}
             </button>
           </form>
-
-          {/* Quick Demo Mode */}
-          {onContinueAsGuest && (
-            <div className="pt-2 border-t border-white/10 text-center">
-              <button
-                type="button"
-                onClick={onContinueAsGuest}
-                className="text-xs text-white/60 hover:text-white underline cursor-pointer transition-colors"
-              >
-                Tester l'application en mode aperçu
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

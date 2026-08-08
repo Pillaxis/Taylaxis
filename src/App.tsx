@@ -27,7 +27,6 @@ export const AppContent: React.FC = () => {
 
   // Auth state
   const [user, setUser] = useState<any>(null);
-  const [isGuestMode, setIsGuestMode] = useState<boolean>(false);
   const [loadingAuth, setLoadingAuth] = useState<boolean>(true);
 
   // Data state
@@ -294,7 +293,6 @@ export const AppContent: React.FC = () => {
       await supabase.auth.signOut();
     }
     setUser(null);
-    setIsGuestMode(false);
   };
 
   if (loadingAuth) {
@@ -306,11 +304,10 @@ export const AppContent: React.FC = () => {
     );
   }
 
-  if (!user && !isGuestMode) {
+  if (!user) {
     return (
       <AuthView
         onAuthSuccess={(u) => setUser(u)}
-        onContinueAsGuest={() => setIsGuestMode(true)}
       />
     );
   }

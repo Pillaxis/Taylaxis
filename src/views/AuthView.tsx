@@ -49,9 +49,30 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   // Mobile PWA App installation state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
+  const [showAlreadyInstalledModal, setShowAlreadyInstalledModal] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState<boolean>(() => {
+    return localStorage.getItem('taylaxis_app_installed_v1') === 'true';
+  });
 
   useEffect(() => {
+    // 1. Check if running inside installed standalone PWA app
+    const checkStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://');
+
+    setIsStandalone(checkStandalone);
+
+    // 2. Listen for appinstalled event
+    const handleAppInstalled = () => {
+      setIsAlreadyInstalled(true);
+      localStorage.setItem('taylaxis_app_installed_v1', 'true');
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -66,14 +87,22 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const handleInstallApp = async () => {
+    if (isAlreadyInstalled) {
+      setShowAlreadyInstalledModal(true);
+      return;
+    }
+
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const choiceResult = await deferredPrompt.userChoice;
       if (choiceResult.outcome === 'accepted') {
+        setIsAlreadyInstalled(true);
+        localStorage.setItem('taylaxis_app_installed_v1', 'true');
         setDeferredPrompt(null);
       }
     } else {
@@ -443,18 +472,24 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
           </form>
         </div>
 
-        {/* Button to Download Mobile App */}
-        <div className="pt-1 text-center space-y-2">
-          <button
-            type="button"
-            onClick={handleInstallApp}
-            className="w-full py-3 px-4 rounded-[18px] bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-bold text-xs flex items-center justify-center space-x-2.5 cursor-pointer transition-all active:scale-98 shadow-md"
-          >
-            <Download size={16} className="text-[#7C3AED]" />
-            <span>Télécharger l'application Taylaxis sur Mobile</span>
-            <Smartphone size={16} className="text-white/80" />
-          </button>
-        </div>
+        {/* Button to Download Mobile App - Hidden when running inside installed standalone app */}
+        {!isStandalone && (
+          <div className="pt-1 text-center space-y-2">
+            <button
+              type="button"
+              onClick={handleInstallApp}
+              className="w-full py-3 px-4 rounded-[18px] bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white font-bold text-xs flex items-center justify-center space-x-2.5 cursor-pointer transition-all active:scale-98 shadow-md"
+            >
+              <Download size={16} className="text-[#7C3AED]" />
+              <span>
+                {isAlreadyInstalled
+                  ? "Application Taylaxis déjà installée (Ouvrir)"
+                  : "Télécharger l'application Taylaxis sur Mobile"}
+              </span>
+              <Smartphone size={16} className="text-white/80" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* PWA Mobile Installation Guide Modal */}
@@ -512,6 +547,54 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
             >
               Compris, j'installe maintenant
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Application Déjà Installée */}
+      {showAlreadyInstalledModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#120F38] border border-emerald-500/30 rounded-[28px] max-w-md w-full p-6 text-white space-y-5 shadow-2xl relative text-center">
+            <button
+              type="button"
+              onClick={() => setShowAlreadyInstalledModal(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white p-1 rounded-full bg-white/10 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+              <CheckCircle2 size={32} />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-extrabold text-white">Application déjà installée !</h3>
+              <p className="text-xs text-white/80 leading-relaxed font-medium">
+                L'application Taylaxis est déjà installée sur votre téléphone. Vous pouvez l'ouvrir directement depuis l'icône sur votre écran d'accueil.
+              </p>
+            </div>
+
+            <div className="pt-2 space-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAlreadyInstalledModal(false);
+                  window.location.href = '/';
+                }}
+                className="w-full py-3 rounded-[16px] bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs hover:opacity-95 cursor-pointer shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2"
+              >
+                <Smartphone size={16} />
+                <span>Ouvrir l'application Taylaxis</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAlreadyInstalledModal(false)}
+                className="w-full py-2 text-xs text-white/60 hover:text-white cursor-pointer"
+              >
+                Rester dans le navigateur
+              </button>
+            </div>
           </div>
         </div>
       )}

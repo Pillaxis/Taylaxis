@@ -431,9 +431,9 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               <UserPlus size={24} />
             </div>
             <div>
-              <h4 className="text-body-strong font-extrabold text-primary">Étape 3 : Créer une commande</h4>
+              <h4 className="text-body-strong font-extrabold text-primary">Créer une commande</h4>
               <p className="text-caption text-secondary mt-1 max-w-sm mx-auto">
-                Pour créer une commande dans l'atelier, vous devez d'abord ajouter votre premier client (Étape 1).
+                Pour créer une commande dans l'atelier, vous devez d'abord ajouter votre premier client.
               </p>
             </div>
             <button
@@ -441,7 +441,7 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
               className="px-5 py-2.5 rounded-full bg-[#7C3AED] text-white font-bold text-xs hover:bg-[#6D28D9] transition-all shadow-xs cursor-pointer inline-flex items-center space-x-2"
             >
               <UserPlus size={15} />
-              <span>+ 1. Ajouter mon 1er client</span>
+              <span>+ Ajouter mon premier client</span>
             </button>
           </div>
         ) : filteredOrders.length === 0 ? (

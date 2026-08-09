@@ -9,7 +9,7 @@ import type {
 import { OrderEngine } from './orderEngine';
 import { MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from '../data/mockData';
 
-const ORDERS_KEY = 'taylaxis_orders_v1';
+const ORDERS_KEY = 'taylaxis_orders_v2';
 
 export class OrderService {
   private static listeners: Array<(orders: Order[]) => void> = [];
@@ -95,10 +95,13 @@ export class OrderService {
   static getOrders(): Order[] {
     try {
       const stored = localStorage.getItem(ORDERS_KEY);
+      let parsed: Order[];
       if (!stored) {
-        return [];
+        parsed = this.seedInitialOrders(MOCK_ORDERS);
+        localStorage.setItem(ORDERS_KEY, JSON.stringify(parsed));
+      } else {
+        parsed = JSON.parse(stored);
       }
-      const parsed: Order[] = JSON.parse(stored);
       // Re-hydrate dynamically calculated statuses (due date status depends on real clock)
       return parsed.map((ord) => {
         const mfg = ord.manufacturingStatus || OrderEngine.mapLegacyToManufacturingStatus(ord.status);
@@ -125,13 +128,36 @@ export class OrderService {
   /**
    * Save orders list to storage
    */
-  private static saveOrders(orders: Order[]) {
+  static saveOrders(orders: Order[]) {
     try {
       localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
       this.notify();
     } catch (e) {
       console.error('Failed to save orders to localStorage:', e);
     }
+  }
+
+  /**
+   * Generate next order number
+   */
+  static generateOrderNumber(): string {
+    const orders = this.getOrders();
+    const count = orders.length + 1;
+    return `#${String(count).padStart(3, '0')}`;
+  }
+
+  /**
+   * Save or update a single order
+   */
+  static saveOrder(order: Order): void {
+    const orders = this.getOrders();
+    const idx = orders.findIndex((o) => o.id === order.id);
+    if (idx >= 0) {
+      orders[idx] = order;
+    } else {
+      orders.unshift(order);
+    }
+    this.saveOrders(orders);
   }
 
   /**

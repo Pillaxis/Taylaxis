@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Scissors, Mail, Lock, User, Phone, ArrowRight, CheckCircle2, AlertCircle, Download, Smartphone, Share, X } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { userService } from '../services/userService';
 
 interface AuthViewProps {
@@ -42,7 +41,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [workshopName, setWorkshopName] = useState('');
 
-  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
@@ -163,114 +161,58 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
         (a) => a.identifier.toLowerCase() === credentialIdentifier.toLowerCase()
       );
 
-      if (!matchedAccount && (!isSupabaseConfigured || !supabase)) {
-        setErrorMsg('Ce numéro de téléphone ou email n’est pas enregistré. Cliquez sur "Créer un compte" d’abord.');
-        return;
-      }
+      if (matchedAccount) {
+        if (matchedAccount.passwordHash === password) {
+          // Save profile details to local userService state
+          userService.saveUserProfile({
+            ...userService.getUserProfile(),
+            fullName: matchedAccount.workshopName ? `Atelier ${matchedAccount.workshopName}` : 'Tailleur Taylaxis',
+            phone: authMethod === 'phone' ? credentialIdentifier : '',
+            email: authMethod === 'email' ? credentialIdentifier : '',
+          });
 
-      if (matchedAccount && matchedAccount.passwordHash !== password && (!isSupabaseConfigured || !supabase)) {
-        setErrorMsg('Mot de passe incorrect. Veuillez vérifier vos identifiants.');
+          userService.saveWorkshopProfile({
+            ...userService.getWorkshopProfile(),
+            name: matchedAccount.workshopName || 'Mon Atelier de Couture',
+          });
+
+          onAuthSuccess({
+            id: `usr_${Date.now()}`,
+            email: authMethod === 'email' ? credentialIdentifier : undefined,
+            phone: authMethod === 'phone' ? credentialIdentifier : undefined,
+            user_metadata: { workshop_name: matchedAccount.workshopName || 'Mon Atelier' },
+          });
+          return;
+        } else {
+          setErrorMsg('Mot de passe incorrect. Veuillez vérifier votre mot de passe.');
+          return;
+        }
+      } else {
+        setErrorMsg('Ce numéro de téléphone ou email n’est pas encore enregistré. Cliquez sur "Créer un compte" pour démarrer.');
         return;
       }
     }
 
-    // Save profile details to local userService state
+    // Registration mode
     userService.saveUserProfile({
       ...userService.getUserProfile(),
       fullName: workshopName ? `Atelier ${workshopName}` : 'Tailleur Taylaxis',
-      phone: phone || '',
-      email: authMethod === 'email' ? email : '',
+      phone: authMethod === 'phone' ? credentialIdentifier : '',
+      email: authMethod === 'email' ? credentialIdentifier : '',
     });
 
     userService.saveWorkshopProfile({
       ...userService.getWorkshopProfile(),
       name: workshopName || 'Mon Atelier de Couture',
-      phone: phone || '',
+      phone: authMethod === 'phone' ? credentialIdentifier : '',
     });
 
-    if (!isSupabaseConfigured || !supabase) {
-      onAuthSuccess({
-        id: `usr_${Date.now()}`,
-        email: authMethod === 'email' ? email : undefined,
-        phone: authMethod === 'phone' ? phone : undefined,
-        user_metadata: { workshop_name: workshopName || 'Mon Atelier' },
-      });
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      if (mode === 'login') {
-        let authResult;
-
-        if (authMethod === 'phone') {
-          authResult = await supabase.auth.signInWithPassword({
-            phone,
-            password,
-          });
-        } else {
-          authResult = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-        }
-
-        if (authResult.error) {
-          if (
-            authResult.error.message.includes('Invalid login credentials') ||
-            authResult.error.message.includes('User not found')
-          ) {
-            setErrorMsg('Identifiant ou mot de passe incorrect. Si vous n’avez pas encore de compte, veuillez cliquer sur "Créer un compte".');
-          } else {
-            setErrorMsg(authResult.error.message);
-          }
-        } else if (authResult.data.user) {
-          onAuthSuccess(authResult.data.user);
-        }
-      } else {
-        let signUpResult;
-
-        if (authMethod === 'phone') {
-          signUpResult = await supabase.auth.signUp({
-            phone,
-            password,
-            options: {
-              data: {
-                workshop_name: workshopName || 'Atelier Taylaxis',
-              },
-            },
-          });
-        } else {
-          signUpResult = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              data: {
-                workshop_name: workshopName || 'Atelier Taylaxis',
-              },
-            },
-          });
-        }
-
-        if (signUpResult.error) {
-          setErrorMsg(signUpResult.error.message);
-        } else if (signUpResult.data.user) {
-          if (signUpResult.data.session) {
-            onAuthSuccess(signUpResult.data.user);
-          } else {
-            setSuccessMsg('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
-            setTimeout(() => {
-              setMode('login');
-            }, 2500);
-          }
-        }
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Une erreur est survenue lors de l’authentification.');
-    } finally {
-      setLoading(false);
-    }
+    onAuthSuccess({
+      id: `usr_${Date.now()}`,
+      email: authMethod === 'email' ? credentialIdentifier : undefined,
+      phone: authMethod === 'phone' ? credentialIdentifier : undefined,
+      user_metadata: { workshop_name: workshopName || 'Mon Atelier' },
+    });
   };
 
   return (
@@ -457,17 +399,10 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-[16px] bg-gradient-to-r from-[#7C3AED] to-[#3155C8] text-white font-bold text-sm hover:opacity-95 active:scale-98 transition-all shadow-lg shadow-[#7C3AED]/30 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 rounded-[16px] bg-gradient-to-r from-[#7C3AED] to-[#3155C8] text-white font-bold text-sm hover:opacity-95 active:scale-98 transition-all shadow-lg shadow-[#7C3AED]/30 flex items-center justify-center space-x-2 cursor-pointer"
             >
-              {loading ? (
-                <span>Patientez...</span>
-              ) : (
-                <>
-                  <span>{mode === 'login' ? 'Accéder à mon atelier' : 'Créer mon compte atelier'}</span>
-                  <ArrowRight size={16} />
-                </>
-              )}
+              <span>{mode === 'login' ? 'Accéder à mon atelier' : 'Créer mon compte atelier'}</span>
+              <ArrowRight size={16} />
             </button>
           </form>
         </div>

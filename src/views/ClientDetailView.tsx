@@ -19,7 +19,8 @@ import {
 } from 'lucide-react';
 import type { Client, Measurement, Order, StatusType } from '../types';
 import { StatusBadge } from '../components/common/StatusBadge';
-import { MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from '../data/mockData';
+import { MOCK_ORDERS, GARMENT_TYPES, GARMENT_TYPE_PRESETS } from '../data/mockData';
+import { OrderService } from '../services/orderService';
 import { Truck, DollarSign } from 'lucide-react';
 import { OrderDetailModal } from '../components/orders/OrderDetailModal';
 
@@ -32,6 +33,7 @@ interface ClientDetailViewProps {
   onUpdateClient?: (updatedClient: Client) => void;
   onUpdateOrderStatus?: (orderId: string, status: StatusType) => void;
   onPayOrder?: (orderId: string, amount: number) => void;
+  onOrderCreated?: (order: Order) => void;
 }
 
 export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
@@ -43,29 +45,28 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
   onUpdateClient,
   onUpdateOrderStatus,
   onPayOrder,
+  onOrderCreated,
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'mensurations' | 'commandes' | 'paiements'>(initialTab);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [payAmount, setPayAmount] = useState<number | ''>('');
   const [selectedClientOrder, setSelectedClientOrder] = useState<Order | null>(null);
+  const [settingPriceOrderId, setSettingPriceOrderId] = useState<string | null>(null);
+  const [inputPriceFCFA, setInputPriceFCFA] = useState<number | ''>('');
 
   // Edit Information state
   const [isEditingInfo, setIsEditingInfo] = useState(false);
   const [editName, setEditName] = useState(client.name);
   const [editPhone, setEditPhone] = useState(client.phone);
-  const [editAddress, setEditAddress] = useState(client.address || 'Lomé, Adidogomé');
-  const [editBirthDate, setEditBirthDate] = useState(client.birthDate || '12 Mars 1990');
-  const [editGender, setEditGender] = useState(client.gender || 'Homme');
-  const [editAgeGroup, setEditAgeGroup] = useState<'adulte' | 'enfant'>(client.ageGroup || 'adulte');
-  const [editAge, setEditAge] = useState<number>(client.age || 34);
-  const [editNotes, setEditNotes] = useState(
-    client.notes || 'Client fidèle, préfère les coupes ajustées et tissus hollandais.'
-  );
+  const [editAddress, setEditAddress] = useState(client.address || '');
+  const [editBirthDate, setEditBirthDate] = useState(client.birthDate || '');
+  const [editGender, setEditGender] = useState(client.gender || '');
+  const [editAgeGroup, setEditAgeGroup] = useState<'adulte' | 'enfant' | undefined>(client.ageGroup);
+  const [editAge, setEditAge] = useState<number | ''>(client.age || '');
+  const [editNotes, setEditNotes] = useState(client.notes || '');
 
   // Measurement Editing & Addition State
-  const initialMeasurements = client.customMeasurements && client.customMeasurements.length > 0
-    ? client.customMeasurements
-    : MOCK_MEASUREMENTS_COSTUME.slice(0, 5);
+  const initialMeasurements = client.customMeasurements || [];
   const [measurements, setMeasurements] = useState(initialMeasurements);
   const [editingMeasurement, setEditingMeasurement] = useState<{ id: string; label: string; valueCm: number } | null>(null);
   const [newMeasurementValue, setNewMeasurementValue] = useState<number | ''>(0);
@@ -89,13 +90,176 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
       birthDate: editBirthDate,
       gender: editGender,
       ageGroup: editAgeGroup,
-      age: editAge,
+      age: typeof editAge === 'number' ? editAge : undefined,
       notes: editNotes,
     };
     if (onUpdateClient) {
       onUpdateClient(updated);
     }
     setIsEditingInfo(false);
+  };
+
+  const totalPaidFCFA = clientOrders.reduce((sum, o) => sum + (o.paidFCFA || 0), 0);
+  const totalBalanceFCFA = clientOrders.reduce((sum, o) => sum + (o.balanceFCFA || 0), 0);
+
+  // New Order Modal State for this Client
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
+  const [newGarmentType, setNewGarmentType] = useState('Costume 3 Pièces');
+  const [customGarmentNameModal, setCustomGarmentNameModal] = useState('');
+  const [newOrderPriceInput, setNewOrderPriceInput] = useState<number | ''>('');
+  const [newOrderDeliveryDate, setNewOrderDeliveryDate] = useState(
+    new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+
+  // Custom Taylaxis Calendar Popover State
+  const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const [calendarViewMonth, setCalendarViewMonth] = useState(() => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).getMonth());
+  const [calendarViewYear, setCalendarViewYear] = useState(() => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).getFullYear());
+
+  // In-modal measurements state
+  const [modalOrderMeasurements, setModalOrderMeasurements] = useState<{ id: string; label: string; valueCm: number | ''; placeholder: string }[]>(() => {
+    const preset = GARMENT_TYPE_PRESETS['Costume 3 Pièces'] || [];
+    return preset.map((p, idx) => ({ id: `m-modal-${idx}`, label: p.label, valueCm: '', placeholder: p.placeholder }));
+  });
+
+  // Custom Measurement Addition inside Modal
+  const [showAddCustomModalMeasurement, setShowAddCustomModalMeasurement] = useState(false);
+  const [newModalCustomLabel, setNewModalCustomLabel] = useState('');
+  const [newModalCustomValCm, setNewModalCustomValCm] = useState<number | ''>('');
+
+  const handleAddCustomModalMeasurementRow = () => {
+    if (!newModalCustomLabel.trim()) return;
+    setModalOrderMeasurements((prev) => [
+      ...prev,
+      {
+        id: `m-custom-modal-${Date.now()}`,
+        label: newModalCustomLabel.trim(),
+        valueCm: newModalCustomValCm === '' ? '' : Number(newModalCustomValCm),
+        placeholder: 'ex: 45',
+      },
+    ]);
+    setNewModalCustomLabel('');
+    setNewModalCustomValCm('');
+    setShowAddCustomModalMeasurement(false);
+  };
+
+  const handleSelectGarmentType = (garmentId: string) => {
+    setNewGarmentType(garmentId);
+    const preset = GARMENT_TYPE_PRESETS[garmentId] || GARMENT_TYPE_PRESETS['Costume 3 Pièces'] || [];
+    setModalOrderMeasurements(
+      preset.map((p, idx) => ({ id: `m-modal-${idx}`, label: p.label, valueCm: '', placeholder: p.placeholder }))
+    );
+  };
+
+  const handleCreateNewClientOrder = (e: React.FormEvent) => {
+    e.preventDefault();
+    const effectiveGarment =
+      newGarmentType === 'Autre vêtement (Personnalisé)' && customGarmentNameModal.trim()
+        ? customGarmentNameModal.trim()
+        : newGarmentType;
+    const title = `Confection - ${effectiveGarment}`;
+    const price = typeof newOrderPriceInput === 'number' ? newOrderPriceInput : 0;
+    const newOrderId = `ord_${Date.now()}`;
+
+    // Process entered measurements from modal
+    const filledModalMeasurements: Measurement[] = modalOrderMeasurements
+      .filter((m) => m.valueCm !== '' && Number(m.valueCm) > 0)
+      .map((m, idx) => ({
+        id: `ms_${Date.now()}_${idx}`,
+        label: m.label,
+        valueCm: Number(m.valueCm),
+        iconName: 'Ruler',
+      }));
+
+    // Merge into client measurements if new
+    const updatedClientMeasurements = [...measurements];
+    filledModalMeasurements.forEach((fm) => {
+      const existingIdx = updatedClientMeasurements.findIndex((m) => m.label.toLowerCase() === fm.label.toLowerCase());
+      if (existingIdx >= 0) {
+        updatedClientMeasurements[existingIdx].valueCm = fm.valueCm;
+      } else {
+        updatedClientMeasurements.push(fm);
+      }
+    });
+
+    if (filledModalMeasurements.length > 0) {
+      setMeasurements(updatedClientMeasurements);
+      client.customMeasurements = updatedClientMeasurements;
+      if (onUpdateClient) {
+        onUpdateClient({ ...client, customMeasurements: updatedClientMeasurements });
+      }
+    }
+
+    const createdOrder: Order = {
+      id: newOrderId,
+      orderNumber: OrderService.generateOrderNumber(),
+      clientId: client.id,
+      clientName: client.name,
+      title,
+      priceFCFA: price,
+      paidFCFA: 0,
+      balanceFCFA: price,
+      status: 'progress',
+      manufacturingStatus: 'EN_COURS',
+      paymentStatus: price > 0 ? 'NON_PAYEE' : 'NON_PAYEE',
+      dueDateStatus: 'BIENTOT',
+      priority: 'NORMALE',
+      deliveryDate: newOrderDeliveryDate,
+      orderDate: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+      paymentHistory: [],
+      eventTimeline: [
+        {
+          id: `evt_${Date.now()}`,
+          orderId: newOrderId,
+          timestamp: `${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
+          title: 'Commande créée',
+          description: `Nouvelle commande de ${title} enregistrée depuis la fiche client.`,
+          type: 'COMMANDE_CREEE',
+          performedBy: 'Atelier Taylaxis',
+        },
+      ],
+      measurementSnapshot: {
+        takenAt: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+        measurements: filledModalMeasurements.length > 0 ? filledModalMeasurements : measurements,
+      },
+    };
+
+    OrderService.saveOrder(createdOrder);
+    client.ordersCount = (client.ordersCount || 0) + 1;
+    if (onOrderCreated) {
+      onOrderCreated(createdOrder);
+    }
+
+    // Reset modal state
+    setShowNewOrderModal(false);
+    setNewOrderPriceInput('');
+  };
+
+  const handleSavePrice = (targetOrder: Order, newPrice: number) => {
+    if (newPrice <= 0) return;
+    const newBalance = newPrice - (targetOrder.paidFCFA || 0);
+    let newPaymentStatus = targetOrder.paymentStatus;
+    if (targetOrder.paidFCFA >= newPrice) {
+      newPaymentStatus = 'PAYEE';
+    } else if (targetOrder.paidFCFA > 0) {
+      newPaymentStatus = 'PARTIELLEMENT_PAYEE';
+    } else {
+      newPaymentStatus = 'NON_PAYEE';
+    }
+
+    const updatedOrder: Order = {
+      ...targetOrder,
+      priceFCFA: newPrice,
+      balanceFCFA: newBalance,
+      paymentStatus: newPaymentStatus,
+    };
+
+    OrderService.saveOrder(updatedOrder);
+    if (onOrderCreated) {
+      onOrderCreated(updatedOrder);
+    }
+    setSettingPriceOrderId(null);
+    setInputPriceFCFA('');
   };
 
   return (
@@ -188,7 +352,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
             onClick={() => setActiveTab('commandes')}
             className="p-2 sm:p-2.5 bg-[#F3E8FF] rounded-[14px] border border-[#E9D5FF] text-center cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0"
           >
-            <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums leading-tight">{client.ordersCount}</div>
+            <div className="text-base sm:text-lg font-extrabold text-[#4C1D95] tabular-nums leading-tight">{clientOrders.length}</div>
             <div className="text-[9.5px] sm:text-[10px] font-bold text-[#5B21B6] truncate mt-0.5">Commandes</div>
           </div>
 
@@ -197,23 +361,25 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
             onClick={() => setActiveTab('mensurations')}
             className="p-2 sm:p-2.5 bg-[#DBEAFE] rounded-[14px] border border-[#BFDBFE] text-center cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0"
           >
-            <div className="text-base sm:text-lg font-extrabold text-[#1E3A8A] tabular-nums leading-tight">{client.mensurationsCount || 5}</div>
+            <div className="text-base sm:text-lg font-extrabold text-[#1E3A8A] tabular-nums leading-tight">
+              {measurements.length}
+            </div>
             <div className="text-[9.5px] sm:text-[10px] font-bold text-[#1E40AF] truncate mt-0.5">Mensurations</div>
           </div>
 
-          {/* Card 3: Total dépensé -> Redirects to Paiements */}
+          {/* Card 3: Total Encaissé en vert -> Redirects to Paiements */}
           <div
             onClick={() => setActiveTab('paiements')}
             className="p-2 sm:p-2.5 bg-[#D1FAE5] rounded-[14px] border border-[#A7F3D0] text-center cursor-pointer palette-card-hover active:scale-95 transition-all min-w-0"
           >
             <div className="text-base sm:text-lg font-extrabold text-[#064E3B] tabular-nums leading-tight">
-              {(client.totalSpentFCFA || 320000).toLocaleString('fr-FR')}
+              {totalPaidFCFA.toLocaleString('fr-FR')}
             </div>
-            <div className="text-[9.5px] sm:text-[10px] font-bold text-[#065F46] truncate mt-0.5">Total (FCFA)</div>
+            <div className="text-[9.5px] sm:text-[10px] font-bold text-[#065F46] truncate mt-0.5">Encaissé (FCFA)</div>
           </div>
         </div>
 
-        {/* Underline Sub-Tabs (Commandes comes before Mensurations) */}
+        {/* Underline Sub-Tabs */}
         <div className="flex border-b border-[#EDE9F6] justify-between overflow-x-auto no-scrollbar">
           {[
             { id: 'info', label: 'Informations' },
@@ -283,7 +449,13 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                     <MapPin size={18} className="text-[#7C3AED]" />
                     <div className="flex-1 flex justify-between">
                       <span className="text-[#605B80] font-medium">Adresse</span>
-                      <span className="text-[#110E2D] font-semibold">{client.address || 'Lomé, Adidogomé'}</span>
+                      <span className="text-[#110E2D] font-semibold">
+                        {client.address ? (
+                          client.address
+                        ) : (
+                          <span className="text-[#605B80]/70 italic font-normal">Non renseignée</span>
+                        )}
+                      </span>
                     </div>
                   </div>
 
@@ -291,7 +463,13 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                     <Calendar size={18} className="text-[#7C3AED]" />
                     <div className="flex-1 flex justify-between">
                       <span className="text-[#605B80] font-medium">Date de naissance</span>
-                      <span className="text-[#110E2D] font-semibold">{client.birthDate || '12 Mars 1990'}</span>
+                      <span className="text-[#110E2D] font-semibold">
+                        {client.birthDate ? (
+                          client.birthDate
+                        ) : (
+                          <span className="text-[#605B80]/70 italic font-normal">Non renseignée</span>
+                        )}
+                      </span>
                     </div>
                   </div>
 
@@ -301,8 +479,30 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                     <div className="flex-1 flex justify-between">
                       <span className="text-[#605B80] font-medium">Genre & Tranche d'âge</span>
                       <span className="text-[#110E2D] font-semibold">
-                        {editGender === 'Femme' ? '👩 Femme' : '👨 Homme'} •{' '}
-                        {editAgeGroup === 'enfant' ? `🧒 Enfant (${editAge} ans)` : `🧑 Adulte (${editAge} ans)`}
+                        {client.gender || client.ageGroup || client.age ? (
+                          <>
+                            {client.gender === 'Femme' ? '👩 Femme' : client.gender === 'Homme' ? '👨 Homme' : ''}
+                            {client.ageGroup ? ` • ${client.ageGroup === 'enfant' ? '🧒 Enfant' : '🧑 Adulte'}` : ''}
+                            {client.age ? ` (${client.age} ans)` : ''}
+                          </>
+                        ) : (
+                          <span className="text-[#605B80]/70 italic font-normal">Non spécifié</span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Reste total à encaisser chez le client */}
+                  <div className="flex items-center space-x-3 text-caption pt-2 border-t border-[#EDE9F6]/60">
+                    <CreditCard size={18} className="text-[#7C3AED]" />
+                    <div className="flex-1 flex justify-between items-center">
+                      <span className="text-[#605B80] font-medium">Reste total à encaisser</span>
+                      <span className={`font-extrabold tabular-nums px-2.5 py-0.5 rounded-full text-caption ${
+                        totalBalanceFCFA > 0
+                          ? 'bg-[#FEE2E2] text-[#DC2626]'
+                          : 'bg-[#D1FAE5] text-[#059669]'
+                      }`}>
+                        {totalBalanceFCFA > 0 ? `${totalBalanceFCFA.toLocaleString('fr-FR')} FCFA` : '✓ Réglé à 100%'}
                       </span>
                     </div>
                   </div>
@@ -312,7 +512,11 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                     <div className="flex-1">
                       <span className="text-[#605B80] font-medium block mb-0.5">Notes de l'atelier</span>
                       <span className="text-[#110E2D] font-medium">
-                        {client.notes || 'Client fidèle, préfère les coupes ajustées et tissus hollandais.'}
+                        {client.notes ? (
+                          client.notes
+                        ) : (
+                          <span className="text-[#605B80]/70 italic font-normal">Aucune note enregistrée</span>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -529,13 +733,19 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                     <span className="text-body font-semibold text-[#110E2D]">{m.label}</span>
                   </div>
                   <div className="flex items-center space-x-1.5">
-                    <span className="text-body-strong text-[#7C3AED] font-bold tabular-nums pr-1">
-                      {m.valueCm} cm
-                    </span>
+                    {m.valueCm && m.valueCm > 0 ? (
+                      <span className="text-body-strong text-[#7C3AED] font-bold tabular-nums pr-1">
+                        {m.valueCm} cm
+                      </span>
+                    ) : (
+                      <span className="text-caption font-medium text-[#605B80]/40 italic pr-1">
+                        ex: -- cm
+                      </span>
+                    )}
                     <button
                       onClick={() => {
                         setEditingMeasurement(m);
-                        setNewMeasurementValue(m.valueCm);
+                        setNewMeasurementValue(m.valueCm > 0 ? m.valueCm : '');
                       }}
                       className="p-1.5 text-[#7C3AED] bg-[#F3E8FF] hover:bg-[#7C3AED] hover:text-white rounded-full transition-all cursor-pointer shadow-xs active:scale-95"
                       title="Modifier cette mesure"
@@ -567,7 +777,21 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
 
         {/* Tab 3: Commandes */}
         {activeTab === 'commandes' && (
-          <div className="space-y-3">
+          <div className="space-y-3 relative pb-12">
+            {/* Top Summary Bar for Commandes */}
+            <div className="p-3.5 rounded-[16px] bg-[#F3E8FF] border border-[#E9D5FF] flex items-center justify-between">
+              <div>
+                <div className="text-caption font-bold text-[#5B21B6]">Commandes ({clientOrders.length})</div>
+                <div className="text-[11px] text-[#605B80]">Gestion des confections</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] font-bold text-[#605B80] uppercase">Reste total à encaisser</div>
+                <div className={`text-caption font-extrabold tabular-nums ${totalBalanceFCFA > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
+                  {totalBalanceFCFA.toLocaleString('fr-FR')} FCFA
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-[20px] border border-[#EDE9F6] divide-y divide-[#EDE9F6] overflow-hidden shadow-xs">
               {clientOrders.map((order) => {
                 const isHighlighted =
@@ -603,14 +827,20 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
 
                     <div className="flex items-center justify-between text-caption pt-1 border-t border-[#EDE9F6]/50">
                       <span className="text-[#605B80]">
-                        Prix : <strong className="text-[#110E2D] font-semibold tabular-nums">{order.priceFCFA.toLocaleString('fr-FR')} FCFA</strong>
+                        Prix : {order.priceFCFA === 0 ? (
+                          <strong className="text-[#B45309] bg-[#FEF3C7] px-2 py-0.5 rounded-full font-bold">À définir</strong>
+                        ) : (
+                          <strong className="text-[#110E2D] font-semibold tabular-nums">{order.priceFCFA.toLocaleString('fr-FR')} FCFA</strong>
+                        )}
                       </span>
-                      {order.balanceFCFA > 0 ? (
-                        <span className="text-[#605B80]">
-                          Reste : <strong className="text-[#EF4444] font-semibold tabular-nums">{order.balanceFCFA.toLocaleString('fr-FR')} FCFA</strong>
-                        </span>
-                      ) : (
-                        <span className="text-[#059669] font-bold text-[10px]">✓ 100% Réglé</span>
+                      {order.priceFCFA > 0 && (
+                        order.balanceFCFA > 0 ? (
+                          <span className="text-[#605B80]">
+                            Reste : <strong className="text-[#EF4444] font-semibold tabular-nums">{order.balanceFCFA.toLocaleString('fr-FR')} FCFA</strong>
+                          </span>
+                        ) : (
+                          <span className="text-[#059669] font-bold text-[10px]">✓ 100% Réglé</span>
+                        )
                       )}
                     </div>
 
@@ -665,6 +895,19 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                   </div>
                 );
               })}
+            </div>
+
+            {/* Floating Action Button '+' for adding a new order */}
+            <div className="fixed inset-x-0 bottom-20 z-40 max-w-md md:max-w-2xl lg:max-w-4xl mx-auto px-4 pointer-events-none flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowNewOrderModal(true)}
+                className="pointer-events-auto w-14 h-14 rounded-full bg-[#7C3AED] hover:bg-[#6D28D9] text-white flex items-center justify-center shadow-2xl transition-all cursor-pointer active:scale-95 ring-4 ring-[#7C3AED]/25"
+                title="Ajouter une nouvelle commande"
+                aria-label="Ajouter une nouvelle commande"
+              >
+                <Plus size={26} />
+              </button>
             </div>
           </div>
         )}
@@ -737,40 +980,221 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
         </div>
       )}
 
-        {/* Tab 4: Paiements */}
+        {/* Tab 4: Paiements & Tarification */}
         {activeTab === 'paiements' && (
-          <div className="space-y-3">
-            <div className="bg-white rounded-[20px] border border-[#EDE9F6] divide-y divide-[#EDE9F6] overflow-hidden shadow-xs">
-              <div className="p-4 flex items-center justify-between white-element-hover">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-[#10B981]/15 text-[#10B981] flex items-center justify-center">
-                    <CreditCard size={18} />
-                  </div>
-                  <div>
-                    <div className="text-body-strong font-bold text-[#110E2D]">Acompte Costume</div>
-                    <div className="text-caption text-[#605B80]">Espèces • 18 Mai 2024</div>
-                  </div>
-                </div>
-                <div className="text-body-strong font-bold text-[#10B981] tabular-nums">
-                  +20 000 FCFA
-                </div>
+          <div className="space-y-4">
+            {clientOrders.length === 0 ? (
+              <div className="p-6 text-center text-caption text-[#605B80] bg-white rounded-[20px] border border-[#EDE9F6] space-y-2">
+                <CreditCard size={28} className="mx-auto text-[#7C3AED]" />
+                <p className="font-bold text-[#110E2D]">Aucune commande pour ce client</p>
+                <p className="text-xs text-[#605B80]">Créez une commande pour pouvoir définir un prix et encaisser des règlements.</p>
               </div>
+            ) : (
+              clientOrders.map((order) => {
+                const isSettingPrice = settingPriceOrderId === order.id;
 
-              <div className="p-4 flex items-center justify-between white-element-hover">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-[#10B981]/15 text-[#10B981] flex items-center justify-center">
-                    <CreditCard size={18} />
+                return (
+                  <div key={order.id} className="bg-white rounded-[20px] border border-[#EDE9F6] p-4 space-y-3 shadow-xs">
+                    {/* Header: Order Info */}
+                    <div className="flex items-start justify-between border-b border-[#EDE9F6] pb-2.5">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-caption font-bold text-[#7C3AED]">{order.orderNumber}</span>
+                          <span className="text-body-strong font-bold text-[#110E2D]">{order.title}</span>
+                        </div>
+                        <p className="text-[11px] text-[#605B80] mt-0.5">Date : {order.orderDate || 'Aujourd’hui'}</p>
+                      </div>
+                      <StatusBadge status={order.status} />
+                    </div>
+
+                    {/* Case 1: Order Price is 0 (Unset Price) */}
+                    {order.priceFCFA === 0 ? (
+                      <div className="p-3 rounded-[14px] bg-[#FFFBEB] border border-[#FDE68A] space-y-2">
+                        <div className="flex items-center justify-between text-caption font-extrabold text-[#92400E]">
+                          <span>Prix de confection non défini</span>
+                          <span className="px-2 py-0.5 bg-[#F59E0B] text-white rounded-full text-[10px]">Action requise</span>
+                        </div>
+                        <p className="text-[11px] text-[#B45309]">
+                          Saisissez le tarif fixé avec le client pour débloquer les encaissements d'acomptes.
+                        </p>
+
+                        {isSettingPrice ? (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (typeof inputPriceFCFA === 'number' && inputPriceFCFA > 0) {
+                                handleSavePrice(order, inputPriceFCFA);
+                              }
+                            }}
+                            className="flex items-center space-x-2 pt-1"
+                          >
+                            <input
+                              type="number"
+                              placeholder="ex: 35000 FCFA"
+                              autoFocus
+                              value={inputPriceFCFA}
+                              onChange={(e) => setInputPriceFCFA(e.target.value === '' ? '' : Number(e.target.value))}
+                              className="flex-1 px-3 py-2 bg-white border border-[#EDE9F6] rounded-[10px] text-body-strong font-bold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] tabular-nums"
+                            />
+                            <button
+                              type="submit"
+                              className="px-3.5 py-2 bg-[#7C3AED] text-white rounded-[10px] text-caption font-bold hover:bg-[#6D28D9] cursor-pointer active:scale-95 transition-all flex items-center space-x-1"
+                            >
+                              <Check size={15} />
+                              <span>Enregistrer</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSettingPriceOrderId(null);
+                                setInputPriceFCFA('');
+                              }}
+                              className="p-2 text-[#605B80] hover:text-[#110E2D] cursor-pointer"
+                            >
+                              <X size={16} />
+                            </button>
+                          </form>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettingPriceOrderId(order.id);
+                              setInputPriceFCFA(order.priceFCFA > 0 ? order.priceFCFA : '');
+                            }}
+                            className="w-full py-2 bg-[#7C3AED] text-white rounded-[12px] text-caption font-bold hover:bg-[#6D28D9] cursor-pointer transition-all active:scale-95 shadow-xs flex items-center justify-center space-x-1.5"
+                          >
+                            <DollarSign size={14} />
+                            <span>Définir le prix de cette commande</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      /* Case 2: Order Price is Set */
+                      <div className="space-y-3">
+                        {isSettingPrice ? (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (typeof inputPriceFCFA === 'number' && inputPriceFCFA > 0) {
+                                handleSavePrice(order, inputPriceFCFA);
+                              }
+                            }}
+                            className="p-3 bg-[#F3E8FF] rounded-[14px] border border-[#E9D5FF] flex items-center space-x-2"
+                          >
+                            <div className="flex-1">
+                              <label className="text-[10px] font-extrabold text-[#6D28D9] block mb-0.5 uppercase">
+                                Modifier le prix total (FCFA)
+                              </label>
+                              <input
+                                type="number"
+                                autoFocus
+                                value={inputPriceFCFA}
+                                onChange={(e) => setInputPriceFCFA(e.target.value === '' ? '' : Number(e.target.value))}
+                                className="w-full px-3 py-1.5 bg-white border border-[#EDE9F6] rounded-[10px] text-body-strong font-bold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] tabular-nums"
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              className="mt-4 px-3 py-1.5 bg-[#7C3AED] text-white rounded-[10px] text-xs font-bold hover:bg-[#6D28D9] cursor-pointer"
+                            >
+                              Valider
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSettingPriceOrderId(null);
+                                setInputPriceFCFA('');
+                              }}
+                              className="mt-4 p-1.5 text-[#605B80] hover:text-[#110E2D] cursor-pointer"
+                            >
+                              <X size={16} />
+                            </button>
+                          </form>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-2 p-2.5 bg-[#F4F2FA] rounded-[14px] text-center border border-[#EDE9F6] relative group">
+                            <div className="relative">
+                              <div className="flex items-center justify-center space-x-1">
+                                <span className="text-[10px] text-[#605B80] font-medium">Prix Total</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSettingPriceOrderId(order.id);
+                                    setInputPriceFCFA(order.priceFCFA);
+                                  }}
+                                  className="text-[#7C3AED] hover:text-[#6D28D9] cursor-pointer p-0.5 rounded-full"
+                                  title="Modifier le prix"
+                                >
+                                  <Edit3 size={11} />
+                                </button>
+                              </div>
+                              <div className="text-caption font-extrabold text-[#110E2D] tabular-nums">
+                                {order.priceFCFA.toLocaleString('fr-FR')} FCFA
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-[10px] text-[#605B80] font-medium">Payé</div>
+                              <div className="text-caption font-extrabold text-[#10B981] tabular-nums">
+                                {order.paidFCFA.toLocaleString('fr-FR')} FCFA
+                              </div>
+                            </div>
+
+                            <div>
+                              <div className="text-[10px] text-[#605B80] font-medium">Reste</div>
+                              <div className={`text-caption font-extrabold tabular-nums ${order.balanceFCFA > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
+                                {order.balanceFCFA.toLocaleString('fr-FR')} FCFA
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Payment Actions */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-[#605B80]">Historique des versements</span>
+                          {order.balanceFCFA > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPayingOrder(order);
+                                setPayAmount(order.balanceFCFA);
+                              }}
+                              className="px-3 py-1 bg-[#10B981] text-white rounded-full text-[11px] font-bold hover:bg-[#059669] transition-all cursor-pointer shadow-xs active:scale-95 flex items-center space-x-1"
+                            >
+                              <DollarSign size={13} />
+                              <span>Encaisser un versement</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Payment Records List */}
+                        {order.paymentHistory && order.paymentHistory.length > 0 ? (
+                          <div className="space-y-1.5 divide-y divide-[#EDE9F6]/60">
+                            {order.paymentHistory.map((rec) => (
+                              <div key={rec.id} className="pt-1.5 flex items-center justify-between text-caption">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-7 h-7 rounded-full bg-[#10B981]/15 text-[#10B981] flex items-center justify-center flex-shrink-0">
+                                    <CreditCard size={14} />
+                                  </div>
+                                  <div>
+                                    <div className="text-[11px] font-bold text-[#110E2D]">{rec.note || 'Versement'}</div>
+                                    <div className="text-[10px] text-[#605B80]">{rec.paymentMethod} • {rec.date}</div>
+                                  </div>
+                                </div>
+                                <div className="text-caption font-extrabold text-[#10B981] tabular-nums">
+                                  +{rec.amountFCFA.toLocaleString('fr-FR')} FCFA
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-[#605B80] italic">Aucun versement reçu pour le moment.</p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <div className="text-body-strong font-bold text-[#110E2D]">Acompte Chemise</div>
-                    <div className="text-caption text-[#605B80]">Mobile Money • 10 Mai 2024</div>
-                  </div>
-                </div>
-                <div className="text-body-strong font-bold text-[#10B981] tabular-nums">
-                  +10 000 FCFA
-                </div>
-              </div>
-            </div>
+                );
+              })
+            )}
           </div>
         )}
       </div>
@@ -805,10 +1229,11 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                   type="number"
                   min="1"
                   max="300"
+                  placeholder="ex: 95"
                   autoFocus
                   value={newMeasurementValue}
                   onChange={(e) => setNewMeasurementValue(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full pl-4 pr-12 py-3 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[16px] text-lg font-bold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] tabular-nums"
+                  className="w-full pl-4 pr-12 py-3 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[16px] text-lg font-bold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] tabular-nums placeholder:text-[#605B80]/40 placeholder:font-normal placeholder:italic"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-bold text-[#7C3AED]">
                   cm
@@ -827,11 +1252,17 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setMeasurements(
-                    measurements.map((m) =>
-                      m.id === editingMeasurement.id ? { ...m, valueCm: Number(newMeasurementValue) || 0 } : m
-                    )
+                  const updated = measurements.map((m) =>
+                    m.id === editingMeasurement.id ? { ...m, valueCm: Number(newMeasurementValue) || 0 } : m
                   );
+                  setMeasurements(updated);
+                  if (onUpdateClient) {
+                    onUpdateClient({
+                      ...client,
+                      customMeasurements: updated,
+                      mensurationsCount: updated.length,
+                    });
+                  }
                   setEditingMeasurement(null);
                 }}
                 className="flex-1 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-[14px] text-caption font-bold transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center space-x-1.5"
@@ -876,7 +1307,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                   placeholder="ex: Tour de poignet, Hauteur taille..."
                   value={newMeasurementLabel}
                   onChange={(e) => setNewMeasurementLabel(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[14px] text-body font-semibold text-[#110E2D] focus:outline-none focus:border-[#7C3AED]"
+                  className="w-full px-4 py-2.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[14px] text-body font-semibold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] placeholder:text-[#605B80]/40 placeholder:font-normal placeholder:italic"
                 />
               </div>
 
@@ -892,7 +1323,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                     placeholder="ex: 95"
                     value={newAddMeasurementValue}
                     onChange={(e) => setNewAddMeasurementValue(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full pl-4 pr-12 py-2.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[14px] text-lg font-bold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] tabular-nums"
+                    className="w-full pl-4 pr-12 py-2.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[14px] text-lg font-bold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] tabular-nums placeholder:text-[#605B80]/40 placeholder:font-normal placeholder:italic"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-caption font-bold text-[#7C3AED]">
                     cm
@@ -919,8 +1350,17 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
                     valueCm: Number(newAddMeasurementValue) || 0,
                     iconName: 'Ruler',
                   };
-                  setMeasurements([...measurements, newM]);
+                  const updated = [...measurements, newM];
+                  setMeasurements(updated);
+                  if (onUpdateClient) {
+                    onUpdateClient({
+                      ...client,
+                      customMeasurements: updated,
+                      mensurationsCount: updated.length,
+                    });
+                  }
                   setNewMeasurementLabel('');
+                  setNewAddMeasurementValue('');
                   setShowAddMeasurementModal(false);
                 }}
                 className="flex-1 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-[14px] text-caption font-bold transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center space-x-1.5"
@@ -959,7 +1399,15 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setMeasurements(measurements.filter((m) => m.id !== deletingMeasurement.id));
+                  const updated = measurements.filter((m) => m.id !== deletingMeasurement.id);
+                  setMeasurements(updated);
+                  if (onUpdateClient) {
+                    onUpdateClient({
+                      ...client,
+                      customMeasurements: updated,
+                      mensurationsCount: updated.length,
+                    });
+                  }
                   setDeletingMeasurement(null);
                 }}
                 className="flex-1 py-2.5 bg-[#EF4444] hover:bg-[#DC2626] text-white rounded-[14px] text-caption font-bold transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center space-x-1.5"
@@ -978,9 +1426,425 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
           client={client}
           onClose={() => setSelectedClientOrder(null)}
           onOrderUpdated={(updated) => {
+            OrderService.saveOrder(updated);
             setSelectedClientOrder(updated);
+            if (onOrderCreated) {
+              onOrderCreated(updated);
+            }
+            if (onUpdateOrderStatus) {
+              onUpdateOrderStatus(updated.id, updated.status);
+            }
+
+            // Synchronize client measurements if new/updated values were saved in the order
+            if (updated.measurementSnapshot?.measurements && updated.measurementSnapshot.measurements.length > 0) {
+              const updatedClientMeasurements = [...measurements];
+              updated.measurementSnapshot.measurements.forEach((m) => {
+                if (m.valueCm > 0) {
+                  const idx = updatedClientMeasurements.findIndex((cm) => cm.label.toLowerCase() === m.label.toLowerCase());
+                  if (idx >= 0) {
+                    updatedClientMeasurements[idx] = { ...updatedClientMeasurements[idx], valueCm: m.valueCm };
+                  } else {
+                    updatedClientMeasurements.push(m);
+                  }
+                }
+              });
+              setMeasurements(updatedClientMeasurements);
+              if (onUpdateClient) {
+                onUpdateClient({
+                  ...client,
+                  customMeasurements: updatedClientMeasurements,
+                  mensurationsCount: updatedClientMeasurements.length,
+                  totalSpentFCFA: clientOrders.reduce((sum, o) => sum + (o.id === updated.id ? updated.paidFCFA : o.paidFCFA), 0),
+                });
+              }
+            }
           }}
         />
+      )}
+
+      {/* Modal: Ajouter une nouvelle commande pour ce client */}
+      {showNewOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white text-[#110E2D] rounded-[28px] border border-[#EDE9F6] w-full max-w-lg shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#EDE9F6] pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center">
+                  <Plus size={18} />
+                </div>
+                <h3 className="text-body-strong font-bold text-[#110E2D]">
+                  Nouvelle commande pour {client.name}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNewOrderModal(false)}
+                className="p-1 text-[#605B80] hover:text-[#110E2D] rounded-full cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewClientOrder} className="space-y-4">
+              {/* Garment Type Grid Selector */}
+              <div>
+                <label className="text-caption text-[#605B80] font-semibold block mb-2">
+                  Sélectionner le type de vêtement
+                </label>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  {GARMENT_TYPES.map((gt) => {
+                    const isSel = newGarmentType === gt.id;
+                    return (
+                      <button
+                        key={gt.id}
+                        type="button"
+                        onClick={() => handleSelectGarmentType(gt.id)}
+                        className={`p-2.5 rounded-[16px] text-xs font-extrabold flex flex-col items-center justify-center space-y-1 transition-all cursor-pointer border ${
+                          isSel
+                            ? 'bg-[#7C3AED] text-white border-[#7C3AED] shadow-md scale-102 ring-2 ring-[#7C3AED]/30'
+                            : 'bg-[#F4F2FA] text-[#605B80] border-[#EDE9F6] hover:bg-[#E9E4F5]'
+                        }`}
+                      >
+                        <span className="text-xl">{gt.icon}</span>
+                        <span className="truncate max-w-full text-[11px]">{gt.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {newGarmentType === 'Autre vêtement (Personnalisé)' && (
+                <div>
+                  <label className="text-caption text-[#605B80] font-semibold block mb-1">
+                    Nom du vêtement personnalisé
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ex: Kimono, Tenue de gala..."
+                    value={customGarmentNameModal}
+                    onChange={(e) => setCustomGarmentNameModal(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[14px] text-body text-[#110E2D] focus:outline-none focus:border-[#7C3AED]"
+                  />
+                </div>
+              )}
+
+              {/* In-Modal Measurements Section */}
+              <div className="bg-[#FAF9FE] p-3.5 rounded-[20px] border border-[#EDE9F6] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-caption font-bold text-[#4C1D95] flex items-center space-x-1.5">
+                    <span>📐 Mensurations pour cette confection (cm)</span>
+                  </span>
+                  <span className="text-[11px] text-[#605B80] italic">Personnalisables</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {modalOrderMeasurements.map((m, idx) => (
+                    <div key={m.id} className="bg-white p-2.5 rounded-[14px] border border-[#EDE9F6] shadow-2xs relative group">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-semibold text-[#605B80] truncate max-w-[80%]">
+                          {m.label}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setModalOrderMeasurements((prev) => prev.filter((_, i) => i !== idx))}
+                          className="text-[#EF4444] opacity-40 hover:opacity-100 p-0.5 rounded-full hover:bg-[#FEE2E2] transition-all cursor-pointer"
+                          title="Supprimer cette mesure"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                      <div className="flex items-center space-x-1 mt-1">
+                        <input
+                          type="number"
+                          placeholder={m.placeholder}
+                          value={m.valueCm}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? '' : Number(e.target.value);
+                            setModalOrderMeasurements((prev) =>
+                              prev.map((item, i) => (i === idx ? { ...item, valueCm: val } : item))
+                            );
+                          }}
+                          className="w-full text-xs font-bold text-[#7C3AED] bg-[#F4F2FA] px-2 py-1 rounded-[8px] border border-[#EDE9F6] focus:outline-none focus:border-[#7C3AED] tabular-nums"
+                        />
+                        <span className="text-[10px] font-bold text-[#605B80]/60">cm</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Option to Add Custom Measurement */}
+                {!showAddCustomModalMeasurement ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCustomModalMeasurement(true)}
+                    className="w-full py-2 bg-white hover:bg-[#F3E8FF] border border-dashed border-[#7C3AED]/40 text-[#7C3AED] rounded-[14px] text-xs font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 shadow-2xs mt-1"
+                  >
+                    <Plus size={14} />
+                    <span>Ajouter une mesure personnalisée</span>
+                  </button>
+                ) : (
+                  <div className="p-3 bg-white rounded-[16px] border border-[#7C3AED]/30 shadow-xs space-y-2.5 mt-2 animate-fadeIn">
+                    <div className="text-xs font-bold text-[#4C1D95] flex items-center justify-between">
+                      <span>Nouvelle mesure sur mesure</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddCustomModalMeasurement(false)}
+                        className="text-[#605B80] hover:text-[#110E2D]"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#605B80] block mb-0.5">
+                          Nom de la mesure
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="ex: Tour de mollet..."
+                          value={newModalCustomLabel}
+                          onChange={(e) => setNewModalCustomLabel(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[10px] text-xs font-semibold text-[#110E2D] focus:outline-none focus:border-[#7C3AED]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-semibold text-[#605B80] block mb-0.5">
+                          Valeur (cm)
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="ex: 42"
+                          value={newModalCustomValCm}
+                          onChange={(e) => setNewModalCustomValCm(e.target.value === '' ? '' : Number(e.target.value))}
+                          className="w-full px-2.5 py-1.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[10px] text-xs font-bold text-[#7C3AED] focus:outline-none tabular-nums"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowAddCustomModalMeasurement(false)}
+                        className="px-3 py-1 text-xs text-[#605B80] hover:bg-[#F4F2FA] rounded-full font-bold cursor-pointer"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddCustomModalMeasurementRow}
+                        className="px-3.5 py-1 text-xs bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full font-bold shadow-xs flex items-center space-x-1 cursor-pointer"
+                      >
+                        <Check size={14} />
+                        <span>Valider la mesure</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Price FCFA */}
+              <div>
+                <label className="text-caption text-[#605B80] font-semibold block mb-1">
+                  Prix convenu (FCFA) - Optionnel
+                </label>
+                <input
+                  type="number"
+                  placeholder="Laisser vide si à définir plus tard"
+                  value={newOrderPriceInput}
+                  onChange={(e) => setNewOrderPriceInput(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-3.5 py-2.5 bg-[#F4F2FA] border border-[#EDE9F6] rounded-[14px] text-body font-bold text-[#110E2D] focus:outline-none focus:border-[#7C3AED] tabular-nums"
+                />
+              </div>
+
+              {/* Pro Taylaxis Custom Calendar / Delivery Date Picker */}
+              <div className="space-y-2">
+                <label className="text-caption text-[#605B80] font-semibold block">
+                  Date de livraison prévue
+                </label>
+
+                {/* Pro Taylaxis Selected Date Banner Card */}
+                <div className="p-3 bg-[#F3E8FF] rounded-[18px] border border-[#E9D5FF] flex items-center justify-between shadow-2xs">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-full bg-[#7C3AED] text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                      <Calendar size={20} />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-extrabold text-[#6D28D9] uppercase tracking-wider">
+                        Date sélectionnée
+                      </div>
+                      <div className="text-body-strong font-extrabold text-[#4C1D95] capitalize">
+                        {new Date(newOrderDeliveryDate).toLocaleDateString('fr-FR', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomDatePicker(!showCustomDatePicker)}
+                    className="px-3 py-1.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full text-caption font-bold transition-all shadow-xs active:scale-95 cursor-pointer flex items-center space-x-1"
+                  >
+                    <Calendar size={13} />
+                    <span>{showCustomDatePicker ? 'Fermer' : 'Changer'}</span>
+                  </button>
+                </div>
+
+                {/* Custom Taylaxis Interactive Calendar Popover Grid */}
+                {showCustomDatePicker && (
+                  <div className="bg-[#FAF9FE] p-3 rounded-[20px] border border-[#EDE9F6] space-y-3 animate-fadeIn shadow-xs">
+                    <div className="flex items-center justify-between px-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (calendarViewMonth === 0) {
+                            setCalendarViewMonth(11);
+                            setCalendarViewYear(calendarViewYear - 1);
+                          } else {
+                            setCalendarViewMonth(calendarViewMonth - 1);
+                          }
+                        }}
+                        className="px-2 py-1 text-xs font-bold text-[#7C3AED] hover:bg-[#F3E8FF] rounded-full transition-all cursor-pointer"
+                      >
+                        &larr; Préc.
+                      </button>
+                      <span className="text-body-strong font-extrabold text-[#4C1D95] capitalize">
+                        {new Date(calendarViewYear, calendarViewMonth, 1).toLocaleDateString('fr-FR', {
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (calendarViewMonth === 11) {
+                            setCalendarViewMonth(0);
+                            setCalendarViewYear(calendarViewYear + 1);
+                          } else {
+                            setCalendarViewMonth(calendarViewMonth + 1);
+                          }
+                        }}
+                        className="px-2 py-1 text-xs font-bold text-[#7C3AED] hover:bg-[#F3E8FF] rounded-full transition-all cursor-pointer"
+                      >
+                        Suiv. &rarr;
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-7 text-center gap-1 text-[11px] font-extrabold text-[#605B80]">
+                      <div>Lun</div>
+                      <div>Mar</div>
+                      <div>Mer</div>
+                      <div>Jeu</div>
+                      <div>Ven</div>
+                      <div>Sam</div>
+                      <div>Dim</div>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1 text-center">
+                      {(() => {
+                        const firstDay = new Date(calendarViewYear, calendarViewMonth, 1);
+                        const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+                        let startDay = firstDay.getDay() - 1;
+                        if (startDay === -1) startDay = 6;
+
+                        const days = [];
+                        for (let i = 0; i < startDay; i++) {
+                          days.push(null);
+                        }
+                        for (let d = 1; d <= daysInMonth; d++) {
+                          days.push(d);
+                        }
+
+                        const currentSelObj = new Date(newOrderDeliveryDate);
+                        const isSelMonth = currentSelObj.getFullYear() === calendarViewYear && currentSelObj.getMonth() === calendarViewMonth;
+                        const selDay = isSelMonth ? currentSelObj.getDate() : null;
+
+                        return days.map((d, idx) => {
+                          if (d === null) return <div key={`emp-${idx}`} className="h-8" />;
+                          const isSelected = d === selDay;
+                          const formattedStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+                          return (
+                            <button
+                              key={`d-${d}`}
+                              type="button"
+                              onClick={() => {
+                                setNewOrderDeliveryDate(formattedStr);
+                                setShowCustomDatePicker(false);
+                              }}
+                              className={`h-8 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
+                                isSelected
+                                  ? 'bg-[#7C3AED] text-white shadow-md font-extrabold scale-110'
+                                  : 'bg-white text-[#110E2D] hover:bg-[#F3E8FF] hover:text-[#7C3AED] border border-[#EDE9F6]'
+                              }`}
+                            >
+                              {d}
+                            </button>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Date Pills Shortcuts */}
+                <div className="flex items-center space-x-1.5 flex-wrap gap-y-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                      setNewOrderDeliveryDate(d);
+                      setShowCustomDatePicker(false);
+                    }}
+                    className="px-2.5 py-1 bg-[#F3E8FF] border border-[#E9D5FF] text-[#7C3AED] rounded-full text-[11px] font-bold hover:bg-[#7C3AED] hover:text-white transition-all cursor-pointer"
+                  >
+                    ⚡ 7 jours (Recommandé)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                      setNewOrderDeliveryDate(d);
+                      setShowCustomDatePicker(false);
+                    }}
+                    className="px-2.5 py-1 bg-[#F4F2FA] border border-[#EDE9F6] text-[#605B80] rounded-full text-[11px] font-bold hover:bg-[#E9E4F5] transition-all cursor-pointer"
+                  >
+                    14 jours
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                      setNewOrderDeliveryDate(d);
+                      setShowCustomDatePicker(false);
+                    }}
+                    className="px-2.5 py-1 bg-[#F4F2FA] border border-[#EDE9F6] text-[#605B80] rounded-full text-[11px] font-bold hover:bg-[#E9E4F5] transition-all cursor-pointer"
+                  >
+                    30 jours
+                  </button>
+                </div>
+              </div>
+
+              {/* Submit / Cancel Actions */}
+              <div className="flex items-center space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewOrderModal(false)}
+                  className="flex-1 py-3 bg-[#F4F2FA] hover:bg-[#E9E4F5] text-[#605B80] rounded-[14px] text-caption font-bold transition-all cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-[14px] text-caption font-bold transition-all cursor-pointer shadow-md active:scale-95 flex items-center justify-center space-x-1.5"
+                >
+                  <Check size={16} />
+                  <span>Créer la commande</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -53,6 +53,7 @@ const getStoredAppointments = (): AppointmentItem[] => {
 interface AgendaViewProps {
   onSelectClient?: (clientId: string) => void;
   clients?: Client[];
+  onOpenNewClientModal?: () => void;
 }
 
 const now = new Date();
@@ -76,7 +77,7 @@ const getMonthInfo = (offset: number) => {
   return { year, month, name: monthNameCapitalized, shortMonthName, daysInMonth, firstDayOfWeek, offset };
 };
 
-export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients }) => {
+export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients = [], onOpenNewClientModal }) => {
   // Index 3 corresponds to offset 0 (Current real month)
   const [currentMonthIdx, setCurrentMonthIdx] = useState<number>(3);
   const [selectedDay, setSelectedDay] = useState<number>(currentRealDay);
@@ -305,7 +306,13 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
           </h3>
 
           <button
-            onClick={() => setShowNewModal(true)}
+            onClick={() => {
+              if (clients.length === 0 && onOpenNewClientModal) {
+                onOpenNewClientModal();
+              } else {
+                setShowNewModal(true);
+              }
+            }}
             className="text-[12px] font-bold text-[#7C3AED] hover:underline cursor-pointer flex items-center space-x-0.5"
           >
             <Plus size={14} />
@@ -315,7 +322,26 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
 
         {/* Compact Cards List */}
         <div className="space-y-2">
-          {selectedDayAppointments.length === 0 ? (
+          {clients.length === 0 ? (
+            <div className="py-6 text-center px-4 bg-surface rounded-[20px] border border-subtle space-y-2">
+              <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] mx-auto flex items-center justify-center">
+                <Users size={20} />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-caption font-extrabold text-primary">Étape 4 : Planifier un rendez-vous</p>
+                <p className="text-[11px] text-secondary">
+                  Pour fixer des rendez-vous d'essayage ou de livraison, vous devez d'abord ajouter votre premier client (Étape 1).
+                </p>
+              </div>
+              <button
+                onClick={() => onOpenNewClientModal?.()}
+                className="px-4 py-2 bg-[#7C3AED] text-white rounded-[14px] text-[11px] font-bold hover:bg-[#6D28D9] cursor-pointer active:scale-95 transition-all inline-flex items-center space-x-1.5"
+              >
+                <Users size={14} />
+                <span>+ 1. Ajouter mon 1er client</span>
+              </button>
+            </div>
+          ) : selectedDayAppointments.length === 0 ? (
             <div className="py-6 text-center px-4 bg-surface rounded-[20px] border border-subtle space-y-2">
               <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] mx-auto flex items-center justify-center">
                 <CalendarIcon size={20} />

@@ -165,10 +165,16 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
       {/* Clients List (Standalone Fluid Cards without dividing lines) */}
       <div className="space-y-2.5">
         {filteredClients.length === 0 ? (
-          <div className="py-12 text-center text-caption text-tertiary space-y-2 bg-surface rounded-[20px] border border-subtle">
-            <Users size={32} className="mx-auto text-tertiary/50" />
-            <p className="font-medium text-secondary">Aucun client enregistré pour le moment.</p>
-            <p className="text-xs text-tertiary">Cliquez sur le bouton + en haut à droite pour ajouter votre premier client.</p>
+          <div className="py-10 px-4 text-center text-caption text-tertiary space-y-2 bg-surface rounded-[24px] border border-subtle shadow-xs">
+            <div className="w-12 h-12 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] mx-auto flex items-center justify-center">
+              <Users size={24} />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-body-strong font-extrabold text-primary">Aucun client enregistré</h4>
+              <p className="text-xs text-secondary max-w-xs mx-auto">
+                Cliquez sur le bouton <strong>+ (en bas à droite)</strong> pour ajouter votre premier client et noter ses mensurations.
+              </p>
+            </div>
           </div>
         ) : (
           filteredClients.map((client) => (
@@ -222,16 +228,18 @@ export const ClientsView: React.FC<ClientsViewProps> = ({
         </div>
       </div>
 
-      {/* Pure Circular Floating Action Button (FAB) (+) in Bottom Right */}
+      {/* Pure Circular Floating Action Button (FAB) (+) aligned inside app container */}
       {onOpenNewClientModal && (
-        <button
-          onClick={onOpenNewClientModal}
-          className="fixed bottom-20 right-4 sm:right-6 z-40 w-13 h-13 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white rounded-full shadow-2xl hover:shadow-purple-500/40 flex items-center justify-center cursor-pointer active:scale-95 transition-all border border-white/20 group ring-4 ring-[#7C3AED]/15"
-          aria-label="Ajouter un client"
-          title="Nouveau Client"
-        >
-          <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
-        </button>
+        <div className="fixed inset-x-0 bottom-20 z-40 max-w-md md:max-w-2xl lg:max-w-4xl mx-auto px-4 pointer-events-none flex justify-end">
+          <button
+            onClick={onOpenNewClientModal}
+            className="pointer-events-auto w-13 h-13 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white rounded-full shadow-2xl hover:shadow-purple-500/40 flex items-center justify-center cursor-pointer active:scale-95 transition-all border border-white/20 group ring-4 ring-[#7C3AED]/15"
+            aria-label="Ajouter un client"
+            title="Nouveau Client"
+          >
+            <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+          </button>
+        </div>
       )}
     </div>
   );

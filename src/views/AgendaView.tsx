@@ -7,7 +7,6 @@ import {
   Users,
   Ruler,
   MoreVertical,
-  CalendarPlus,
   Phone,
   MessageSquare,
   MessageCircle,
@@ -328,9 +327,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
                 <Users size={20} />
               </div>
               <div className="space-y-0.5">
-                <p className="text-caption font-extrabold text-primary">Étape 4 : Planifier un rendez-vous</p>
+                <p className="text-caption font-extrabold text-primary">Planifier un rendez-vous</p>
                 <p className="text-[11px] text-secondary">
-                  Pour fixer des rendez-vous d'essayage ou de livraison, vous devez d'abord ajouter votre premier client (Étape 1).
+                  Pour fixer des rendez-vous d'essayage ou de livraison, vous devez d'abord ajouter votre premier client.
                 </p>
               </div>
               <button
@@ -338,7 +337,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
                 className="px-4 py-2 bg-[#7C3AED] text-white rounded-[14px] text-[11px] font-bold hover:bg-[#6D28D9] cursor-pointer active:scale-95 transition-all inline-flex items-center space-x-1.5"
               >
                 <Users size={14} />
-                <span>+ 1. Ajouter mon 1er client</span>
+                <span>+ Ajouter mon premier client</span>
               </button>
             </div>
           ) : selectedDayAppointments.length === 0 ? (
@@ -443,13 +442,20 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
         </div>
       </div>
 
-      {/* Bottom Floating Action Button */}
+      {/* Floating Add Appointment Button (+) in bottom right corner */}
       <button
-        onClick={() => setShowNewModal(true)}
-        className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white rounded-[16px] text-body-strong font-bold flex items-center justify-center space-x-2 cursor-pointer shadow-sm active:scale-98 transition-all"
+        onClick={() => {
+          if (clients.length === 0 && onOpenNewClientModal) {
+            onOpenNewClientModal();
+          } else {
+            setShowNewModal(true);
+          }
+        }}
+        className="fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-[#7C3AED] text-white shadow-xl hover:bg-[#6D28D9] flex items-center justify-center transition-all transform active:scale-90 cursor-pointer ring-4 ring-[#7C3AED]/20"
+        title="Programmer un nouveau rendez-vous"
+        aria-label="Programmer un nouveau rendez-vous"
       >
-        <CalendarPlus size={18} />
-        <span>+ Programmer un nouveau rendez-vous</span>
+        <Plus size={26} className="stroke-[2.5]" />
       </button>
 
       {/* MODAL 1: Appointment Details & Actions */}

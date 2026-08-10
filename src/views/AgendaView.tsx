@@ -18,7 +18,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { StatusBadge } from '../components/common/StatusBadge';
-import type { Client } from '../types';
+import type { Client, Order } from '../types';
 
 interface AppointmentItem {
   id: string;
@@ -35,6 +35,8 @@ interface AppointmentItem {
   dayNumber: number;
   monthIndex: number;
   notes?: string;
+  isOrderDelivery?: boolean;
+  orderId?: string;
 }
 
 const STORAGE_KEY_APPOINTMENTS = 'taylaxis_agenda_appointments_v1';
@@ -52,6 +54,7 @@ const getStoredAppointments = (): AppointmentItem[] => {
 interface AgendaViewProps {
   onSelectClient?: (clientId: string) => void;
   clients?: Client[];
+  orders?: Order[];
   onOpenNewClientModal?: () => void;
 }
 
@@ -76,7 +79,29 @@ const getMonthInfo = (offset: number) => {
   return { year, month, name: monthNameCapitalized, shortMonthName, daysInMonth, firstDayOfWeek, offset };
 };
 
-export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients = [], onOpenNewClientModal }) => {
+const parseOrderDeliveryDate = (dateStr: string): { year: number; month: number; day: number; dateString: string } | null => {
+  if (!dateStr) return null;
+  const isoMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10) - 1;
+    const day = parseInt(isoMatch[3], 10);
+    return { year, month, day, dateString: dateStr };
+  }
+  const timestamp = Date.parse(dateStr);
+  if (!isNaN(timestamp)) {
+    const d = new Date(timestamp);
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const day = d.getDate();
+    const formattedDay = day < 10 ? `0${day}` : `${day}`;
+    const formattedMonth = month + 1 < 10 ? `0${month + 1}` : `${month + 1}`;
+    return { year, month, day, dateString: `${year}-${formattedMonth}-${formattedDay}` };
+  }
+  return null;
+};
+
+export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients = [], orders = [], onOpenNewClientModal }) => {
   // Index 3 corresponds to offset 0 (Current real month)
   const [currentMonthIdx, setCurrentMonthIdx] = useState<number>(3);
   const [selectedDay, setSelectedDay] = useState<number>(currentRealDay);
@@ -89,22 +114,61 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
     localStorage.setItem(STORAGE_KEY_APPOINTMENTS, JSON.stringify(newApts));
   };
 
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [newClientName, setNewClientName] = useState('');
   const [newType, setNewType] = useState('Essayage');
   const [newTime, setNewTime] = useState('14:00');
   const [newNotes, setNewNotes] = useState('');
 
+  const orderAppointments = React.useMemo<AppointmentItem[]>(() => {
+    if (!orders || orders.length === 0) return [];
+    const result: AppointmentItem[] = [];
+    orders.forEach((order) => {
+      const mfg = order.manufacturingStatus || 'EN_COURS';
+      if (mfg === 'LIVREE' || mfg === 'TERMINEE') return;
+
+      const parsed = parseOrderDeliveryDate(order.deliveryDate);
+      if (!parsed) return;
+
+      const matchedClient = clients.find((c) => c.id === order.clientId || c.name === order.clientName);
+
+      result.push({
+        id: `order_del_${order.id}`,
+        time: '17:00',
+        duration: '00:30',
+        clientName: order.clientName,
+        clientId: order.clientId,
+        phone: matchedClient?.phone,
+        type: 'Livraison Commande',
+        garment: order.title || order.garmentType || 'Vêtement',
+        badgeLabel: order.dueDateStatus === 'EN_RETARD' ? 'En Retard' : 'Livraison',
+        colorCategory: order.dueDateStatus === 'EN_RETARD' ? 'red' : 'orange',
+        date: parsed.dateString,
+        dayNumber: parsed.day,
+        monthIndex: parsed.month,
+        notes: `Livraison commande ${order.orderNumber} - ${order.title}`,
+        isOrderDelivery: true,
+        orderId: order.id,
+      });
+    });
+    return result;
+  }, [orders, clients]);
+
+  const allAppointments = React.useMemo(() => {
+    return [...appointments, ...orderAppointments];
+  }, [appointments, orderAppointments]);
+
   const currentMonthInfo = getMonthInfo(MONTH_OFFSETS[currentMonthIdx]);
   const daysArray = Array.from({ length: currentMonthInfo.daysInMonth }, (_, i) => i + 1);
   const startOffset = currentMonthInfo.firstDayOfWeek;
 
-  const selectedDayAppointments = appointments.filter(
+  const selectedDayAppointments = allAppointments.filter(
     (apt) => apt.monthIndex === currentMonthInfo.month && apt.dayNumber === selectedDay
   );
 
   const eventDaysInMonth = Array.from(
     new Set(
-      appointments
+      allAppointments
         .filter((apt) => apt.monthIndex === currentMonthInfo.month)
         .map((apt) => apt.dayNumber)
     )
@@ -141,7 +205,26 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
 
   const handleCreateAppointment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClientName) return;
+    let finalClientName = newClientName.trim();
+    let finalClientId: string | undefined = undefined;
+    let finalPhone: string | undefined = undefined;
+
+    if (selectedClientId) {
+      const found = clients.find((c) => c.id === selectedClientId);
+      if (found) {
+        finalClientName = found.name;
+        finalClientId = found.id;
+        finalPhone = found.phone;
+      }
+    } else if (finalClientName) {
+      const found = clients.find((c) => c.name.toLowerCase() === finalClientName.toLowerCase());
+      if (found) {
+        finalClientId = found.id;
+        finalPhone = found.phone;
+      }
+    }
+
+    if (!finalClientName) return;
 
     let category: 'purple' | 'orange' | 'red' | 'blue' = 'purple';
     if (newType === 'Livraison') category = 'orange';
@@ -155,7 +238,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
       id: `apt_${Date.now()}`,
       time: newTime || '10:00',
       duration: '00:45',
-      clientName: newClientName,
+      clientName: finalClientName,
+      clientId: finalClientId,
+      phone: finalPhone,
       type: newType,
       badgeLabel: newType === 'Livraison' ? 'Livraison' : 'RDV',
       colorCategory: category,
@@ -168,6 +253,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
     saveAppointments([...appointments, newApt]);
     setShowNewModal(false);
     setNewClientName('');
+    setSelectedClientId('');
     setNewNotes('');
   };
 
@@ -595,16 +681,54 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
             <div className="space-y-2.5">
               <div>
                 <label className="text-caption font-semibold text-secondary block mb-1">
-                  Nom du Client
+                  Client concerné
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="ex: Kossi A."
-                  value={newClientName}
-                  onChange={(e) => setNewClientName(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface-alt border border-subtle rounded-[12px] text-body font-medium text-primary focus:outline-none focus:border-[#7C3AED]"
-                />
+                {clients.length > 0 ? (
+                  <div className="space-y-2">
+                    <select
+                      value={selectedClientId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedClientId(val);
+                        if (val) {
+                          const matched = clients.find((c) => c.id === val);
+                          if (matched) setNewClientName(matched.name);
+                        } else {
+                          setNewClientName('');
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-surface-alt border border-subtle rounded-[12px] text-body font-medium text-primary focus:outline-none focus:border-[#7C3AED]"
+                    >
+                      <option value="">-- Sélectionner un client --</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.phone})
+                        </option>
+                      ))}
+                      <option value="CUSTOM">+ Nom personnalisé (Hors liste)</option>
+                    </select>
+
+                    {(!selectedClientId || selectedClientId === 'CUSTOM') && (
+                      <input
+                        type="text"
+                        required
+                        placeholder="ex: Kossi A."
+                        value={newClientName}
+                        onChange={(e) => setNewClientName(e.target.value)}
+                        className="w-full px-3 py-2 bg-surface-alt border border-subtle rounded-[12px] text-body font-medium text-primary focus:outline-none focus:border-[#7C3AED]"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    required
+                    placeholder="ex: Kossi A."
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-alt border border-subtle rounded-[12px] text-body font-medium text-primary focus:outline-none focus:border-[#7C3AED]"
+                  />
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2.5">

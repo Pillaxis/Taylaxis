@@ -16,6 +16,7 @@ import { MOCK_CLIENTS, MOCK_MEASUREMENTS_COSTUME, GARMENT_TYPES, GARMENT_TYPE_PR
 import type { Client, Order, StatusType } from './types';
 import { OrderEngine } from './services/orderEngine';
 import { OrderService } from './services/orderService';
+import { userService } from './services/userService';
 import { SupabaseService } from './services/supabaseService';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { X, Ruler, Plus, Trash2, Shirt } from 'lucide-react';
@@ -504,6 +505,7 @@ export const AppContent: React.FC = () => {
           <AgendaView
             onSelectClient={handleSelectClient}
             clients={clients}
+            orders={orders}
             onOpenNewClientModal={() => setShowNewClientModal(true)}
           />
         );
@@ -550,6 +552,9 @@ export const AppContent: React.FC = () => {
   }
 
   const getHeaderProps = () => {
+    const profile = userService.getUserProfile();
+    const displayUserName = profile.firstName || (profile.fullName && profile.fullName !== 'Tailleur Taylaxis' ? profile.fullName.split(' ')[0] : '') || user?.user_metadata?.user_name || '';
+
     if (selectedClientId && selectedClient) {
       return {
         title: viewingMensurations ? `Mensurations` : 'Fiche Client',
@@ -559,7 +564,7 @@ export const AppContent: React.FC = () => {
 
     switch (activeTab) {
       case 'accueil':
-        return { isHome: true };
+        return { isHome: true, userName: displayUserName };
       case 'clients':
         return {
           title: 'Clients',

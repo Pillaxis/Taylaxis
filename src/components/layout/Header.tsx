@@ -5,6 +5,7 @@ interface HeaderProps {
   title?: string;
   subtitle?: string;
   isHome?: boolean;
+  userName?: string;
   showBack?: boolean;
   onBack?: () => void;
   showSearchIcon?: boolean;
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   title,
   subtitle,
   isHome = false,
+  userName,
   showBack = false,
   onBack,
   showSearchIcon = false,
@@ -26,7 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   searchValue = '',
   onSearchChange,
   onNotificationClick,
-  unreadCount = 4,
+  unreadCount = 3,
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -94,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
       {isHome && (
         <div className="pt-0.5">
           <h2 className="text-xl font-bold text-white flex items-center gap-1.5">
-            Bonjour, Nasser <span className="text-xl">👋</span>
+            Bonjour, {userName || 'Tailleur'} <span className="text-xl">👋</span>
           </h2>
           <p className="text-caption text-white/70 mt-0.5">Voici l'activité de votre atelier</p>
         </div>

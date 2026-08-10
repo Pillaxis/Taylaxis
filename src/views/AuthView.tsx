@@ -9,6 +9,7 @@ interface AuthViewProps {
 interface RegisteredAccount {
   identifier: string;
   passwordHash: string;
+  userName?: string;
   workshopName: string;
 }
 
@@ -35,6 +36,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('phone');
 
+  const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -151,6 +153,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
       saveRegisteredAccount({
         identifier: credentialIdentifier,
         passwordHash: password,
+        userName: userName.trim(),
         workshopName: workshopName || 'Mon Atelier',
       });
     }
@@ -164,9 +167,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
       if (matchedAccount) {
         if (matchedAccount.passwordHash === password) {
           // Save profile details to local userService state
+          const displayFirstName = matchedAccount.userName ? matchedAccount.userName.split(' ')[0] : 'Tailleur';
           userService.saveUserProfile({
             ...userService.getUserProfile(),
-            fullName: matchedAccount.workshopName ? `Atelier ${matchedAccount.workshopName}` : 'Tailleur Taylaxis',
+            firstName: displayFirstName,
+            fullName: matchedAccount.userName || (matchedAccount.workshopName ? `Atelier ${matchedAccount.workshopName}` : 'Tailleur Taylaxis'),
             phone: authMethod === 'phone' ? credentialIdentifier : '',
             email: authMethod === 'email' ? credentialIdentifier : '',
           });
@@ -180,7 +185,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
             id: `usr_${Date.now()}`,
             email: authMethod === 'email' ? credentialIdentifier : undefined,
             phone: authMethod === 'phone' ? credentialIdentifier : undefined,
-            user_metadata: { workshop_name: matchedAccount.workshopName || 'Mon Atelier' },
+            user_metadata: { workshop_name: matchedAccount.workshopName || 'Mon Atelier', user_name: matchedAccount.userName },
           });
           return;
         } else {
@@ -194,9 +199,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     }
 
     // Registration mode
+    const displayFirstName = userName.trim() ? userName.trim().split(' ')[0] : 'Tailleur';
     userService.saveUserProfile({
       ...userService.getUserProfile(),
-      fullName: workshopName ? `Atelier ${workshopName}` : 'Tailleur Taylaxis',
+      firstName: displayFirstName,
+      fullName: userName.trim() || 'Tailleur Taylaxis',
       phone: authMethod === 'phone' ? credentialIdentifier : '',
       email: authMethod === 'email' ? credentialIdentifier : '',
     });
@@ -211,7 +218,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
       id: `usr_${Date.now()}`,
       email: authMethod === 'email' ? credentialIdentifier : undefined,
       phone: authMethod === 'phone' ? credentialIdentifier : undefined,
-      user_metadata: { workshop_name: workshopName || 'Mon Atelier' },
+      user_metadata: { workshop_name: workshopName || 'Mon Atelier', user_name: userName.trim() },
     });
   };
 
@@ -317,20 +324,37 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/90 block">Nom de votre atelier / Tailleur</label>
-                <div className="relative">
-                  <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Atelier Kossi Couture"
-                    value={workshopName}
-                    onChange={(e) => setWorkshopName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-black/20 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#7C3AED] transition-all"
-                  />
+              <>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-white/90 block">Votre Prénom & Nom</label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Nasser"
+                      value={userName}
+                      onChange={(e) => setUserName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-black/20 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#7C3AED] transition-all"
+                    />
+                  </div>
                 </div>
-              </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-white/90 block">Nom de votre atelier</label>
+                  <div className="relative">
+                    <Scissors size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Atelier Kossi Couture"
+                      value={workshopName}
+                      onChange={(e) => setWorkshopName(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-[14px] bg-black/20 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-[#7C3AED] transition-all"
+                    />
+                  </div>
+                </div>
+              </>
             )}
 
             {authMethod === 'email' ? (

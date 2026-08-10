@@ -11,8 +11,13 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import type { TextScale } from '../types';
 
+import { userService } from '../services/userService';
+
 export const ApparenceView: React.FC = () => {
   const { textScale, setTextScale, brandColor, setBrandColor } = useTheme();
+  const userProfile = userService.getUserProfile();
+  const displayName = userProfile.firstName || userProfile.fullName || 'Tailleur Taylaxis';
+  const initial = displayName.charAt(0).toUpperCase();
 
   const colors = [
     { name: 'Violet Signature', hex: '#7C3AED' },
@@ -27,10 +32,10 @@ export const ApparenceView: React.FC = () => {
       {/* Profile Card */}
       <div className="bg-surface rounded-[20px] p-4 border border-subtle flex items-center space-x-4 shadow-xs">
         <div className="w-14 h-14 rounded-full bg-[#7C3AED]/15 text-[#7C3AED] font-bold text-xl flex items-center justify-center flex-shrink-0">
-          N
+          {initial}
         </div>
         <div className="flex-1">
-          <h2 className="text-body-strong font-bold text-primary text-base">Nasser</h2>
+          <h2 className="text-body-strong font-bold text-primary text-base">{displayName}</h2>
           <p className="text-caption text-secondary">Maître Tailleur • Atelier Principal</p>
           <div className="inline-flex items-center space-x-1 mt-1 text-[11px] font-semibold text-[#10B981] bg-[#D1FAE5] px-2 py-0.5 rounded-full">
             <ShieldCheck size={12} />

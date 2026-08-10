@@ -4,6 +4,7 @@ import { userService } from '../services/userService';
 
 interface AuthViewProps {
   onAuthSuccess: (user: any) => void;
+  onViewLandingPage?: () => void;
 }
 
 interface RegisteredAccount {
@@ -32,7 +33,7 @@ const saveRegisteredAccount = (account: RegisteredAccount) => {
   localStorage.setItem(STORAGE_KEY_REGISTRY, JSON.stringify(filtered));
 };
 
-export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
+export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess, onViewLandingPage }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('phone');
 
@@ -446,6 +447,18 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
                   : "Télécharger l'application Taylaxis sur Mobile"}
               </span>
               <Smartphone size={16} className="text-white/80" />
+            </button>
+          </div>
+        )}
+
+        {onViewLandingPage && (
+          <div className="text-center pt-2">
+            <button
+              type="button"
+              onClick={onViewLandingPage}
+              className="text-xs font-bold text-[#A78BFA] hover:text-white underline cursor-pointer transition-colors"
+            >
+              🌐 Découvrir la Landing Page Officielle Taylaxis
             </button>
           </div>
         )}

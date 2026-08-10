@@ -14,6 +14,7 @@ interface HeaderProps {
   onSearchChange?: (val: string) => void;
   onNotificationClick?: () => void;
   unreadCount?: number;
+  onViewLandingPage?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSearchChange,
   onNotificationClick,
   unreadCount = 3,
+  onViewLandingPage,
 }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -59,8 +61,18 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Action Icons: 1. Cloche Notification, 2. Loupe de Recherche 🔍 */}
-        <div className="flex items-center space-x-1 flex-shrink-0">
+        {/* Action Icons: 1. Landing Page button, 2. Cloche Notification, 3. Loupe de Recherche 🔍 */}
+        <div className="flex items-center space-x-1.5 flex-shrink-0">
+          {onViewLandingPage && (
+            <button
+              onClick={onViewLandingPage}
+              className="px-2.5 py-1 text-[11px] font-bold text-[#A78BFA] bg-white/10 border border-white/15 hover:bg-white/20 rounded-full transition-all cursor-pointer active:scale-95 flex items-center space-x-1"
+              title="Voir la Landing Page Officielle Taylaxis"
+            >
+              <span>🌐 Landing Page</span>
+            </button>
+          )}
+
           {/* 1. Cloche Notification */}
           <button
             onClick={onNotificationClick}

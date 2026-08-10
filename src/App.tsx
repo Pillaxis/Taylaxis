@@ -11,6 +11,7 @@ import { CommandesView } from './views/CommandesView';
 import { AgendaView } from './views/AgendaView';
 import { MoiView } from './views/MoiView';
 import { AuthView } from './views/AuthView';
+import { LandingPageView } from './views/LandingPageView';
 import { NotificationsModal } from './components/common/NotificationsModal';
 import { MOCK_CLIENTS, MOCK_MEASUREMENTS_COSTUME, GARMENT_TYPES, GARMENT_TYPE_PRESETS } from './data/mockData';
 import type { Client, Order, StatusType } from './types';
@@ -34,6 +35,7 @@ export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('accueil');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [viewingMensurations, setViewingMensurations] = useState<boolean>(false);
+  const [showLandingPage, setShowLandingPage] = useState<boolean>(false);
 
   // Auth state with localStorage session persistence
   const [user, setUser] = useState<any>(() => {
@@ -549,10 +551,20 @@ export const AppContent: React.FC = () => {
     );
   }
 
+  if (showLandingPage) {
+    return (
+      <LandingPageView
+        onGetStarted={() => setShowLandingPage(false)}
+        onLogin={() => setShowLandingPage(false)}
+      />
+    );
+  }
+
   if (!user) {
     return (
       <AuthView
         onAuthSuccess={(u) => handleSetUser(u)}
+        onViewLandingPage={() => setShowLandingPage(true)}
       />
     );
   }
@@ -611,6 +623,7 @@ export const AppContent: React.FC = () => {
           onBack={handleBackFromClient}
           onNotificationClick={() => setShowNotificationsModal(true)}
           unreadCount={unreadNotificationsCount}
+          onViewLandingPage={() => setShowLandingPage(true)}
         />
 
         {/* Dynamic Main View */}

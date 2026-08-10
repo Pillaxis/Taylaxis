@@ -19,7 +19,7 @@ import { OrderService } from './services/orderService';
 import { userService } from './services/userService';
 import { SupabaseService } from './services/supabaseService';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
-import { X, Ruler, Plus, Trash2, Shirt } from 'lucide-react';
+import { X, Ruler, Plus, Trash2, Shirt, UserPlus } from 'lucide-react';
 
 interface ModalMeasurementItem {
   id: string;
@@ -452,7 +452,13 @@ export const AppContent: React.FC = () => {
             onNavigateToAgenda={() => setActiveTab('agenda')}
             onSelectClient={handleSelectClient}
             onOpenNewClientModal={() => setShowNewClientModal(true)}
-            onOpenNewOrderModal={() => setShowNewOrderModal(true)}
+            onOpenNewOrderModal={() => {
+              if (clients.length === 0) {
+                setShowNewClientModal(true);
+              } else {
+                setShowNewOrderModal(true);
+              }
+            }}
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onPayOrder={handlePayOrder}
           />
@@ -888,20 +894,54 @@ export const AppContent: React.FC = () => {
             </div>
 
             <form onSubmit={handleCreateOrder} className="space-y-4">
-              <div>
-                <label className="text-caption text-secondary font-medium block mb-1">Client</label>
-                <select
-                  value={newOrderClient}
-                  onChange={(e) => setNewOrderClient(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-surface-alt border border-subtle rounded-[14px] text-body text-primary focus:outline-none focus:border-[#7C3AED]"
-                >
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.name}>
-                      {c.name} ({c.phone})
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {clients.length === 0 ? (
+                <div className="p-4 rounded-[18px] bg-[#F3E8FF] border border-[#E9D5FF] space-y-2.5 text-center">
+                  <div className="w-10 h-10 rounded-full bg-[#7C3AED]/20 text-[#7C3AED] mx-auto flex items-center justify-center">
+                    <UserPlus size={20} />
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-sm font-extrabold text-[#5B21B6]">Aucun client dans votre atelier</h4>
+                    <p className="text-xs text-[#6B21A8]">
+                      Pour enregistrer une nouvelle commande, vous devez d'abord créer votre premier client.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewOrderModal(false);
+                      setShowNewClientModal(true);
+                    }}
+                    className="w-full py-2.5 rounded-[12px] bg-[#7C3AED] text-white font-bold text-xs hover:bg-[#6D28D9] cursor-pointer shadow-xs active:scale-95 transition-all inline-flex items-center justify-center space-x-2"
+                  >
+                    <UserPlus size={15} />
+                    <span>+ 1. Enregistrer mon 1er client (Nom & Mensurations)</span>
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <label className="text-caption text-secondary font-medium block mb-1">Client</label>
+                  <select
+                    value={newOrderClient}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__ADD_NEW__') {
+                        setShowNewOrderModal(false);
+                        setShowNewClientModal(true);
+                      } else {
+                        setNewOrderClient(val);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 bg-surface-alt border border-subtle rounded-[14px] text-body text-primary focus:outline-none focus:border-[#7C3AED]"
+                  >
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name} ({c.phone})
+                      </option>
+                    ))}
+                    <option value="__ADD_NEW__">+ Ajouter un nouveau client...</option>
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="text-caption text-secondary font-medium block mb-1">Intitulé du vêtement</label>

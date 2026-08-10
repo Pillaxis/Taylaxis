@@ -238,9 +238,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </button>
           </div>
 
-          {/* Compact Mockup Container with Animated Main Mockup & 2 Overlapping Floating Badges */}
+          {/* Compact Mockup Container (Exact CVPillar / Revizion Screenshot 6 Layout) */}
           <div className="pt-8 sm:pt-10 relative max-w-xl mx-auto">
-            {/* Main Window Mockup Capture in Movement (Compact & Floating) */}
+            {/* Main Window Mockup Capture in Straight Movement */}
             <div className="p-4 sm:p-5 rounded-[24px] bg-white border border-gray-200/80 shadow-2xl text-left space-y-3 relative animate-float">
               {/* Window Header */}
               <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
@@ -255,10 +255,10 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 </span>
               </div>
 
-              {/* Taylaxis Atelier App Compact Items */}
-              <div className="space-y-2 relative">
-                {/* First Order Line Container (Reference Element for Both Floating Notifications) */}
-                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between relative">
+              {/* Taylaxis Atelier App Compact Items (3 Rows like CVPillar) */}
+              <div className="space-y-2">
+                {/* Row 1 */}
+                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-9 h-9 rounded-[10px] bg-[#F3E8FF] text-[#7C3AED] flex items-center justify-center font-bold">
                       <Scissors size={18} />
@@ -269,23 +269,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                     </div>
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full bg-[#ECFEFF] text-[#0891B2] text-[11px] font-extrabold">Prêt</span>
-
-                  {/* 1. Left Notification (« Soldes encaissés 100% ») - Centered vertically around the 1st Order Line */}
-                  <div className="absolute top-1/2 -translate-y-1/2 -left-3 sm:-left-6 lg:-left-8 p-2 px-3 sm:px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float z-30 pointer-events-none select-none">
-                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">Soldes encaissés</span>
-                    <span className="text-xs font-black text-[#06B6D4] leading-tight mt-0.5">100%</span>
-                  </div>
-
-                  {/* 2. Right Notification (« Confection prête ! ») - Aligned with upper part of the 1st Order Line */}
-                  <div className="absolute -top-3 sm:-top-4 -right-3 sm:-right-5 lg:-right-6 p-2 px-3 sm:px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float-reverse z-30 pointer-events-none select-none">
-                    <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 size={13} />
-                    </div>
-                    <span className="whitespace-nowrap">Confection prête !</span>
-                  </div>
                 </div>
 
-                {/* Second Order Line Container */}
+                {/* Row 2 */}
                 <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-9 h-9 rounded-[10px] bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
@@ -298,6 +284,34 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold">En atelier</span>
                 </div>
+
+                {/* Row 3 */}
+                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-9 h-9 rounded-[10px] bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+                      <Shirt size={18} />
+                    </div>
+                    <div>
+                      <div className="text-xs sm:text-sm font-extrabold text-gray-900">Chemise Sur-Mesure & Veste</div>
+                      <div className="text-[11px] text-gray-500 font-medium">Jean-Marc Koffi • Essayage vendredi</div>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-extrabold">Nouveau</span>
+                </div>
+              </div>
+
+              {/* 1. Top-Right Floating Notification (Sticking out of Top-Right Border like CVPillar) */}
+              <div className="absolute -top-4 right-4 sm:right-6 lg:right-8 p-2.5 px-4 rounded-[18px] bg-white border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl backdrop-blur-md animate-float-reverse z-30 pointer-events-none select-none">
+                <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 size={14} />
+                </div>
+                <span className="whitespace-nowrap">Confection prête !</span>
+              </div>
+
+              {/* 2. Left Floating Notification (Sticking out of Left Border like CVPillar) */}
+              <div className="absolute top-[58%] -left-4 sm:-left-6 lg:-left-8 -translate-y-1/2 p-2.5 px-4 rounded-[18px] bg-white border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl backdrop-blur-md animate-float z-30 pointer-events-none select-none">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">Soldes encaissés</span>
+                <span className="text-sm font-black text-[#06B6D4] leading-tight mt-0.5">100%</span>
               </div>
             </div>
           </div>

@@ -17,6 +17,9 @@ import {
   Layers,
   HelpCircle,
   MessageSquare,
+  UserPlus,
+  Ruler,
+  Calendar,
 } from 'lucide-react';
 
 interface LandingPageViewProps {
@@ -199,51 +202,52 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         )}
       </header>
 
-      {/* 2. HERO SECTION (Exact Revizion Visual Architecture with Tailor Application Content) */}
+      {/* 2. HERO SECTION */}
       <section className="pt-12 sm:pt-16 pb-16 sm:pb-24 px-4 sm:px-8 relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] via-[#FAF9FE] to-[#FAF9FE]">
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
-          {/* Hero Badge Pill */}
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#E0F2FE] border border-[#7DD3FC] text-xs sm:text-sm font-extrabold text-[#0369A1] shadow-xs">
-            <Shirt size={15} className="text-[#0284C7]" />
-            <span>Pour les tailleurs & ateliers de couture</span>
+          {/* Badge */}
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#7C3AED]/10 border border-[#7C3AED]/30 text-xs sm:text-sm font-extrabold text-[#7C3AED] shadow-xs">
+            <Shirt size={15} className="text-[#7C3AED]" />
+            <span>POUR LES TAILLEURS ET ATELIERS DE COUTURE</span>
           </div>
 
-          {/* Hero Main Title */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-[1.15]">
-            Transformez la gestion de votre atelier en<br />
-            <span className="bg-gradient-to-r from-[#06B6D4] via-[#0891B2] to-[#7C3AED] bg-clip-text text-transparent">
-              outils de confection intelligents
+          {/* Title */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15]">
+            <span className="text-[#0C0A27] block">Oubliez vos cahiers.</span>
+            <span className="bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] bg-clip-text text-transparent block">
+              Gérez votre atelier comme un pro.
             </span>
           </h1>
 
-          {/* Hero Subtitle */}
+          {/* Subtitle */}
           <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto font-medium leading-relaxed">
-            Saisissez vos clients. Taylaxis génère automatiquement vos fiches de mensurations, le suivi 3D de vos vêtements et vos relances d'acomptes par WhatsApp.
+            Clients, mensurations, commandes, rendez-vous et relances : Taylaxis vous aide à organiser votre atelier et à ne plus rien oublier.
           </p>
 
-          {/* Hero CTAs */}
+          {/* CTAs */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-4 bg-[#06B6D4] hover:bg-[#0891B2] text-white font-extrabold text-base rounded-xl shadow-lg shadow-[#06B6D4]/30 hover:scale-105 active:scale-98 transition-all flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-8 py-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-base rounded-xl shadow-lg shadow-[#7C3AED]/30 hover:scale-105 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer"
             >
-              <span>Essayer gratuitement</span>
+              <span>Commencer</span>
               <ArrowRight size={18} />
             </button>
 
-            <a
-              href="#how-it-works"
-              className="w-full sm:w-auto px-7 py-4 bg-white hover:bg-gray-50 text-gray-700 font-bold text-base rounded-xl border border-gray-200 cursor-pointer shadow-xs active:scale-98 transition-all flex items-center justify-center"
+            <button
+              onClick={handleInstallApp}
+              className="w-full sm:w-auto px-7 py-4 bg-white hover:bg-gray-50 text-gray-800 font-bold text-base rounded-xl border border-gray-200 cursor-pointer shadow-xs hover:scale-105 active:scale-98 transition-all flex items-center justify-center space-x-2"
             >
-              Voir comment ça marche
-            </a>
+              <Download size={18} className="text-[#7C3AED]" />
+              <span>Installer l'application</span>
+            </button>
           </div>
 
-          {/* Social Proof Rating Bar (Exact Revizion Screenshot 1) */}
+          {/* Social Proof */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3 max-w-md mx-auto">
             <div className="flex items-center">
               <div className="w-9 h-9 rounded-full bg-[#7C3AED] text-white font-extrabold text-xs flex items-center justify-center border-2 border-white shadow-md z-4">K</div>
-              <div className="w-9 h-9 rounded-full bg-[#06B6D4] text-white font-extrabold text-xs flex items-center justify-center border-2 border-white shadow-md -ml-3 z-3">A</div>
+              <div className="w-9 h-9 rounded-full bg-[#3155C8] text-white font-extrabold text-xs flex items-center justify-center border-2 border-white shadow-md -ml-3 z-3">A</div>
               <div className="w-9 h-9 rounded-full bg-amber-600 text-white font-extrabold text-xs flex items-center justify-center border-2 border-white shadow-md -ml-3 z-2">L</div>
               <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center border-2 border-white shadow-md -ml-3 z-1">M</div>
             </div>
@@ -254,13 +258,13 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 ))}
               </div>
               <span className="text-amber-500 font-extrabold text-sm">4.9 / 5</span>
-              <span className="text-gray-500 text-xs font-medium">• Utilisé par plus de 500+ ateliers et tailleurs</span>
+              <span className="text-gray-500 text-xs font-medium">• Utilisé par plus de 500+ ateliers et créateurs</span>
             </div>
           </div>
 
-          {/* Hero Visual Mockup Container (Taylaxis Application Capture + 2 Floating Mini-Mockups in Movement) */}
-          <div className="pt-8 sm:pt-12 relative max-w-3xl mx-auto">
-            {/* Main Window Mockup Capture */}
+          {/* Large Realistic Mockup with 5 Floating Elements */}
+          <div className="pt-10 sm:pt-14 relative max-w-3xl mx-auto">
+            {/* Main Window Mockup Container */}
             <div className="p-4 sm:p-6 rounded-[28px] bg-white border border-gray-200/80 shadow-2xl text-left space-y-4 relative">
               {/* Window Header */}
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -268,16 +272,15 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   <span className="w-3 h-3 rounded-full bg-red-400" />
                   <span className="w-3 h-3 rounded-full bg-yellow-400" />
                   <span className="w-3 h-3 rounded-full bg-green-400" />
-                  <span className="text-xs text-gray-500 font-mono ml-2">Taylaxis — Accueil Atelier</span>
+                  <span className="text-xs text-gray-500 font-mono ml-2">Taylaxis — Dashboard Atelier</span>
                 </div>
-                <span className="text-[11px] font-bold text-[#06B6D4] bg-[#ECFEFF] px-2.5 py-0.5 rounded-full border border-[#CFFAFE]">
+                <span className="text-[11px] font-bold text-[#7C3AED] bg-[#F3E8FF] px-2.5 py-0.5 rounded-full border border-[#E9D5FF]">
                   ● Live Atelier
                 </span>
               </div>
 
-              {/* Realistic Capture of Taylaxis Atelier App */}
+              {/* Taylaxis Atelier App Real Dashboard Representation */}
               <div className="space-y-3">
-                {/* Stat Cards 2x2 */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <div className="p-3 rounded-[16px] bg-[#059669] text-white space-y-1 shadow-sm">
                     <div className="text-[10px] opacity-90">CA du jour</div>
@@ -304,10 +307,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   </div>
                 </div>
 
-                {/* Tailor Application Items */}
                 <div className="p-3.5 rounded-[16px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-[12px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-[12px] bg-[#F3E8FF] text-[#7C3AED] flex items-center justify-center font-bold">
                       <Scissors size={20} />
                     </div>
                     <div>
@@ -315,12 +317,12 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                       <div className="text-xs text-gray-500 font-medium">Client : Kossi Mensah • 6 mensurations congelées</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-[#CCFBF1] text-[#0D9488] text-xs font-extrabold">Prêt</span>
+                  <span className="px-2.5 py-1 rounded-full bg-[#ECFEFF] text-[#0891B2] text-xs font-extrabold">Prêt</span>
                 </div>
 
                 <div className="p-3.5 rounded-[16px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-[12px] bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <div className="w-10 h-10 rounded-[12px] bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
                       <FileText size={20} />
                     </div>
                     <div>
@@ -328,25 +330,50 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                       <div className="text-xs text-gray-500 font-medium">Cliente : Aminata Diallo • Solde versé: 50 000 FCFA</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-extrabold">En atelier</span>
+                  <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold">En atelier</span>
                 </div>
               </div>
             </div>
 
-            {/* Floating Mini-Mockup 1 (Top Right in Movement - animate-float) */}
-            <div className="absolute -top-5 -right-3 sm:-right-6 p-3 px-4 rounded-[20px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2.5 shadow-xl animate-float z-20">
-              <div className="w-7 h-7 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center">
-                <CheckCircle2 size={16} />
+            {/* THE 5 FLOATING ELEMENTS IN MOVEMENT */}
+            {/* 1. Top Left: Nouveau client */}
+            <div className="absolute -top-6 -left-3 sm:-left-8 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl animate-float z-20">
+              <div className="w-6 h-6 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center">
+                <UserPlus size={14} />
               </div>
-              <span>Confection prête !</span>
+              <span>Nouveau client</span>
             </div>
 
-            {/* Floating Mini-Mockup 2 (Bottom Left in Movement - animate-float-reverse) */}
-            <div className="absolute -bottom-5 -left-3 sm:-left-6 p-3 px-4 rounded-[20px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-3 shadow-xl animate-float-reverse z-20">
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-gray-500 font-bold uppercase">Soldes encaissés</span>
-                <span className="text-sm font-black text-[#06B6D4]">100%</span>
+            {/* 2. Top Right: Mensurations enregistrées */}
+            <div className="absolute -top-6 -right-3 sm:-right-8 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl animate-float-reverse z-20">
+              <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <Ruler size={14} />
               </div>
+              <span>Mensurations enregistrées</span>
+            </div>
+
+            {/* 3. Middle Right: Commande en cours */}
+            <div className="hidden sm:flex absolute top-1/2 -right-10 -translate-y-1/2 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs items-center space-x-2 shadow-xl animate-float z-20">
+              <div className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                <Scissors size={14} />
+              </div>
+              <span>Commande en cours</span>
+            </div>
+
+            {/* 4. Bottom Left: Rendez-vous demain */}
+            <div className="absolute -bottom-6 -left-3 sm:-left-8 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl animate-float-reverse z-20">
+              <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+                <Calendar size={14} />
+              </div>
+              <span>Rendez-vous demain</span>
+            </div>
+
+            {/* 5. Bottom Right: Relance envoyée */}
+            <div className="absolute -bottom-6 -right-3 sm:-right-8 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl animate-float z-20">
+              <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <CheckCircle2 size={14} />
+              </div>
+              <span>Relance envoyée</span>
             </div>
           </div>
         </div>

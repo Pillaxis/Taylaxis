@@ -238,80 +238,83 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </button>
           </div>
 
-          {/* Compact Mockup Container (Exact CVPillar / Revizion Screenshot 6 Layout) */}
-          <div className="pt-8 sm:pt-10 relative max-w-xl mx-auto">
-            {/* Main Window Mockup Capture in Straight Movement */}
-            <div className="p-4 sm:p-5 rounded-[24px] bg-white border border-gray-200/80 shadow-2xl text-left space-y-3 relative animate-float">
-              {/* Window Header */}
-              <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                  <span className="text-[11px] text-gray-500 font-mono ml-2">Taylaxis — Commandes Atelier</span>
+          {/* Premium Mac Window Mockup Container (Exact CVPillar & Revizion Ultra-Clean Design) */}
+          <div className="pt-8 sm:pt-12 relative max-w-xl mx-auto">
+            {/* Subtle Glowing Radial Backdrop */}
+            <div className="absolute -inset-2 bg-gradient-to-r from-[#7C3AED]/15 via-[#06B6D4]/15 to-[#7C3AED]/15 rounded-[36px] blur-2xl opacity-70" />
+
+            {/* Main Window Mockup Container */}
+            <div className="rounded-[28px] bg-white border border-gray-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] overflow-hidden text-left relative animate-float">
+              {/* Ultra-Clean Mac OS Window Control Header Bar */}
+              <div className="bg-[#F8FAFC] border-b border-gray-200/60 px-4 sm:px-5 py-3 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="w-3 h-3 rounded-full bg-[#FF5F56] shadow-xs" />
+                  <span className="w-3 h-3 rounded-full bg-[#FFBD2E] shadow-xs" />
+                  <span className="w-3 h-3 rounded-full bg-[#27C93F] shadow-xs" />
+                  <span className="text-xs font-bold text-gray-500 font-sans ml-2">Mes Commandes</span>
                 </div>
-                <span className="text-[10px] font-bold text-[#7C3AED] bg-[#F3E8FF] px-2 py-0.5 rounded-full border border-[#E9D5FF]">
+                <span className="text-[10.5px] font-black text-[#7C3AED] bg-[#F3E8FF] px-2.5 py-0.5 rounded-full border border-[#E9D5FF]">
                   ● Live Atelier
                 </span>
               </div>
 
-              {/* Taylaxis Atelier App Compact Items (3 Rows like CVPillar) */}
-              <div className="space-y-2">
+              {/* Taylaxis Atelier Document List (3 Ultra-Crisp Cards) */}
+              <div className="p-4 sm:p-5 space-y-2.5 bg-white">
                 {/* Row 1 */}
-                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 rounded-[10px] bg-[#F3E8FF] text-[#7C3AED] flex items-center justify-center font-bold">
-                      <Scissors size={18} />
+                <div className="p-3.5 rounded-[18px] bg-[#F8FAFC] border border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-10 h-10 rounded-[14px] bg-[#F3E8FF] text-[#7C3AED] flex items-center justify-center font-extrabold flex-shrink-0">
+                      <Scissors size={20} />
                     </div>
                     <div>
-                      <div className="text-xs sm:text-sm font-extrabold text-gray-900">Costume 3 Pièces Sur-Mesure</div>
-                      <div className="text-[11px] text-gray-500 font-medium">Kossi Mensah • 6 mensurations</div>
+                      <div className="text-sm font-extrabold text-gray-900 leading-snug">Costume 3 Pièces Sur-Mesure</div>
+                      <div className="text-xs text-gray-500 font-medium mt-0.5">Kossi Mensah • 6 mensurations</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#ECFEFF] text-[#0891B2] text-[11px] font-extrabold">Prêt</span>
+                  <span className="px-3 py-1 rounded-full bg-[#ECFEFF] text-[#0891B2] text-xs font-extrabold flex-shrink-0">Prêt</span>
                 </div>
 
                 {/* Row 2 */}
-                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 rounded-[10px] bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                      <FileText size={18} />
+                <div className="p-3.5 rounded-[18px] bg-[#F8FAFC] border border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-10 h-10 rounded-[14px] bg-amber-50 text-amber-600 flex items-center justify-center font-extrabold flex-shrink-0">
+                      <FileText size={20} />
                     </div>
                     <div>
-                      <div className="text-xs sm:text-sm font-extrabold text-gray-900">Robe de Soirée & Pagne</div>
-                      <div className="text-[11px] text-gray-500 font-medium">Aminata Diallo • Solde versé: 50k F</div>
+                      <div className="text-sm font-extrabold text-gray-900 leading-snug">Robe de Soirée & Pagne</div>
+                      <div className="text-xs text-gray-500 font-medium mt-0.5">Aminata Diallo • Solde versé: 50k F</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold">En atelier</span>
+                  <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-extrabold flex-shrink-0">En atelier</span>
                 </div>
 
                 {/* Row 3 */}
-                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-9 h-9 rounded-[10px] bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
-                      <Shirt size={18} />
+                <div className="p-3.5 rounded-[18px] bg-[#F8FAFC] border border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="w-10 h-10 rounded-[14px] bg-blue-50 text-blue-600 flex items-center justify-center font-extrabold flex-shrink-0">
+                      <Shirt size={20} />
                     </div>
                     <div>
-                      <div className="text-xs sm:text-sm font-extrabold text-gray-900">Chemise Sur-Mesure & Veste</div>
-                      <div className="text-[11px] text-gray-500 font-medium">Jean-Marc Koffi • Essayage vendredi</div>
+                      <div className="text-sm font-extrabold text-gray-900 leading-snug">Chemise Sur-Mesure & Veste</div>
+                      <div className="text-xs text-gray-500 font-medium mt-0.5">Jean-Marc Koffi • Essayage vendredi</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px] font-extrabold">Nouveau</span>
+                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-extrabold flex-shrink-0">Nouveau</span>
                 </div>
               </div>
 
-              {/* 1. Top-Right Floating Notification (Sticking out of Top-Right Border like CVPillar) */}
-              <div className="absolute -top-4 right-4 sm:right-6 lg:right-8 p-2.5 px-4 rounded-[18px] bg-white border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl backdrop-blur-md animate-float-reverse z-30 pointer-events-none select-none">
-                <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 size={14} />
+              {/* 1. Floating Notification Badge (Top-Right: Sticking out of Top-Right Border) */}
+              <div className="absolute -top-5 right-5 sm:right-8 lg:right-10 p-2.5 px-4 rounded-[20px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float-reverse z-30 pointer-events-none select-none">
+                <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 size={15} />
                 </div>
-                <span className="whitespace-nowrap">Confection prête !</span>
+                <span className="whitespace-nowrap font-black">Confection prête !</span>
               </div>
 
-              {/* 2. Left Floating Notification (Sticking out of Left Border like CVPillar) */}
-              <div className="absolute top-[58%] -left-4 sm:-left-6 lg:-left-8 -translate-y-1/2 p-2.5 px-4 rounded-[18px] bg-white border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl backdrop-blur-md animate-float z-30 pointer-events-none select-none">
-                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">Soldes encaissés</span>
-                <span className="text-sm font-black text-[#06B6D4] leading-tight mt-0.5">100%</span>
+              {/* 2. Floating Notification Badge (Left: Sticking out of Left Border) */}
+              <div className="absolute top-[58%] -left-5 sm:-left-8 lg:-left-10 -translate-y-1/2 p-3 px-4 rounded-[20px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float z-30 pointer-events-none select-none">
+                <span className="text-[9.5px] font-bold text-gray-500 uppercase tracking-widest leading-none">Soldes encaissés</span>
+                <span className="text-sm sm:text-base font-black text-[#06B6D4] leading-tight mt-1">100%</span>
               </div>
             </div>
           </div>

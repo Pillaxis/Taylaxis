@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { userService } from '../services/userService';
+import { paymentService } from '../services/paymentService';
 import type {
   UserProfile,
   WorkshopProfile,
@@ -228,7 +229,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut, onViewLandingPage }
     showToast('Préférences de notification mises à jour.');
   };
 
-  const handleChangeSubscription = (planId: SubscriptionPlanType) => {
+  const handleChangeSubscription = async (planId: SubscriptionPlanType) => {
     const plans: Record<SubscriptionPlanType, SubscriptionPlan> = {
       FREE: {
         id: 'FREE',
@@ -277,10 +278,39 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut, onViewLandingPage }
       },
     };
 
-    const newPlan = userService.saveSubscriptionPlan(plans[planId]);
-    setSubscription(newPlan);
-    setShowSubscriptionModal(false);
-    showToast(`Formule ${newPlan.name} sélectionnée !`);
+    const targetPlan = plans[planId];
+
+    if (targetPlan.priceFCFA > 0) {
+      showToast('Ouverture du paiement FCFA...');
+      const launched = await paymentService.initiatePayment({
+        amountFCFA: targetPlan.priceFCFA,
+        description: `Abonnement ${targetPlan.name} (1 mois)`,
+        customerName: userProfile.fullName || 'Tailleur Taylaxis',
+        customerEmail: userProfile.email,
+        customerPhone: userProfile.phone,
+        onSuccess: (txId) => {
+          const newPlan = userService.saveSubscriptionPlan(targetPlan);
+          setSubscription(newPlan);
+          setShowSubscriptionModal(false);
+          showToast(`Succès ! Abonnement ${newPlan.name} activé (Réf: ${txId}) !`);
+        },
+        onError: (err) => {
+          showToast(`Paiement: ${err}`);
+        },
+      });
+
+      if (!launched) {
+        const newPlan = userService.saveSubscriptionPlan(targetPlan);
+        setSubscription(newPlan);
+        setShowSubscriptionModal(false);
+        showToast(`Abonnement ${newPlan.name} activé (Mode démonstration).`);
+      }
+    } else {
+      const newPlan = userService.saveSubscriptionPlan(targetPlan);
+      setSubscription(newPlan);
+      setShowSubscriptionModal(false);
+      showToast(`Formule ${newPlan.name} sélectionnée !`);
+    }
   };
 
   const handleSubmitBugReport = (e: React.FormEvent) => {

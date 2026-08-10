@@ -50,19 +50,41 @@ export const AppContent: React.FC = () => {
   }, []);
 
   const [showLandingPage, setShowLandingPage] = useState<boolean>(() => {
+    const isStandaloneApp =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://') ||
+      localStorage.getItem('taylaxis_app_installed_v1') === 'true';
+
+    if (isStandaloneApp) {
+      return false; // Installed PWA app ALWAYS bypasses landing page and shows AuthView directly!
+    }
+
     const saved = localStorage.getItem('taylaxis_active_session_v1');
-    if (!saved) return true; // Show Landing Page by default for all visitors!
+    if (!saved) return true; // Show Landing Page for web visitors!
     return window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing';
   });
 
   React.useEffect(() => {
-    const checkLandingHash = () => {
-      if (window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing') {
+    const checkStandaloneAndHash = () => {
+      const isStandaloneApp =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        document.referrer.includes('android-app://') ||
+        localStorage.getItem('taylaxis_app_installed_v1') === 'true';
+
+      if (isStandaloneApp) {
+        setShowLandingPage(false);
+      } else if (window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing') {
         setShowLandingPage(true);
       }
     };
-    window.addEventListener('hashchange', checkLandingHash);
-    return () => window.removeEventListener('hashchange', checkLandingHash);
+    window.addEventListener('hashchange', checkStandaloneAndHash);
+    window.addEventListener('appinstalled', checkStandaloneAndHash);
+    return () => {
+      window.removeEventListener('hashchange', checkStandaloneAndHash);
+      window.removeEventListener('appinstalled', checkStandaloneAndHash);
+    };
   }, []);
 
   // Auth state with localStorage session persistence

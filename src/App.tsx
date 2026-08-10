@@ -68,7 +68,7 @@ export const AppContent: React.FC = () => {
       const saved = localStorage.getItem(CLIENTS_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }
@@ -272,9 +272,10 @@ export const AppContent: React.FC = () => {
 
   const handleCreateClient = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClientName || !newClientPhone) return;
+    if (!newClientName.trim() || !newClientPhone.trim()) return;
 
     const initials = newClientName
+      .trim()
       .split(' ')
       .map((n) => n[0])
       .join('')
@@ -291,72 +292,77 @@ export const AppContent: React.FC = () => {
           }))
       : [];
 
-    const effectiveGarmentType =
-      selectedGarmentType === 'Autre vêtement (Personnalisé)' && customGarmentName.trim()
-        ? customGarmentName.trim()
-        : selectedGarmentType;
-
     const newClientId = `c_${Date.now()}`;
-    const newOrderId = `ord_${Date.now()}`;
-    const orderTitle = `Confection - ${effectiveGarmentType}`;
-
-    const initialOrder: Order = {
-      id: newOrderId,
-      orderNumber: OrderService.generateOrderNumber(),
-      clientId: newClientId,
-      clientName: newClientName,
-      title: orderTitle,
-      priceFCFA: 0,
-      paidFCFA: 0,
-      balanceFCFA: 0,
-      status: 'progress',
-      manufacturingStatus: 'EN_COURS',
-      paymentStatus: 'NON_PAYEE',
-      dueDateStatus: 'BIENTOT',
-      priority: 'NORMALE',
-      deliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      orderDate: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
-      paymentHistory: [],
-      eventTimeline: [
-        {
-          id: `evt_${Date.now()}`,
-          orderId: newOrderId,
-          timestamp: `${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
-          title: 'Commande initiée',
-          description: `Commande de ${orderTitle} créée. Prix à définir dans l'onglet Paiement.`,
-          type: 'COMMANDE_CREEE',
-          performedBy: 'Atelier Taylaxis',
-        },
-      ],
-      measurementSnapshot: {
-        takenAt: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
-        measurements: customM,
-      },
-    };
+    const shouldCreateOrder = addMeasurementsInModal;
 
     const newClient: Client = {
       id: newClientId,
-      name: newClientName,
-      phone: newClientPhone,
-      ordersCount: 1,
+      name: newClientName.trim(),
+      phone: newClientPhone.trim(),
+      ordersCount: shouldCreateOrder ? 1 : 0,
       initials,
       status: 'actif',
       isNew: true,
-      lastOrderDate: "Aujourd'hui",
+      lastOrderDate: shouldCreateOrder ? "Aujourd'hui" : 'Aucune commande',
       mensurationsCount: customM.length,
       totalSpentFCFA: 0,
       customMeasurements: customM,
       notes: '',
     };
 
-    OrderService.saveOrder(initialOrder);
-    setOrders((prev) => [initialOrder, ...prev]);
+    if (shouldCreateOrder) {
+      const effectiveGarmentType =
+        selectedGarmentType === 'Autre vêtement (Personnalisé)' && customGarmentName.trim()
+          ? customGarmentName.trim()
+          : selectedGarmentType;
+
+      const newOrderId = `ord_${Date.now()}`;
+      const orderTitle = `Confection - ${effectiveGarmentType}`;
+
+      const initialOrder: Order = {
+        id: newOrderId,
+        orderNumber: OrderService.generateOrderNumber(),
+        clientId: newClientId,
+        clientName: newClientName.trim(),
+        title: orderTitle,
+        priceFCFA: 0,
+        paidFCFA: 0,
+        balanceFCFA: 0,
+        status: 'progress',
+        manufacturingStatus: 'EN_COURS',
+        paymentStatus: 'NON_PAYEE',
+        dueDateStatus: 'BIENTOT',
+        priority: 'NORMALE',
+        deliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        orderDate: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+        paymentHistory: [],
+        eventTimeline: [
+          {
+            id: `evt_${Date.now()}`,
+            orderId: newOrderId,
+            timestamp: `${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} • ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
+            title: 'Commande initiée à l’enregistrement du client',
+            description: `Commande de ${orderTitle} créée avec ${customM.length} mesure(s).`,
+            type: 'COMMANDE_CREEE',
+            performedBy: 'Atelier Taylaxis',
+          },
+        ],
+        measurementSnapshot: {
+          takenAt: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+          measurements: customM,
+        },
+      };
+
+      OrderService.saveOrder(initialOrder);
+      setOrders((prev) => [initialOrder, ...prev]);
+    }
 
     if (SupabaseService.isReady()) {
       SupabaseService.saveClient(newClient);
     }
 
-    setClients([newClient, ...clients]);
+    setClients((prev) => [newClient, ...prev]);
+
     setNewClientName('');
     setNewClientPhone('');
     setCustomGarmentName('');

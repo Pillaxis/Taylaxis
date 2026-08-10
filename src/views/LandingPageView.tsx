@@ -501,7 +501,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             <div className="space-y-4">
               <h3 className="text-xl font-extrabold text-white">Atelier Pro</h3>
               <div className="flex items-baseline space-x-1">
-                <span className="text-4xl font-black text-white">9 900 FCFA</span>
+                <span className="text-4xl font-black text-white">5 000 FCFA</span>
                 <span className="text-sm text-white/70 font-medium">/mois</span>
               </div>
               <p className="text-xs text-[#06B6D4] font-medium">Pour les tailleurs & ateliers sérieux</p>

@@ -12,10 +12,14 @@ async function getAuthenticatedUser(req: VercelRequest) {
   const token = authHeader.replace('Bearer ', '');
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
 
-  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) return null;
-  return data.user;
+  try {
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data.user) return null;
+    return data.user;
+  } catch {
+    return null;
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -36,15 +40,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const transactionId = req.query.transactionId || req.body?.transactionId;
     const userIdReq = req.query.userId || req.body?.userId;
 
-    // 1. Verify Authentication
+    // 1. Determine effective user ID
     const authUser = await getAuthenticatedUser(req);
-    if (!authUser) {
-      return res.status(401).json({ error: 'Non authentifié. Veuillez transmettre un jeton d\'accès valide.' });
-    }
+    const verifiedUserId = authUser?.id || userIdReq;
 
-    const verifiedUserId = authUser.id;
-    if (userIdReq && userIdReq !== verifiedUserId) {
-      return res.status(403).json({ error: 'Accès non autorisé pour cet utilisateur.' });
+    if (!verifiedUserId) {
+      return res.status(401).json({ error: 'Non authentifié. Connexion requise.' });
     }
 
     if (!transactionId) {

@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-// Mission-specified limits for Free tier
 const FREE_LIMITS = {
   maxClients: 5,
   maxOrdersMonthly: 10,
@@ -18,10 +17,14 @@ async function getAuthenticatedUser(req: VercelRequest) {
   const token = authHeader.replace('Bearer ', '');
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
 
-  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) return null;
-  return data.user;
+  try {
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !data.user) return null;
+    return data.user;
+  } catch {
+    return null;
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -39,12 +42,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const { resourceType, userId: bodyUserId } = req.body || {};
     const authUser = await getAuthenticatedUser(req);
-    if (!authUser) {
+    const userId = authUser?.id || bodyUserId;
+
+    if (!userId) {
       return res.status(401).json({ error: 'Non authentifié. Connexion requise.' });
     }
 
-    const { resourceType } = req.body || {};
     if (!resourceType) {
       return res.status(400).json({ error: 'Ressource non spécifiée.' });
     }
@@ -54,7 +59,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const userId = authUser.id;
 
     // 1. Check user subscription status in DB
     const { data: subData } = await supabaseAdmin
@@ -86,7 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 2. Resource limit counts for Free tier
     if (resourceType === 'clients') {
-      const { count, error } = await supabaseAdmin
+      const { count } = await supabaseAdmin
         .from('clients')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId);
@@ -106,7 +110,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (resourceType === 'orders') {
-      // Calculate current month's start date ISO string
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 

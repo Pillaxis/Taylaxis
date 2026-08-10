@@ -257,8 +257,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               </div>
 
               {/* Taylaxis Atelier App Compact Items */}
-              <div className="space-y-2">
-                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
+              <div className="space-y-2 relative">
+                {/* First Order Line Container (Reference Element for Both Floating Notifications) */}
+                <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between relative">
                   <div className="flex items-center space-x-3">
                     <div className="w-9 h-9 rounded-[10px] bg-[#F3E8FF] text-[#7C3AED] flex items-center justify-center font-bold">
                       <Scissors size={18} />
@@ -269,8 +270,23 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                     </div>
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full bg-[#ECFEFF] text-[#0891B2] text-[11px] font-extrabold">Prêt</span>
+
+                  {/* 1. Left Notification (« Soldes encaissés 100% ») - Centered vertically around the 1st Order Line */}
+                  <div className="absolute top-1/2 -translate-y-1/2 -left-3 sm:-left-6 lg:-left-8 p-2 px-3 sm:px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float z-30 pointer-events-none select-none">
+                    <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">Soldes encaissés</span>
+                    <span className="text-xs font-black text-[#06B6D4] leading-tight mt-0.5">100%</span>
+                  </div>
+
+                  {/* 2. Right Notification (« Confection prête ! ») - Aligned with upper part of the 1st Order Line */}
+                  <div className="absolute -top-3 sm:-top-4 -right-3 sm:-right-5 lg:-right-6 p-2 px-3 sm:px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float-reverse z-30 pointer-events-none select-none">
+                    <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 size={13} />
+                    </div>
+                    <span className="whitespace-nowrap">Confection prête !</span>
+                  </div>
                 </div>
 
+                {/* Second Order Line Container */}
                 <div className="p-3 rounded-[14px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-9 h-9 rounded-[10px] bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
@@ -283,20 +299,6 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold">En atelier</span>
                 </div>
-              </div>
-
-              {/* 1. Right Floating Notification Pill (Anchored to top-right edge & upper row) */}
-              <div className="absolute top-10 -right-3 sm:-right-6 p-2 px-3 sm:px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float-reverse z-30 pointer-events-none select-none">
-                <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 size={13} />
-                </div>
-                <span className="whitespace-nowrap">Confection prête !</span>
-              </div>
-
-              {/* 2. Left Floating Notification Pill (Anchored to left edge, centered vertically) */}
-              <div className="absolute top-1/2 -translate-y-1/2 -left-3 sm:-left-7 p-2 px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float z-30 pointer-events-none select-none">
-                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">Soldes encaissés</span>
-                <span className="text-xs font-black text-[#06B6D4] leading-tight mt-0.5">100%</span>
               </div>
             </div>
           </div>

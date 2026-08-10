@@ -118,7 +118,6 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </div>
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 leading-none">Taylaxis</span>
-              <span className="text-[9.5px] font-bold text-[#06B6D4] tracking-widest uppercase mt-0.5">SaaS Couture</span>
             </div>
           </div>
 

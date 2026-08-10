@@ -21,7 +21,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { userId, customerEmail, customerName, customerPhone } = req.body || {};
+    const { userId, customerEmail, customerName, customerPhone, featureIntent } = req.body || {};
 
     if (!userId) {
       return res.status(400).json({ error: 'ID Utilisateur (userId) manquant.' });
@@ -51,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         description: 'Abonnement Taylaxis Pro (5 000 FCFA / mois)',
         amount: 5000,
         currency: { iso: 'XOF' },
-        callback_url: `${req.headers.origin || 'https://taylaxis.vercel.app'}/?feda_tx=true`,
+        callback_url: `${req.headers.origin || 'https://taylaxis.vercel.app'}/?feda_tx_id={id}&status=callback`,
         customer: {
           email: customerEmail || 'client@taylaxis.com',
           firstname: customerName || 'Tailleur',
@@ -61,6 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         custom_metadata: {
           user_id: userId,
           plan: 'PRO',
+          feature_intent: featureIntent || '',
         },
       }),
     });
@@ -106,6 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           amount: 5000,
           currency: 'XOF',
           status: 'pending',
+          feature_intent: featureIntent || null,
           raw_response: transaction,
         });
 
@@ -117,6 +119,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           transaction_id: String(fedaTxId),
           amount: 5000,
           currency: 'XOF',
+          feature_intent: featureIntent || null,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
       } catch (dbErr) {

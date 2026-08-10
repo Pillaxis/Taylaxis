@@ -56,6 +56,7 @@ interface AgendaViewProps {
   clients?: Client[];
   orders?: Order[];
   onOpenNewClientModal?: () => void;
+  onRequirePro?: (featureKey: string, customMessage?: string) => void;
 }
 
 const now = new Date();
@@ -101,13 +102,27 @@ const parseOrderDeliveryDate = (dateStr: string): { year: number; month: number;
   return null;
 };
 
-export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients = [], orders = [], onOpenNewClientModal }) => {
+export const AgendaView: React.FC<AgendaViewProps> = ({
+  onSelectClient,
+  clients = [],
+  orders = [],
+  onOpenNewClientModal,
+  onRequirePro,
+}) => {
   // Index 3 corresponds to offset 0 (Current real month)
   const [currentMonthIdx, setCurrentMonthIdx] = useState<number>(3);
   const [selectedDay, setSelectedDay] = useState<number>(currentRealDay);
   const [appointments, setAppointments] = useState<AppointmentItem[]>(getStoredAppointments);
   const [selectedAppointment, setSelectedAppointment] = useState<AppointmentItem | null>(null);
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
+
+  const handleOpenNewAppointment = () => {
+    if (appointments.length >= 5 && onRequirePro) {
+      onRequirePro('appointments', 'Vous avez atteint la limite de 5 rendez-vous par mois du forfait gratuit.');
+      return;
+    }
+    setShowNewModal(true);
+  };
 
   const saveAppointments = (newApts: AppointmentItem[]) => {
     setAppointments(newApts);
@@ -395,7 +410,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
               if (clients.length === 0 && onOpenNewClientModal) {
                 onOpenNewClientModal();
               } else {
-                setShowNewModal(true);
+                handleOpenNewAppointment();
               }
             }}
             className="text-[12px] font-bold text-[#7C3AED] hover:underline cursor-pointer flex items-center space-x-0.5"
@@ -438,7 +453,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ onSelectClient, clients 
                 </p>
               </div>
               <button
-                onClick={() => setShowNewModal(true)}
+                onClick={handleOpenNewAppointment}
                 className="px-3.5 py-1.5 bg-[#7C3AED] text-white rounded-[12px] text-[11px] font-bold hover:bg-[#6D28D9] cursor-pointer active:scale-95 transition-all inline-flex items-center space-x-1"
               >
                 <Plus size={14} />

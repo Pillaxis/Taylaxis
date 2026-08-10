@@ -57,6 +57,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const realStatus = (transaction.status || '').toLowerCase();
     const isApproved = realStatus === 'approved' || realStatus === 'transferred';
 
+    const customMetadata = transaction.custom_metadata || {};
+    const featureIntent = customMetadata.feature_intent || '';
+
     // 2. If approved, activate PRO subscription in Supabase
     if (isApproved && userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -70,6 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         transaction_id: String(transactionId),
         amount: Number(transaction.amount || 5000),
         currency: 'XOF',
+        feature_intent: featureIntent || null,
         started_at: now.toISOString(),
         expires_at: expiresAt.toISOString(),
         updated_at: now.toISOString(),
@@ -81,6 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         amount: Number(transaction.amount || 5000),
         currency: 'XOF',
         status: 'approved',
+        feature_intent: featureIntent || null,
         raw_response: transaction,
         updated_at: now.toISOString(),
       }, { onConflict: 'feda_transaction_id' });
@@ -91,6 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       status: realStatus,
       isPro: isApproved,
       transactionId: transactionId,
+      featureIntent: featureIntent,
     });
   } catch (err: any) {
     console.error('Verify Feda Transaction Exception:', err);

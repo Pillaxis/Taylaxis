@@ -77,37 +77,37 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
 
           {/* Features Comparison Checklist */}
           <div className="space-y-2.5">
-            <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wider block">Avantages inclus dans le Plan Pro :</span>
+            <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wider block">Ce que contient TAYLAXIS Pro :</span>
             <ul className="space-y-2 text-xs font-semibold text-gray-700">
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Clients & mensurations <strong>illimités</strong></span>
+                <span>Relances clients (WhatsApp & SMS)</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Commandes & Agenda d'essayage <strong>illimités</strong></span>
+                <span>Statistiques avancées & Chiffre d'Affaires</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Relances WhatsApp & SMS 1-Clic</span>
+                <span>Commandes illimitées</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Statistiques financières & Chiffre d'Affaires</span>
+                <span>Clients & mensurations illimités</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Reçus PDF professionnels avec Logo Atelier</span>
+                <span>Rendez-vous illimités</span>
               </li>
             </ul>
           </div>
@@ -123,7 +123,7 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>Passer à Pro — 5 000 FCFA</span>
+                  <span>Continuer vers le paiement — 5 000 FCFA</span>
                   <ArrowRight size={18} />
                 </>
               )}

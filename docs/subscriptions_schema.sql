@@ -1,17 +1,18 @@
 -- =========================================================
 -- TAYLAXIS PRO — SCHEMA GESTION ABONNEMENTS & TRANSACTIONS FEDAPAY
--- Copiez et collez ce script dans le SQL Editor de Supabase
+-- Évolutif : Plans (FREE, PRO, BUSINESS, ENTERPRISE)
 -- =========================================================
 
 -- 1. TABLE DES ABONNEMENTS (SUBSCRIPTIONS)
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE NOT NULL,
-    plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro')),
-    status TEXT NOT NULL DEFAULT 'inactive' CHECK (status IN ('active', 'inactive', 'pending', 'expired')),
+    plan TEXT NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'business', 'enterprise')),
+    status TEXT NOT NULL DEFAULT 'inactive' CHECK (status IN ('active', 'inactive', 'pending', 'expired', 'canceled')),
     transaction_id TEXT,
     amount NUMERIC DEFAULT 0,
     currency TEXT DEFAULT 'XOF',
+    feature_intent TEXT,
     started_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
     amount NUMERIC NOT NULL DEFAULT 5000,
     currency TEXT DEFAULT 'XOF',
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'canceled', 'declined', 'failed')),
+    feature_intent TEXT,
     raw_response JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL

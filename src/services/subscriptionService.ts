@@ -1,10 +1,11 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export interface UserSubscription {
-  plan: 'free' | 'pro';
-  status: 'active' | 'inactive' | 'pending' | 'expired';
+  plan: 'free' | 'pro' | 'business' | 'enterprise';
+  status: 'active' | 'inactive' | 'pending' | 'expired' | 'canceled';
   isPro: boolean;
   transactionId?: string;
+  featureIntent?: string;
   startedAt?: string;
   expiresAt?: string;
 }
@@ -18,16 +19,32 @@ export interface LimitCheckResult {
 }
 
 export const FREE_LIMITS = {
-  maxClients: 5,
-  maxMeasurements: 5,
-  maxOrdersMonthly: 10,
-  maxAppointmentsMonthly: 10,
+  maxClients: 10,
+  maxMeasurements: 10,
+  maxOrdersMonthly: 5,
+  maxAppointmentsMonthly: 5,
   advancedRelances: false,
   advancedStats: false,
+  advancedSearch: false,
 };
 
 export class SubscriptionService {
   private static localCache: Record<string, UserSubscription> = {};
+
+  /**
+   * Save feature intent before auth or payment (e.g. 'relances', 'stats', 'clients', 'orders', 'agenda')
+   */
+  static savePendingFeatureIntent(featureKey: string) {
+    localStorage.setItem('taylaxis_pending_feature_v1', featureKey);
+  }
+
+  static getPendingFeatureIntent(): string | null {
+    return localStorage.getItem('taylaxis_pending_feature_v1');
+  }
+
+  static clearPendingFeatureIntent() {
+    localStorage.removeItem('taylaxis_pending_feature_v1');
+  }
 
   /**
    * Get cached or live subscription for user
@@ -69,19 +86,22 @@ export class SubscriptionService {
         .maybeSingle();
 
       if (error || !data) {
-        const fallback = { plan: 'free' as const, status: 'inactive' as const, isPro: false };
+        const fallback: UserSubscription = { plan: 'free', status: 'inactive', isPro: false };
         this.cacheSub(userId, fallback);
         return fallback;
       }
 
       const isExpired = data.expires_at ? new Date(data.expires_at) < new Date() : false;
-      const isActivePro = data.plan === 'pro' && data.status === 'active' && !isExpired;
+      const isActivePro = (data.plan === 'pro' || data.plan === 'business' || data.plan === 'enterprise') &&
+        data.status === 'active' &&
+        !isExpired;
 
       const subResult: UserSubscription = {
-        plan: isActivePro ? 'pro' : 'free',
+        plan: isActivePro ? (data.plan as any) : 'free',
         status: isExpired ? 'expired' : (data.status as any) || 'inactive',
         isPro: isActivePro,
         transactionId: data.transaction_id,
+        featureIntent: data.feature_intent,
         startedAt: data.started_at,
         expiresAt: data.expires_at,
       };
@@ -104,7 +124,7 @@ export class SubscriptionService {
    */
   static checkLimit(
     userId: string | null | undefined,
-    resourceType: 'clients' | 'measurements' | 'orders' | 'appointments' | 'relances' | 'stats',
+    resourceType: 'clients' | 'measurements' | 'orders' | 'appointments' | 'relances' | 'stats' | 'search',
     currentCount: number
   ): LimitCheckResult {
     const sub = this.getCachedSubscription(userId || undefined);
@@ -119,8 +139,8 @@ export class SubscriptionService {
             allowed: false,
             limit: FREE_LIMITS.maxClients,
             current: currentCount,
-            message: `Le plan Gratuit est limité à ${FREE_LIMITS.maxClients} clients maximum. Passez au Plan Pro pour ajouter des clients en illimité !`,
-            featureName: 'Gestion Clients Illimitée',
+            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxClients} clients du forfait gratuit.`,
+            featureName: 'Clients Illimités',
           };
         }
         return { allowed: true };
@@ -131,8 +151,8 @@ export class SubscriptionService {
             allowed: false,
             limit: FREE_LIMITS.maxMeasurements,
             current: currentCount,
-            message: `Le plan Gratuit est limité à ${FREE_LIMITS.maxMeasurements} fiches de mensurations. Débloquez les mensurations illimitées avec le Plan Pro !`,
-            featureName: 'Fiches de Mensurations Illimitées',
+            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxMeasurements} fiches du forfait gratuit.`,
+            featureName: 'Mensurations Illimitées',
           };
         }
         return { allowed: true };
@@ -143,7 +163,7 @@ export class SubscriptionService {
             allowed: false,
             limit: FREE_LIMITS.maxOrdersMonthly,
             current: currentCount,
-            message: `Le plan Gratuit est limité à ${FREE_LIMITS.maxOrdersMonthly} commandes par mois. Passez au Plan Pro pour créer des commandes illimitées !`,
+            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxOrdersMonthly} commandes par mois du forfait gratuit.`,
             featureName: 'Commandes Illimitées',
           };
         }
@@ -155,8 +175,8 @@ export class SubscriptionService {
             allowed: false,
             limit: FREE_LIMITS.maxAppointmentsMonthly,
             current: currentCount,
-            message: `Le plan Gratuit est limité à ${FREE_LIMITS.maxAppointmentsMonthly} rendez-vous par mois. Profitez d'un agenda illimité avec le Plan Pro !`,
-            featureName: 'Agenda Rendez-vous Illimité',
+            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxAppointmentsMonthly} rendez-vous par mois du forfait gratuit.`,
+            featureName: 'Agenda Illimité',
           };
         }
         return { allowed: true };
@@ -164,15 +184,22 @@ export class SubscriptionService {
       case 'relances':
         return {
           allowed: false,
-          message: 'Les relances clients automatiques (WhatsApp & SMS) sont réservées aux ateliers Taylaxis Pro.',
-          featureName: 'Relances WhatsApp & SMS',
+          message: 'La fonctionnalité de relances clients est disponible avec TAYLAXIS Pro.',
+          featureName: 'Relances Clients Automatiques',
         };
 
       case 'stats':
         return {
           allowed: false,
-          message: 'Les rapports de chiffre d\'affaires et statistiques financières sont réservés au Plan Pro.',
+          message: 'Les statistiques financières et rapports de CA sont disponibles avec TAYLAXIS Pro.',
           featureName: 'Statistiques & CA Avancés',
+        };
+
+      case 'search':
+        return {
+          allowed: false,
+          message: 'La recherche et les filtres avancés sont disponibles avec TAYLAXIS Pro.',
+          featureName: 'Recherche & Filtres Avancés',
         };
 
       default:
@@ -188,6 +215,7 @@ export class SubscriptionService {
     email?: string;
     name?: string;
     phone?: string;
+    featureIntent?: string;
   }): Promise<{ success: boolean; url?: string; token?: string; transactionId?: string; error?: string }> {
     try {
       const res = await fetch('/api/create-feda-transaction', {
@@ -219,7 +247,7 @@ export class SubscriptionService {
   static async verifyTransaction(
     transactionId: string,
     userId: string
-  ): Promise<{ isPro: boolean; status: string; error?: string }> {
+  ): Promise<{ isPro: boolean; status: string; featureIntent?: string; error?: string }> {
     try {
       const res = await fetch('/api/verify-feda-transaction', {
         method: 'POST',
@@ -234,9 +262,10 @@ export class SubscriptionService {
           status: 'active',
           isPro: true,
           transactionId,
+          featureIntent: data.featureIntent,
         };
         this.cacheSub(userId, sub);
-        return { isPro: true, status: 'approved' };
+        return { isPro: true, status: 'approved', featureIntent: data.featureIntent };
       }
       return { isPro: false, status: data.status || 'pending', error: data.error };
     } catch (e: any) {

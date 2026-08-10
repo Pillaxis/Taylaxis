@@ -243,11 +243,11 @@ export const AppContent: React.FC = () => {
     featureName?: string;
   }>({ show: false });
 
-  // Sync user subscription status & verify FedaPay callbacks
+  // Sync user subscription status, verify FedaPay callbacks & manage feature intent redirection
   React.useEffect(() => {
     async function syncAndVerify() {
       if (user?.id) {
-        await SubscriptionService.fetchUserSubscription(user.id);
+        const liveSub = await SubscriptionService.fetchUserSubscription(user.id);
 
         const params = new URLSearchParams(window.location.search);
         const txId = params.get('feda_tx_id') || params.get('id') || params.get('transaction_id');
@@ -257,14 +257,58 @@ export const AppContent: React.FC = () => {
           const res = await SubscriptionService.verifyTransaction(txId, user.id);
           if (res.isPro) {
             localStorage.removeItem('taylaxis_pending_plan_v1');
+            const targetIntent = res.featureIntent || SubscriptionService.getPendingFeatureIntent();
+            SubscriptionService.clearPendingFeatureIntent();
+
             window.history.replaceState({}, document.title, window.location.pathname);
             alert('🎉 Félicitations ! Votre abonnement Taylaxis Pro a été validé et activé avec succès.');
+
+            // Rule 7: Auto-redirect to initial requested Pro feature!
+            if (targetIntent === 'relances' || targetIntent === 'orders') {
+              setActiveTab('commandes');
+            } else if (targetIntent === 'stats') {
+              setActiveTab('accueil');
+            } else if (targetIntent === 'clients') {
+              setActiveTab('clients');
+            } else if (targetIntent === 'agenda') {
+              setActiveTab('agenda');
+            }
+            return;
           }
+        }
+
+        // Rule 4: If logged in with pending feature intent, show Pro Upgrade Modal
+        const pendingFeature = SubscriptionService.getPendingFeatureIntent();
+        if (pendingFeature && !liveSub.isPro) {
+          const limitCheck = SubscriptionService.checkLimit(user.id, pendingFeature as any, 999);
+          setProUpgradeModalData({
+            show: true,
+            reasonMessage: limitCheck.message || 'Cette fonctionnalité est disponible avec TAYLAXIS Pro.',
+            featureName: limitCheck.featureName,
+          });
         }
       }
     }
     syncAndVerify();
   }, [user]);
+
+  const handleRequirePro = (featureKey: string, customMessage?: string) => {
+    const limitCheck = SubscriptionService.checkLimit(user?.id, featureKey as any, 999);
+    const msg = customMessage || limitCheck.message || 'Cette fonctionnalité est disponible avec TAYLAXIS Pro.';
+
+    SubscriptionService.savePendingFeatureIntent(featureKey);
+
+    if (!user) {
+      setShowLandingPage(false);
+      return;
+    }
+
+    setProUpgradeModalData({
+      show: true,
+      reasonMessage: msg,
+      featureName: limitCheck.featureName,
+    });
+  };
 
   const handleAttemptAction = (
     resourceType: 'clients' | 'measurements' | 'orders' | 'appointments' | 'relances' | 'stats',
@@ -273,6 +317,7 @@ export const AppContent: React.FC = () => {
   ) => {
     const limitCheck = SubscriptionService.checkLimit(user?.id, resourceType, currentCount);
     if (!limitCheck.allowed) {
+      SubscriptionService.savePendingFeatureIntent(resourceType);
       setProUpgradeModalData({
         show: true,
         reasonMessage: limitCheck.message,
@@ -592,6 +637,7 @@ export const AppContent: React.FC = () => {
               return [updatedOrder, ...prev];
             });
           }}
+          onRequirePro={handleRequirePro}
         />
       );
     }
@@ -610,6 +656,7 @@ export const AppContent: React.FC = () => {
             onOpenNewOrderModal={handleOpenNewOrderModalWithLimit}
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onPayOrder={handlePayOrder}
+            onRequirePro={handleRequirePro}
           />
         );
       case 'clients':
@@ -661,6 +708,7 @@ export const AppContent: React.FC = () => {
             clients={clients}
             orders={orders}
             onOpenNewClientModal={handleOpenNewClientModalWithLimit}
+            onRequirePro={handleRequirePro}
           />
         );
       case 'moi':
@@ -676,6 +724,7 @@ export const AppContent: React.FC = () => {
             onSelectClient={handleSelectClient}
             onOpenNewClientModal={handleOpenNewClientModalWithLimit}
             onOpenNewOrderModal={handleOpenNewOrderModalWithLimit}
+            onRequirePro={handleRequirePro}
           />
         );
     }

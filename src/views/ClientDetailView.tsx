@@ -34,6 +34,7 @@ interface ClientDetailViewProps {
   onUpdateOrderStatus?: (orderId: string, status: StatusType) => void;
   onPayOrder?: (orderId: string, amount: number) => void;
   onOrderCreated?: (order: Order) => void;
+  onRequirePro?: (featureKey: string, customMessage?: string) => void;
 }
 
 export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
@@ -46,6 +47,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
   onUpdateOrderStatus,
   onPayOrder,
   onOrderCreated,
+  onRequirePro,
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'mensurations' | 'commandes' | 'paiements'>(initialTab);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
@@ -308,11 +310,16 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
           </a>
 
           {/* WhatsApp (Exact Official Logo SVG) */}
-          <a
-            href={`https://wa.me/${client.phone.replace(/\s+/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center group cursor-pointer active:scale-95 transition-transform"
+          <button
+            onClick={(e) => {
+              if (onRequirePro) {
+                e.preventDefault();
+                onRequirePro('relances', 'La fonctionnalité de relances WhatsApp est disponible avec TAYLAXIS Pro.');
+              } else {
+                window.open(`https://wa.me/${client.phone.replace(/\s+/g, '')}`, '_blank');
+              }
+            }}
+            className="flex flex-col items-center group cursor-pointer active:scale-95 transition-transform bg-transparent border-0"
             aria-label="WhatsApp"
             title="Envoyer un message WhatsApp"
           >
@@ -324,12 +331,19 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
             <span className="text-xs font-semibold text-[#25D366] mt-1.5">
               WhatsApp
             </span>
-          </a>
+          </button>
 
           {/* SMS (Messagerie) */}
-          <a
-            href={`sms:${client.phone.replace(/\s+/g, '')}`}
-            className="flex flex-col items-center group cursor-pointer active:scale-95 transition-transform"
+          <button
+            onClick={(e) => {
+              if (onRequirePro) {
+                e.preventDefault();
+                onRequirePro('relances', 'La fonctionnalité de relances SMS est disponible avec TAYLAXIS Pro.');
+              } else {
+                window.location.href = `sms:${client.phone.replace(/\s+/g, '')}`;
+              }
+            }}
+            className="flex flex-col items-center group cursor-pointer active:scale-95 transition-transform bg-transparent border-0"
             aria-label="SMS Messagerie"
             title="Envoyer un SMS Messagerie"
           >
@@ -339,7 +353,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({
             <span className="text-xs font-semibold text-[#A78BFA] mt-1.5">
               SMS
             </span>
-          </a>
+          </button>
         </div>
       </div>
 

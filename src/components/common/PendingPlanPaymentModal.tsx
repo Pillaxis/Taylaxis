@@ -20,11 +20,6 @@ export const PendingPlanPaymentModal: React.FC<PendingPlanPaymentModalProps> = (
   const profile = userService.getUserProfile();
   const workshop = userService.getWorkshopProfile();
 
-  React.useEffect(() => {
-    // Automatically trigger FedaPay payment gateway upon landing after login
-    handleConfirmAndPay();
-  }, []);
-
   const handleConfirmAndPay = async () => {
     setLoading(true);
     setErrorMsg(null);
@@ -186,7 +181,7 @@ export const PendingPlanPaymentModal: React.FC<PendingPlanPaymentModalProps> = (
               ) : (
                 <>
                   <CreditCard size={18} />
-                  <span>Payer 5 000 FCFA via FedaPay →</span>
+                  <span>Continuer vers le paiement — 5 000 FCFA</span>
                 </>
               )}
             </button>

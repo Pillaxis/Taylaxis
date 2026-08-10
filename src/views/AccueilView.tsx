@@ -25,6 +25,7 @@ interface AccueilViewProps {
   onOpenNewOrderModal: () => void;
   onUpdateOrderStatus?: (orderId: string, status: StatusType) => void;
   onPayOrder?: (orderId: string, amount: number) => void;
+  onRequirePro?: (featureKey: string, customMessage?: string) => void;
 }
 
 export const AccueilView: React.FC<AccueilViewProps> = ({
@@ -35,6 +36,7 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
   onSelectClient,
   onOpenNewClientModal,
   onOpenNewOrderModal,
+  onRequirePro,
 }) => {
   const [orders, setOrders] = useState<Order[]>(() => propOrders || OrderService.getOrders());
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -167,7 +169,10 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
         {/* 4 Stat Cards 2x2 Grid */}
         <div className="grid grid-cols-2 gap-3">
           {/* Card 1: CA du jour (Emerald Green) */}
-          <div className="p-3.5 sm:p-4 rounded-[20px] bg-[#059669] text-white shadow-xs space-y-1.5 relative overflow-hidden">
+          <div
+            onClick={() => onRequirePro && onRequirePro('stats', 'Les statistiques financières avancées sont disponibles avec TAYLAXIS Pro.')}
+            className="p-3.5 sm:p-4 rounded-[20px] bg-[#059669] text-white shadow-xs space-y-1.5 relative overflow-hidden cursor-pointer hover:opacity-95 transition-all"
+          >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-medium text-white/90">CA du jour</span>
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -183,9 +188,12 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
           </div>
 
           {/* Card 2: CA du mois (Purple) */}
-          <div className="p-3.5 sm:p-4 rounded-[20px] bg-[#6D28D9] text-white shadow-xs space-y-1.5 relative overflow-hidden">
+          <div
+            onClick={() => onRequirePro && onRequirePro('stats', 'Les statistiques financières avancées sont disponibles avec TAYLAXIS Pro.')}
+            className="p-3.5 sm:p-4 rounded-[20px] bg-[#6D28D9] text-white shadow-xs space-y-1.5 relative overflow-hidden cursor-pointer hover:opacity-95 transition-all"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-white/90">CA du mois</span>
+              <span className="text-[11px] font-medium text-[#EDE9FE]">CA du mois</span>
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
                 <Wallet size={16} className="text-white" />
               </div>
@@ -193,7 +201,7 @@ export const AccueilView: React.FC<AccueilViewProps> = ({
             <div className="text-xl sm:text-2xl font-extrabold text-white tabular-nums tracking-tight">
               {displayCaMois}
             </div>
-            <div className="text-[11px] font-semibold text-white/90">
+            <div className="text-[11px] font-semibold text-[#EDE9FE]">
               {caMois > 0 ? 'Encaissé ce mois-ci' : '0 FCFA encaissé ce mois-ci'}
             </div>
           </div>

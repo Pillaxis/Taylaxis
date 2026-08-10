@@ -14,6 +14,8 @@ import { AuthView } from './views/AuthView';
 import { LandingPageView } from './views/LandingPageView';
 import { NotificationsModal } from './components/common/NotificationsModal';
 import { PendingPlanPaymentModal } from './components/common/PendingPlanPaymentModal';
+import { ProUpgradeModal } from './components/common/ProUpgradeModal';
+import { SubscriptionService } from './services/subscriptionService';
 import { MOCK_CLIENTS, MOCK_MEASUREMENTS_COSTUME, GARMENT_TYPES, GARMENT_TYPE_PRESETS } from './data/mockData';
 import type { Client, Order, StatusType } from './types';
 import { OrderEngine } from './services/orderEngine';
@@ -234,6 +236,68 @@ export const AppContent: React.FC = () => {
   const [showPendingPlanModal, setShowPendingPlanModal] = useState<boolean>(() => {
     return localStorage.getItem('taylaxis_pending_plan_v1') === 'PRO';
   });
+
+  const [proUpgradeModalData, setProUpgradeModalData] = useState<{
+    show: boolean;
+    reasonMessage?: string;
+    featureName?: string;
+  }>({ show: false });
+
+  // Sync user subscription status & verify FedaPay callbacks
+  React.useEffect(() => {
+    async function syncAndVerify() {
+      if (user?.id) {
+        await SubscriptionService.fetchUserSubscription(user.id);
+
+        const params = new URLSearchParams(window.location.search);
+        const txId = params.get('feda_tx_id') || params.get('id') || params.get('transaction_id');
+
+        if (txId) {
+          console.log('⚡ Verifying FedaPay transaction from server API:', txId);
+          const res = await SubscriptionService.verifyTransaction(txId, user.id);
+          if (res.isPro) {
+            localStorage.removeItem('taylaxis_pending_plan_v1');
+            window.history.replaceState({}, document.title, window.location.pathname);
+            alert('🎉 Félicitations ! Votre abonnement Taylaxis Pro a été validé et activé avec succès.');
+          }
+        }
+      }
+    }
+    syncAndVerify();
+  }, [user]);
+
+  const handleAttemptAction = (
+    resourceType: 'clients' | 'measurements' | 'orders' | 'appointments' | 'relances' | 'stats',
+    currentCount: number,
+    onSuccess: () => void
+  ) => {
+    const limitCheck = SubscriptionService.checkLimit(user?.id, resourceType, currentCount);
+    if (!limitCheck.allowed) {
+      setProUpgradeModalData({
+        show: true,
+        reasonMessage: limitCheck.message,
+        featureName: limitCheck.featureName,
+      });
+      return;
+    }
+    onSuccess();
+  };
+
+  const handleOpenNewClientModalWithLimit = () => {
+    handleAttemptAction('clients', clients.length, () => {
+      setShowNewClientModal(true);
+    });
+  };
+
+  const handleOpenNewOrderModalWithLimit = () => {
+    if (clients.length === 0) {
+      handleOpenNewClientModalWithLimit();
+    } else {
+      handleAttemptAction('orders', orders.length, () => {
+        setShowNewOrderModal(true);
+      });
+    }
+  };
 
   React.useEffect(() => {
     if (user && localStorage.getItem('taylaxis_pending_plan_v1') === 'PRO') {
@@ -542,14 +606,8 @@ export const AppContent: React.FC = () => {
             onNavigateToCommandes={() => setActiveTab('commandes')}
             onNavigateToAgenda={() => setActiveTab('agenda')}
             onSelectClient={handleSelectClient}
-            onOpenNewClientModal={() => setShowNewClientModal(true)}
-            onOpenNewOrderModal={() => {
-              if (clients.length === 0) {
-                setShowNewClientModal(true);
-              } else {
-                setShowNewOrderModal(true);
-              }
-            }}
+            onOpenNewClientModal={handleOpenNewClientModalWithLimit}
+            onOpenNewOrderModal={handleOpenNewOrderModalWithLimit}
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onPayOrder={handlePayOrder}
           />
@@ -560,7 +618,7 @@ export const AppContent: React.FC = () => {
             clients={clients}
             onSelectClient={handleSelectClient}
             searchQuery={searchQuery}
-            onOpenNewClientModal={() => setShowNewClientModal(true)}
+            onOpenNewClientModal={handleOpenNewClientModalWithLimit}
           />
         );
       case 'commandes':
@@ -569,14 +627,8 @@ export const AppContent: React.FC = () => {
             orders={orders}
             clients={clients}
             onSelectClient={handleSelectClient}
-            onOpenNewOrderModal={() => {
-              if (clients.length === 0) {
-                setShowNewClientModal(true);
-              } else {
-                setShowNewOrderModal(true);
-              }
-            }}
-            onOpenNewClientModal={() => setShowNewClientModal(true)}
+            onOpenNewOrderModal={handleOpenNewOrderModalWithLimit}
+            onOpenNewClientModal={handleOpenNewClientModalWithLimit}
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onPayOrder={handlePayOrder}
             onOrderUpdated={(updated) => {
@@ -608,7 +660,7 @@ export const AppContent: React.FC = () => {
             onSelectClient={handleSelectClient}
             clients={clients}
             orders={orders}
-            onOpenNewClientModal={() => setShowNewClientModal(true)}
+            onOpenNewClientModal={handleOpenNewClientModalWithLimit}
           />
         );
       case 'moi':
@@ -622,8 +674,8 @@ export const AppContent: React.FC = () => {
             onNavigateToCommandes={() => setActiveTab('commandes')}
             onNavigateToAgenda={() => setActiveTab('agenda')}
             onSelectClient={handleSelectClient}
-            onOpenNewClientModal={() => setShowNewClientModal(true)}
-            onOpenNewOrderModal={() => setShowNewOrderModal(true)}
+            onOpenNewClientModal={handleOpenNewClientModalWithLimit}
+            onOpenNewOrderModal={handleOpenNewOrderModalWithLimit}
           />
         );
     }
@@ -1099,6 +1151,18 @@ export const AppContent: React.FC = () => {
           onClose={() => setShowPendingPlanModal(false)}
           onSuccess={() => {
             setShowPendingPlanModal(false);
+          }}
+        />
+      )}
+
+      {proUpgradeModalData.show && (
+        <ProUpgradeModal
+          reasonMessage={proUpgradeModalData.reasonMessage}
+          featureName={proUpgradeModalData.featureName}
+          onClose={() => setProUpgradeModalData({ show: false })}
+          onStartCheckout={() => {
+            setProUpgradeModalData({ show: false });
+            setShowPendingPlanModal(true);
           }}
         />
       )}

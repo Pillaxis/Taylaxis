@@ -25,6 +25,7 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { userService } from '../services/userService';
 import { paymentService } from '../services/paymentService';
+import { SubscriptionService } from '../services/subscriptionService';
 import type {
   UserProfile,
   WorkshopProfile,
@@ -52,6 +53,36 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
   // UI Toast / Feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
+
+  React.useEffect(() => {
+    async function syncSub() {
+      if (userProfile.id) {
+        const liveSub = await SubscriptionService.fetchUserSubscription(userProfile.id);
+        if (liveSub.isPro) {
+          const proPlan: SubscriptionPlan = {
+            id: 'PRO',
+            name: 'Taylaxis Pro',
+            priceFCFA: 5000,
+            status: 'active',
+            period: 'mensuel',
+            startDate: liveSub.startedAt ? new Date(liveSub.startedAt).toLocaleDateString('fr-FR') : 'Aujourd\'hui',
+            nextBillingDate: liveSub.expiresAt ? new Date(liveSub.expiresAt).toLocaleDateString('fr-FR') : 'Dans 30 jours',
+            features: [
+              'Clients illimités',
+              'Mensurations sur-mesure illimitées',
+              'Relances WhatsApp & SMS',
+              'Impression reçus PDF & Logo Atelier',
+              'Sauvegarde Cloud automatique 24/7',
+            ],
+            maxClients: 999,
+            maxOrdersMonth: 999,
+          };
+          setSubscription(proPlan);
+        }
+      }
+    }
+    syncSub();
+  }, [userProfile.id]);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToastMessage(msg);
@@ -280,7 +311,19 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
     const targetPlan = plans[planId];
 
     if (targetPlan.priceFCFA > 0) {
-      showToast('Ouverture du paiement FCFA...');
+      showToast('Création du paiement FedaPay...');
+      const serverRes = await SubscriptionService.createFedaPayment({
+        userId: userProfile.id,
+        email: userProfile.email,
+        name: userProfile.fullName,
+        phone: userProfile.phone,
+      });
+
+      if (serverRes.success && serverRes.url) {
+        window.location.href = serverRes.url;
+        return;
+      }
+
       const launched = await paymentService.initiatePayment({
         amountFCFA: targetPlan.priceFCFA,
         description: `Abonnement ${targetPlan.name} (1 mois)`,

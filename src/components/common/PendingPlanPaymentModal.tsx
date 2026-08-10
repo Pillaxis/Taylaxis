@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, Sparkles, X, CreditCard, Lock } from 'lucide-react';
 import { paymentService } from '../../services/paymentService';
 import { userService } from '../../services/userService';
+import { SubscriptionService } from '../../services/subscriptionService';
 import type { SubscriptionPlan } from '../../types';
 
 interface PendingPlanPaymentModalProps {
@@ -46,6 +47,18 @@ export const PendingPlanPaymentModal: React.FC<PendingPlanPaymentModalProps> = (
       maxClients: 999,
       maxOrdersMonth: 999,
     };
+
+    const serverRes = await SubscriptionService.createFedaPayment({
+      userId: profile.id,
+      email: profile.email,
+      name: profile.fullName,
+      phone: profile.phone,
+    });
+
+    if (serverRes.success && serverRes.url) {
+      window.location.href = serverRes.url;
+      return;
+    }
 
     const launched = await paymentService.initiatePayment({
       amountFCFA: 5000,

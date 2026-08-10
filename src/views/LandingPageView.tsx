@@ -1,25 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
   Scissors,
-  UserPlus,
   Ruler,
-  Calendar,
   MessageCircle,
   ArrowRight,
   CheckCircle2,
-  XCircle,
-  ShieldCheck,
-  Zap,
-  TrendingUp,
-  Sparkles,
-  AlertTriangle,
-  Award,
-  Lock,
   Banknote,
   Download,
   Smartphone,
   Share,
   X,
+  Star,
+  Quote,
+  ChevronDown,
+  Check,
+  Shirt,
+  Menu,
 } from 'lucide-react';
 
 interface LandingPageViewProps {
@@ -28,7 +24,11 @@ interface LandingPageViewProps {
 }
 
 export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, onLogin }) => {
-  const [activePreviewTab, setActivePreviewTab] = useState<'dashboard' | 'clients' | 'commandes' | 'agenda' | 'relances'>('dashboard');
+  // FAQ accordion active state
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  // Mobile menu toggle
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // PWA & Scroll Install Prompt State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -102,47 +102,50 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
     }
   };
 
+  const toggleFaq = (index: number) => {
+    setOpenFaqIndex(openFaqIndex === index ? null : index);
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF9FE] text-gray-900 font-sans selection:bg-[#7C3AED]/20 relative">
-      {/* 1. TOP NAVIGATION BAR */}
+      {/* 1. HEADER / NAVBAR (Exact Revizion Structure) */}
       <header className="sticky top-0 z-40 bg-[#0C0A27]/95 backdrop-blur-md border-b border-white/10 text-white py-3.5 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          {/* Logo */}
+          {/* Brand Logo */}
           <div className="flex items-center space-x-2.5 cursor-pointer" onClick={onGetStarted}>
             <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white shadow-lg shadow-[#7C3AED]/30 animate-pulse-glow">
               <Scissors size={20} className="rotate-45" />
             </div>
             <div className="flex flex-col">
               <span className="text-xl sm:text-2xl font-black tracking-tight text-white leading-none">Taylaxis</span>
-              <span className="text-[10px] font-extrabold text-[#A78BFA] tracking-wider uppercase">Atelier & Couture</span>
+              <span className="text-[9.5px] font-bold text-[#A78BFA] tracking-widest uppercase mt-0.5">SaaS Couture</span>
             </div>
           </div>
 
-          {/* Desktop Nav Links */}
+          {/* Nav Links */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-white/80">
-            <a href="#valeur" className="hover:text-white transition-colors">La Transformation</a>
-            <a href="#probleme" className="hover:text-white transition-colors">Le Problème</a>
-            <a href="#fonctionnalites" className="hover:text-white transition-colors">Les 5 Piliers</a>
-            <a href="#avantages" className="hover:text-white transition-colors">Bénéfices Tailleur</a>
+            <a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a>
+            <a href="#how-it-works" className="hover:text-white transition-colors">Comment ça marche</a>
+            <a href="#pricing" className="hover:text-white transition-colors">Tarifs</a>
+            <a href="#testimonials" className="hover:text-white transition-colors">Témoignages</a>
+            <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </nav>
 
-          {/* Action CTAs: Télécharger l'App & Connexion */}
-          <div className="flex items-center space-x-1.5 sm:space-x-3">
-            {/* Download Button in Header */}
+          {/* Nav Actions */}
+          <div className="hidden sm:flex items-center space-x-2.5">
             <button
               onClick={handleInstallApp}
-              className="px-2.5 sm:px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 flex-shrink-0"
-              title="Installer l'application Taylaxis sur téléphone"
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95"
+              title="Installer l'application Taylaxis"
             >
               <Download size={14} className="text-[#A78BFA]" />
-              <span className="hidden xs:inline">Installer l'app</span>
-              <span className="xs:hidden">App</span>
+              <span>App Mobile</span>
             </button>
 
             {onLogin && (
               <button
                 onClick={onLogin}
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer flex-shrink-0"
+                className="px-3 py-1.5 text-xs sm:text-sm font-semibold text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all cursor-pointer"
               >
                 Connexion
               </button>
@@ -150,663 +153,625 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
             <button
               onClick={onGetStarted}
-              className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#3155C8] text-white text-xs sm:text-sm font-extrabold rounded-full hover:opacity-95 shadow-md shadow-[#7C3AED]/30 active:scale-95 transition-all cursor-pointer flex items-center space-x-1.5 flex-shrink-0"
+              className="px-4 py-2 bg-gradient-to-r from-[#7C3AED] to-[#3155C8] text-white text-xs sm:text-sm font-extrabold rounded-lg hover:opacity-95 shadow-md shadow-[#7C3AED]/30 active:scale-95 transition-all cursor-pointer flex items-center space-x-1.5"
             >
-              <span>Démarrer</span>
+              <span>Commencer</span>
               <ArrowRight size={15} />
             </button>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="sm:hidden p-2 text-white/80 hover:text-white cursor-pointer"
+            aria-label="Menu"
+          >
+            <Menu size={24} />
+          </button>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="sm:hidden pt-4 pb-2 border-t border-white/10 space-y-3 animate-fadeIn">
+            <nav className="flex flex-col space-y-2 text-sm font-medium">
+              <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="px-2 py-1 text-white/80 hover:text-white">Fonctionnalités</a>
+              <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} className="px-2 py-1 text-white/80 hover:text-white">Comment ça marche</a>
+              <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="px-2 py-1 text-white/80 hover:text-white">Tarifs</a>
+              <a href="#testimonials" onClick={() => setIsMobileMenuOpen(false)} className="px-2 py-1 text-white/80 hover:text-white">Témoignages</a>
+              <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} className="px-2 py-1 text-white/80 hover:text-white">FAQ</a>
+            </nav>
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                onClick={handleInstallApp}
+                className="w-full py-2.5 bg-white/10 text-white font-bold text-xs rounded-lg flex items-center justify-center space-x-2"
+              >
+                <Download size={15} className="text-[#A78BFA]" />
+                <span>Installer l'application Mobile</span>
+              </button>
+              <button
+                onClick={onGetStarted}
+                className="w-full py-2.5 bg-[#7C3AED] text-white font-extrabold text-xs rounded-lg flex items-center justify-center space-x-2"
+              >
+                <span>Commencer maintenant</span>
+                <ArrowRight size={15} />
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* 2. HERO SECTION (Centré + 100% Thématique Tailleurs) */}
-      <section className="bg-[#0C0A27] text-white pt-12 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-8 relative overflow-hidden">
-        {/* Ambient background glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#7C3AED]/20 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#3155C8]/20 rounded-full blur-[100px] pointer-events-none" />
-
-        {/* Micro-Animated Floating Badges (Side Flanks for Desktop) */}
-        <div className="hidden lg:flex absolute left-8 top-1/3 p-3.5 rounded-[22px] bg-white/10 backdrop-blur-xl border border-white/20 text-left space-y-1 animate-float shadow-2xl max-w-[210px] z-20">
-          <div className="flex items-center space-x-2 text-xs font-extrabold text-emerald-400">
-            <Ruler size={16} />
-            <span>Mensurations 3D</span>
-          </div>
-          <p className="text-[11px] text-white/80 leading-tight">Poitrine, carré & longueurs congelés à la coupe</p>
-        </div>
-
-        <div className="hidden lg:flex absolute right-8 top-1/3 p-3.5 rounded-[22px] bg-white/10 backdrop-blur-xl border border-white/20 text-left space-y-1 animate-float-reverse shadow-2xl max-w-[210px] z-20">
-          <div className="flex items-center space-x-2 text-xs font-extrabold text-amber-300">
-            <Scissors size={16} />
-            <span>Zéro Solde Oublié</span>
-          </div>
-          <p className="text-[11px] text-white/80 leading-tight">100% des acomptes & soldes réclamés</p>
-        </div>
+      {/* 2. HERO SECTION (Exact Revizion Layout) */}
+      <section className="bg-[#0C0A27] text-white pt-14 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-8 relative overflow-hidden">
+        {/* Hero Background glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[550px] h-[550px] bg-[#7C3AED]/20 rounded-full blur-[130px] pointer-events-none" />
 
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
-          {/* Unmistakable Tailor Tag Badge */}
-          <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#7C3AED]/30 via-purple-500/20 to-[#3155C8]/30 border border-[#7C3AED]/50 backdrop-blur-md text-xs sm:text-sm font-extrabold text-[#C084FC] shadow-lg shadow-[#7C3AED]/20 animate-pulse-glow">
-            <Scissors size={16} className="text-[#A78BFA] rotate-45" />
-            <span>✂️ APPLICATION MÉTIER N°1 DES TAILLEURS & ATELIERS DE COUTURE 🧵</span>
+          {/* Hero Badge Pill (Revizion Style) */}
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-xs sm:text-sm font-extrabold text-[#C084FC] shadow-lg shadow-[#7C3AED]/20 animate-fadeIn">
+            <Shirt size={15} className="text-[#A78BFA]" />
+            <span>Pour les tailleurs, couturiers & ateliers ambitieux</span>
           </div>
 
-          {/* Centered Main Title */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.12]">
-            Oubliez vos cahiers d'atelier.<br />
+          {/* Hero Main Title */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15]">
+            Transformez vos cahiers en<br />
             <span className="bg-gradient-to-r from-[#A78BFA] via-[#C084FC] to-[#818CF8] bg-clip-text text-transparent">
-              Gérez vos clients, mensurations & confections sur-mesure comme un pro.
+              outils de gestion intelligents
             </span>
           </h1>
 
-          {/* Centered Subtitle */}
-          <p className="text-base sm:text-xl text-white/85 max-w-2xl mx-auto font-medium leading-relaxed">
-            Spécialement conçu pour les tailleurs, couturiers, stylistes et ateliers de confection. Gardez le contrôle total sur vos commandes et livraisons.
+          {/* Hero Subtitle */}
+          <p className="text-base sm:text-xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed">
+            Importez vos mensurations clients. Taylaxis génère automatiquement fiches congelées, suivi 3D des confections et relances d'acomptes pour réussir votre atelier.
           </p>
 
-          {/* Hero Main CTAs */}
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+          {/* Hero CTAs */}
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-base rounded-[20px] hover:scale-105 cursor-pointer shadow-xl shadow-[#7C3AED]/40 active:scale-98 transition-all flex items-center justify-center space-x-2.5 border border-white/20 animate-pulse-glow"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-base rounded-xl hover:opacity-95 cursor-pointer shadow-xl shadow-[#7C3AED]/40 active:scale-98 transition-all flex items-center justify-center space-x-2.5 border border-white/20 animate-pulse-glow"
             >
-              <span>Commencer maintenant</span>
+              <span>Essayer gratuitement</span>
               <ArrowRight size={18} />
             </button>
 
-            <button
-              onClick={handleInstallApp}
-              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/15 text-white font-bold text-base rounded-[20px] backdrop-blur-md border border-white/20 cursor-pointer shadow-lg hover:scale-105 active:scale-98 transition-all flex items-center justify-center space-x-2.5"
+            <a
+              href="#how-it-works"
+              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/15 text-white font-bold text-base rounded-xl backdrop-blur-md border border-white/20 cursor-pointer shadow-lg active:scale-98 transition-all flex items-center justify-center"
             >
-              <Download size={18} className="text-[#A78BFA]" />
-              <span>Installer l'application sur Mobile</span>
-              <Smartphone size={18} className="text-white/80" />
-            </button>
+              Voir comment ça marche
+            </a>
           </div>
 
-          <div className="text-xs text-white/60 font-medium flex items-center justify-center gap-1.5 pt-1">
-            <ShieldCheck size={16} className="text-emerald-400" />
-            <span>Accès immédiat • Conçu pour une prise en main à une main en atelier</span>
-          </div>
-
-          {/* App & Dashboard Interactive Mockup Showcase + 5 Core Functions */}
-          <div className="pt-10 sm:pt-14 space-y-8">
-            {/* The 5 Main Functions Header Pills with Icons */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 text-left">
-              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-[#7C3AED] transition-all">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-[#A78BFA]">
-                  <UserPlus size={14} />
-                  <span>1. Clients</span>
-                </div>
-                <p className="text-[11px] text-white/70 leading-tight">Fiches & répertoires atelier</p>
-              </div>
-
-              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-emerald-400 transition-all">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-emerald-400">
-                  <Ruler size={14} />
-                  <span>2. Mensurations</span>
-                </div>
-                <p className="text-[11px] text-white/70 leading-tight">Mesures congelées par vêtement</p>
-              </div>
-
-              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-amber-400 transition-all">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-400">
-                  <Scissors size={14} />
-                  <span>3. Confections</span>
-                </div>
-                <p className="text-[11px] text-white/70 leading-tight">Moteur 3D de commande</p>
-              </div>
-
-              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-blue-400 transition-all">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-400">
-                  <Calendar size={14} />
-                  <span>4. Essayages</span>
-                </div>
-                <p className="text-[11px] text-white/70 leading-tight">Planning des rendez-vous</p>
-              </div>
-
-              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 col-span-2 sm:col-span-1 hover:border-purple-300 transition-all">
-                <div className="flex items-center space-x-1.5 text-xs font-bold text-purple-300">
-                  <MessageCircle size={14} />
-                  <span>5. Relances</span>
-                </div>
-                <p className="text-[11px] text-white/70 leading-tight">Envoi WhatsApp 1-clic</p>
-              </div>
+          {/* Social Proof Rating Bar (Revizion Avatars + Stars) */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 max-w-md mx-auto">
+            <div className="flex items-center">
+              <div className="w-9 h-9 rounded-full bg-[#7C3AED] text-white font-extrabold text-xs flex items-center justify-center border-2 border-[#0C0A27] shadow-md z-4">K</div>
+              <div className="w-9 h-9 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center border-2 border-[#0C0A27] shadow-md -ml-3 z-3">A</div>
+              <div className="w-9 h-9 rounded-full bg-amber-600 text-white font-extrabold text-xs flex items-center justify-center border-2 border-[#0C0A27] shadow-md -ml-3 z-2">L</div>
+              <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center border-2 border-[#0C0A27] shadow-md -ml-3 z-1">M</div>
             </div>
+            <div className="flex items-center space-x-2">
+              <div className="flex text-amber-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={16} fill="currentColor" />
+                ))}
+              </div>
+              <span className="text-amber-400 font-extrabold text-sm">4.9 / 5</span>
+              <span className="text-white/70 text-xs font-medium">• Utilisé par 500+ ateliers</span>
+            </div>
+          </div>
 
-            {/* Simulated App Dashboard Container */}
-            <div className="p-4 sm:p-6 rounded-[28px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4 text-left max-w-3xl mx-auto relative">
+          {/* Hero Visual Container (Main Mockup Card + Floating Badges) */}
+          <div className="pt-8 sm:pt-12 relative max-w-3xl mx-auto">
+            <div className="p-4 sm:p-6 rounded-[24px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl text-left space-y-4 relative">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center space-x-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                  <span className="text-xs font-extrabold text-white tracking-wide">En direct de l'atelier Taylaxis</span>
+                  <span className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <span className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                  <span className="w-3 h-3 rounded-full bg-green-500/80" />
+                  <span className="text-xs text-white/70 font-mono ml-2">Atelier Taylaxis — Fiches & Commandes</span>
                 </div>
-                <span className="text-[11px] font-bold text-[#A78BFA] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-full border border-[#7C3AED]/40">
-                  Interface Atelier 100% Dynamique
+                <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                  ● Confections prêtes
                 </span>
               </div>
 
-              {/* Stat Cards 2x2 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3 rounded-[16px] bg-[#059669] text-white space-y-1 shadow-md">
-                  <div className="text-[10px] opacity-90">CA du jour</div>
-                  <div className="text-lg font-extrabold">85 000 FCFA</div>
-                  <div className="text-[9px] opacity-80">↗ +12% vs hier</div>
-                </div>
-
-                <div className="p-3 rounded-[16px] bg-[#6D28D9] text-white space-y-1 shadow-md">
-                  <div className="text-[10px] opacity-90">CA du mois</div>
-                  <div className="text-lg font-extrabold">1 240 000 FCFA</div>
-                  <div className="text-[9px] opacity-80">↗ +18% ce mois</div>
-                </div>
-
-                <div className="p-3 rounded-[16px] bg-[#EA580C] text-white space-y-1 shadow-md">
-                  <div className="text-[10px] opacity-90">Commandes en cours</div>
-                  <div className="text-lg font-extrabold">18 confections</div>
-                  <div className="text-[9px] opacity-80">⏱ 2 urgentes</div>
-                </div>
-
-                <div className="p-3 rounded-[16px] bg-[#2563EB] text-white space-y-1 shadow-md">
-                  <div className="text-[10px] opacity-90">À encaisser</div>
-                  <div className="text-lg font-extrabold">350 000 FCFA</div>
-                  <div className="text-[9px] opacity-80">Sur 12 clients</div>
-                </div>
-              </div>
-
-              {/* Mock upcoming delivery list */}
-              <div className="p-3.5 rounded-[18px] bg-white text-gray-900 space-y-2 shadow-lg">
-                <div className="text-xs font-extrabold text-gray-900 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Scissors size={14} className="text-[#7C3AED]" />
-                    Prochaine livraison à effectuer
-                  </span>
-                  <span className="text-[10px] text-[#7C3AED] font-bold">Rappel prêt</span>
-                </div>
-                <div className="p-2.5 rounded-[14px] bg-gray-50 flex items-center justify-between text-xs border border-gray-100">
-                  <div className="flex items-center space-x-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[#7C3AED] text-white font-extrabold flex items-center justify-center text-xs">K</div>
+              {/* Sample Document List */}
+              <div className="space-y-2.5">
+                <div className="p-3.5 rounded-[16px] bg-white/10 border border-white/15 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-[12px] bg-[#7C3AED]/20 text-[#A78BFA] flex items-center justify-center font-bold">
+                      <Scissors size={20} />
+                    </div>
                     <div>
-                      <div className="font-extrabold text-gray-900">Costume 3 Pièces Sur-Mesure</div>
-                      <div className="text-[10px] text-gray-500 font-medium">Client : Kossi Mensah • +228 90 12 34 56</div>
+                      <div className="text-sm font-extrabold text-white">Costume 3 Pièces Sur-Mesure</div>
+                      <div className="text-xs text-white/70">Client: Kossi Mensah • 6 mensurations congelées</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center gap-1">
-                    <CheckCircle2 size={12} />
-                    Prêt
-                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/40">Prêt</span>
                 </div>
+
+                <div className="p-3.5 rounded-[16px] bg-white/10 border border-white/15 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-[12px] bg-blue-500/20 text-blue-300 flex items-center justify-center font-bold">
+                      <Ruler size={20} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-extrabold text-white">Robe de Soirée & Pagne</div>
+                      <div className="text-xs text-white/70">Cliente: Aminata Diallo • Solde versé: 50 000 FCFA</div>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">En atelier</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Badges */}
+            <div className="hidden sm:flex absolute -top-4 -left-6 p-3 rounded-[16px] bg-[#7C3AED] text-white font-extrabold text-xs items-center space-x-2 shadow-2xl animate-float">
+              <CheckCircle2 size={16} />
+              <span>Relance WhatsApp envoyée !</span>
+            </div>
+
+            <div className="hidden sm:flex absolute -bottom-4 -right-6 p-3.5 rounded-[16px] bg-white text-gray-900 font-extrabold text-xs items-center space-x-3 shadow-2xl animate-float-reverse">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                100%
+              </div>
+              <div className="text-left">
+                <div className="text-[10px] text-gray-500 uppercase font-bold">Soldes d'acomptes</div>
+                <div className="text-xs font-extrabold text-emerald-700">Aucun oubli financier</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. SECTION VALEUR & TRANSFORMATION */}
-      <section id="valeur" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
+      {/* 3. SOCIAL PROOF CITIES / LOGOS BAR */}
+      <section className="py-8 bg-white border-b border-gray-200/60 text-center">
+        <div className="max-w-6xl mx-auto px-4 space-y-3">
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+            Utilisé par les plus grands ateliers de couture à
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-12 text-sm sm:text-base font-extrabold text-gray-400">
+            <span className="hover:text-gray-900 transition-colors">Lomé</span>
+            <span className="hover:text-gray-900 transition-colors">Cotonou</span>
+            <span className="hover:text-gray-900 transition-colors">Abidjan</span>
+            <span className="hover:text-gray-900 transition-colors">Dakar</span>
+            <span className="hover:text-gray-900 transition-colors">Douala</span>
+            <span className="hover:text-gray-900 transition-colors">Paris</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. FEATURES GRID SECTION (Exact Revizion Order) */}
+      <section id="features" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3.5 py-1 rounded-full">
-            La Transformation de Votre Atelier
+          <span className="text-xs font-extrabold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3.5 py-1 rounded-full border border-[#7C3AED]/20">
+            Fonctionnalités
           </span>
           <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight">
-            Ne vendez plus de simples vêtements. Offrez un service d'exception à vos clients.
+            Tout ce qu'il faut pour réussir votre atelier
           </h2>
           <p className="text-sm sm:text-base text-gray-600 font-medium">
-            Taylaxis ne se contente pas de remplacer vos cahiers : l'application transforme votre atelier en une entreprise structurée, crédible et hautement rentable.
+            Des outils intelligents qui s'adaptent au quotidien du tailleur sur-mesure
           </p>
         </div>
 
-        {/* Avant vs Après Taylaxis Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {/* Avant (Le Cahier) */}
-          <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-red-200 shadow-xs space-y-5">
-            <div className="flex items-center space-x-3 pb-3 border-b border-red-100">
-              <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold">
-                <XCircle size={22} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-red-900">Avant : Le Cahier Tradionnel</h3>
-                <p className="text-xs text-red-600">Désordre, retards et pertes financières</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Card 1 */}
+          <article className="p-6 rounded-[24px] bg-white border border-gray-200/80 shadow-xs space-y-4 hover:border-[#7C3AED] hover:shadow-xl transition-all">
+            <div className="w-12 h-12 rounded-[16px] bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center font-bold">
+              <Ruler size={24} />
             </div>
+            <h3 className="text-lg font-extrabold text-gray-900">Prise de mensurations 3D</h3>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+              Conservez chaque mesure client et gèlez un instantané sur chaque vêtement pour zéro hésitation à la coupe.
+            </p>
+          </article>
 
-            <ul className="space-y-3 text-xs sm:text-sm text-gray-700 font-medium">
-              <li className="flex items-start space-x-2.5">
-                <span className="text-red-500 font-bold mt-0.5">✕</span>
-                <span>Mensurations raturées, effacées ou perdues dans les pages.</span>
-              </li>
-              <li className="flex items-start space-x-2.5">
-                <span className="text-red-500 font-bold mt-0.5">✕</span>
-                <span>Relances des soldes d'acomptes oubliées (pertes de trésorerie).</span>
-              </li>
-              <li className="flex items-start space-x-2.5">
-                <span className="text-red-500 font-bold mt-0.5">✕</span>
-                <span>Retards de livraison causant la colère et la déception des clients.</span>
-              </li>
-              <li className="flex items-start space-x-2.5">
-                <span className="text-red-500 font-bold mt-0.5">✕</span>
-                <span>Appels incessants pour chercher les informations d'un vêtement.</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Après (Avec Taylaxis) */}
-          <div className="p-6 sm:p-8 rounded-[28px] bg-gradient-to-br from-[#0C0A27] to-[#1D1850] text-white shadow-xl space-y-5 border border-white/10">
-            <div className="flex items-center space-x-3 pb-3 border-b border-white/15">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-                <CheckCircle2 size={22} />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-white">Après : Avec Taylaxis</h3>
-                <p className="text-xs text-emerald-400">Atelier professionnel, serein et rentable</p>
-              </div>
+          {/* Card 2 */}
+          <article className="p-6 rounded-[24px] bg-white border border-gray-200/80 shadow-xs space-y-4 hover:border-[#7C3AED] hover:shadow-xl transition-all">
+            <div className="w-12 h-12 rounded-[16px] bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold">
+              <Scissors size={24} />
             </div>
+            <h3 className="text-lg font-extrabold text-gray-900">Moteur de Confection 3D</h3>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+              Suivi tridimensionnel : fabrication en cours, statut du versement d'acompte et calcul dynamique du délai.
+            </p>
+          </article>
 
-            <ul className="space-y-3 text-xs sm:text-sm text-white/90 font-medium">
-              <li className="flex items-start space-x-2.5">
-                <span className="text-emerald-400 font-bold mt-0.5">✓</span>
-                <span>Mensurations retrouvées en 2 secondes et congelées sur chaque vêtement.</span>
-              </li>
-              <li className="flex items-start space-x-2.5">
-                <span className="text-emerald-400 font-bold mt-0.5">✓</span>
-                <span>Historique financier clair : 100% des soldes réclamés et encaissés.</span>
-              </li>
-              <li className="flex items-start space-x-2.5">
-                <span className="text-emerald-400 font-bold mt-0.5">✓</span>
-                <span>Alertes de retards automatiques et livraisons toujours à temps.</span>
-              </li>
-              <li className="flex items-start space-x-2.5">
-                <span className="text-emerald-400 font-bold mt-0.5">✓</span>
-                <span>Relances instantanées par WhatsApp en un seul clic.</span>
-              </li>
-            </ul>
-          </div>
+          {/* Card 3 */}
+          <article className="p-6 rounded-[24px] bg-white border border-gray-200/80 shadow-xs space-y-4 hover:border-[#7C3AED] hover:shadow-xl transition-all">
+            <div className="w-12 h-12 rounded-[16px] bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+              <Banknote size={24} />
+            </div>
+            <h3 className="text-lg font-extrabold text-gray-900">Gestion des Acomptes & Soldes</h3>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+              Règlement en plusieurs fois (Espèces, Mobile Money). Historique comptable clair pour ne rien oublier.
+            </p>
+          </article>
+
+          {/* Card 4 */}
+          <article className="p-6 rounded-[24px] bg-white border border-gray-200/80 shadow-xs space-y-4 hover:border-[#7C3AED] hover:shadow-xl transition-all">
+            <div className="w-12 h-12 rounded-[16px] bg-blue-500/10 text-blue-600 flex items-center justify-center font-bold">
+              <MessageCircle size={24} />
+            </div>
+            <h3 className="text-lg font-extrabold text-gray-900">Relances WhatsApp 1-Clic</h3>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+              Prévenez le client instantanément dès que l'habit est prêt pour l'essayage ou la livraison en un clic.
+            </p>
+          </article>
         </div>
       </section>
 
-      {/* 4. LE PROBLÈME */}
-      <section id="probleme" className="py-16 sm:py-20 bg-white border-y border-gray-200/60 px-4 sm:px-8">
+      {/* 5. HOW IT WORKS SECTION (Revizion 1, 2, 3 Step Grid) */}
+      <section id="how-it-works" className="py-16 sm:py-24 bg-white border-y border-gray-200/60 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto space-y-12">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs font-bold text-red-600 uppercase tracking-wider bg-red-50 px-3 py-1 rounded-full">
-              Le Défi Métier
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-extrabold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3.5 py-1 rounded-full border border-[#7C3AED]/20">
+              Comment ça marche
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-              Pourquoi 80% des ateliers de couture perdent des revenus avec les cahiers ?
+            <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight">
+              Simple comme 1, 2, 3
             </h2>
+            <p className="text-sm sm:text-base text-gray-600 font-medium">
+              De la prise de mesure à la livraison du vêtement en quelques secondes
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            <div className="p-6 rounded-[24px] bg-[#FAF9FE] border border-gray-100 space-y-3 hover:border-[#7C3AED]/30 transition-all">
-              <div className="w-12 h-12 rounded-[18px] bg-red-100 text-red-600 flex items-center justify-center">
-                <Ruler size={24} />
+            {/* Step 1 */}
+            <article className="p-8 rounded-[28px] bg-[#FAF9FE] border border-gray-200/80 space-y-4 relative">
+              <div className="w-10 h-10 rounded-full bg-[#7C3AED] text-white font-extrabold text-lg flex items-center justify-center shadow-md">
+                1
               </div>
-              <h3 className="text-lg font-bold text-gray-900">1. Mensurations égarées</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Reprendre les mesures à chaque visite ou utiliser une ancienne note gribouillée cause des erreurs de coupe coûteuses et des heures de retouches gratuites.
+              <h3 className="text-xl font-extrabold text-gray-900">Importez & Mesurez</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+                Enregistrez le client avec ses numéros et notez ses mensurations (veste, boubou, robe).
               </p>
-            </div>
+            </article>
 
-            <div className="p-6 rounded-[24px] bg-[#FAF9FE] border border-gray-100 space-y-3 hover:border-[#7C3AED]/30 transition-all">
-              <div className="w-12 h-12 rounded-[18px] bg-amber-100 text-amber-700 flex items-center justify-center">
-                <Banknote size={24} />
+            {/* Step 2 */}
+            <article className="p-8 rounded-[28px] bg-[#FAF9FE] border border-gray-200/80 space-y-4 relative">
+              <div className="w-10 h-10 rounded-full bg-[#7C3AED] text-white font-extrabold text-lg flex items-center justify-center shadow-md">
+                2
               </div>
-              <h3 className="text-lg font-bold text-gray-900">2. Acomptes non réclamés</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Sans registre financier structuré, les tailleurs oublient de réclamer le solde restant au moment de remettre le vêtement au client.
+              <h3 className="text-xl font-extrabold text-gray-900">Confectionnez & Suivez</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+                Passez de la coupe à la finition. L'application calcule les délais et enregistre l'acompte perçu.
               </p>
-            </div>
+            </article>
 
-            <div className="p-6 rounded-[24px] bg-[#FAF9FE] border border-gray-100 space-y-3 hover:border-[#7C3AED]/30 transition-all">
-              <div className="w-12 h-12 rounded-[18px] bg-purple-100 text-[#7C3AED] flex items-center justify-center">
-                <AlertTriangle size={24} />
+            {/* Step 3 */}
+            <article className="p-8 rounded-[28px] bg-[#FAF9FE] border border-gray-200/80 space-y-4 relative">
+              <div className="w-10 h-10 rounded-full bg-[#7C3AED] text-white font-extrabold text-lg flex items-center justify-center shadow-md">
+                3
               </div>
-              <h3 className="text-lg font-bold text-gray-900">3. Livraisons hors délais</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Les cahiers ne vous préviennent pas des urgences. Résultat : des habits en retard pour les fêtes, mariages ou événements majeurs.
+              <h3 className="text-xl font-extrabold text-gray-900">Livrez & Encaissez</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+                Envoyez le SMS/WhatsApp "Prêt", remettez le colis au client et percevez le solde restant sans aucun doute.
               </p>
-            </div>
+            </article>
           </div>
         </div>
       </section>
 
-      {/* 5. LES 5 FONCTIONNALITÉS PRINCIPALES */}
-      <section id="fonctionnalites" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
+      {/* 6. PRICING SECTION (Exact Revizion 2-Card Grid) */}
+      <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-8 max-w-5xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3 py-1 rounded-full">
-            Solution Tout-en-un
+          <span className="text-xs font-extrabold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3.5 py-1 rounded-full border border-[#7C3AED]/20">
+            Tarifs
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Les 5 piliers pour piloter votre atelier de couture
+          <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight">
+            Choisissez votre formule
           </h2>
           <p className="text-sm sm:text-base text-gray-600 font-medium">
-            Tout ce dont un tailleur professionnel a besoin, réuni dans une interface fluide et intuitive.
+            Commencez gratuitement, évoluez selon les besoins de votre atelier
           </p>
         </div>
 
-        <div className="space-y-6 sm:space-y-8">
-          {/* Feature 1 */}
-          <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-gray-100 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] font-bold text-sm flex items-center justify-center">
-                1
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+          {/* Plan 1: Gratuit */}
+          <div className="p-8 rounded-[28px] bg-white border border-gray-200/80 shadow-xs flex flex-col justify-between space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-extrabold text-gray-900">Découverte</h3>
+              <div className="flex items-baseline space-x-1">
+                <span className="text-4xl font-black text-gray-900">0 FCFA</span>
+                <span className="text-sm text-gray-500 font-medium">/mois</span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Gestion des Clients & Fiches Détaillées</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Créez une fiche pour chaque client avec son nom, numéro de téléphone, adresse et historique complet d'achats. Retrouvez n'importe quel profil en 1 clic grâce à la recherche instantanée.
-              </p>
+              <p className="text-xs text-gray-500 font-medium">Pour découvrir Taylaxis</p>
+
+              <ul className="space-y-3 pt-2 text-xs sm:text-sm text-gray-700 font-medium">
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-500 flex-shrink-0" />
+                  <span>Jusqu'à 10 clients</span>
+                </li>
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-500 flex-shrink-0" />
+                  <span>Fiches de mensurations basiques</span>
+                </li>
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-500 flex-shrink-0" />
+                  <span>Gestion des commandes</span>
+                </li>
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-500 flex-shrink-0" />
+                  <span>Support communautaire</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="p-4 rounded-[20px] bg-[#FAF9FE] border border-[#EDE9F6] space-y-2">
-              <div className="flex items-center space-x-3 p-2 bg-white rounded-[14px] shadow-2xs border border-gray-100">
-                <div className="w-10 h-10 rounded-full bg-[#7C3AED] text-white font-bold flex items-center justify-center text-sm">
-                  K
+            <button
+              onClick={onGetStarted}
+              className="w-full py-3.5 rounded-xl border-2 border-gray-900 text-gray-900 font-extrabold text-sm hover:bg-gray-900 hover:text-white transition-all cursor-pointer text-center"
+            >
+              Commencer gratuitement
+            </button>
+          </div>
+
+          {/* Plan 2: Pro (Featured Card) */}
+          <div className="p-8 rounded-[28px] bg-[#0C0A27] text-white border-2 border-[#7C3AED] shadow-2xl flex flex-col justify-between space-y-6 relative overflow-hidden">
+            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#7C3AED] text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md">
+              Le plus populaire
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-xl font-extrabold text-white">Atelier Pro</h3>
+              <div className="flex items-baseline space-x-1">
+                <span className="text-4xl font-black text-white">9 900 FCFA</span>
+                <span className="text-sm text-white/70 font-medium">/mois</span>
+              </div>
+              <p className="text-xs text-[#A78BFA] font-medium">Pour les tailleurs & couturiers sérieux</p>
+
+              <ul className="space-y-3 pt-2 text-xs sm:text-sm text-white/90 font-medium">
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-400 flex-shrink-0" />
+                  <span>Clients & mensurations illimités</span>
+                </li>
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-400 flex-shrink-0" />
+                  <span>Instantanés 3D de coupe congelés</span>
+                </li>
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-400 flex-shrink-0" />
+                  <span>Relances WhatsApp & SMS 1-Clic</span>
+                </li>
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-400 flex-shrink-0" />
+                  <span>Chiffre d'affaires jour/mois & statistiques</span>
+                </li>
+                <li className="flex items-center space-x-2.5">
+                  <Check size={16} className="text-emerald-400 flex-shrink-0" />
+                  <span>Support prioritaire 7j/7</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={onGetStarted}
+              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-sm hover:opacity-95 transition-all cursor-pointer shadow-lg shadow-[#7C3AED]/40 text-center"
+            >
+              Essayer Pro gratuitement
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. TESTIMONIALS SECTION (Revizion Quote Cards) */}
+      <section id="testimonials" className="py-16 sm:py-24 bg-white border-y border-gray-200/60 px-4 sm:px-8">
+        <div className="max-w-6xl mx-auto space-y-12">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-xs font-extrabold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3.5 py-1 rounded-full border border-[#7C3AED]/20">
+              Témoignages
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight">
+              Ils nous font confiance
+            </h2>
+            <p className="text-sm sm:text-base text-gray-600 font-medium">
+              Découvrez ce que les tailleurs et créateurs de mode disent de Taylaxis
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {/* Testimonial 1 */}
+            <article className="p-6 rounded-[24px] bg-[#FAF9FE] border border-gray-200/80 space-y-4 relative flex flex-col justify-between">
+              <div className="space-y-3">
+                <Quote size={28} className="text-[#7C3AED]/30" />
+                <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-semibold italic">
+                  "Je gagne facilement 2h par jour sur la recherche de fiches. Mes clients sont impressionnés par la précision des coupes !"
+                </p>
+              </div>
+              <div className="flex items-center space-x-3 pt-4 border-t border-gray-200/60">
+                <div className="w-10 h-10 rounded-full bg-[#7C3AED] text-white font-extrabold text-xs flex items-center justify-center">
+                  LK
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-gray-900">Koffi Mensah</div>
-                  <div className="text-[11px] text-gray-500">+228 90 12 34 56 • Lomé</div>
+                  <div className="text-xs font-extrabold text-gray-900">Léandre Kouassi</div>
+                  <div className="text-[11px] text-gray-500 font-medium">Maître Tailleur, Cotonou</div>
                 </div>
               </div>
-            </div>
-          </div>
+            </article>
 
-          {/* Feature 2 */}
-          <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-gray-100 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div className="space-y-3 order-2 md:order-1">
-              <div className="p-4 rounded-[20px] bg-[#FAF9FE] border border-[#EDE9F6] space-y-2">
-                <div className="text-xs font-bold text-[#5B21B6] flex items-center gap-1">
-                  <Ruler size={14} />
-                  <span>Mensurations Costume 3 Pièces</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 bg-white rounded-[10px] border border-gray-100 font-medium">Tour poitrine: <strong className="text-gray-900">102 cm</strong></div>
-                  <div className="p-2 bg-white rounded-[10px] border border-gray-100 font-medium">Carrure épaules: <strong className="text-gray-900">46 cm</strong></div>
-                  <div className="p-2 bg-white rounded-[10px] border border-gray-100 font-medium">Longueur manche: <strong className="text-gray-900">64 cm</strong></div>
-                  <div className="p-2 bg-white rounded-[10px] border border-gray-100 font-medium">Tour de taille: <strong className="text-gray-900">88 cm</strong></div>
-                </div>
+            {/* Testimonial 2 */}
+            <article className="p-6 rounded-[24px] bg-[#FAF9FE] border border-gray-200/80 space-y-4 relative flex flex-col justify-between">
+              <div className="space-y-3">
+                <Quote size={28} className="text-[#7C3AED]/30" />
+                <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-semibold italic">
+                  "Plus aucun solde d'acompte oublié. Mon chiffre d'affaires a augmenté de 25% dès le premier mois d'utilisation."
+                </p>
               </div>
-            </div>
-
-            <div className="space-y-3 order-1 md:order-2">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 font-bold text-sm flex items-center justify-center">
-                2
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Prise de Mensurations Précises & Congelées</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Renseignez toutes les mensurations (veste, chemise, pantalon, robe dame, boubou). Chaque commande gèle un instantané des mesures utilisées pour éliminer toute hésitation lors de la coupe.
-              </p>
-            </div>
-          </div>
-
-          {/* Feature 3 */}
-          <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-gray-100 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 font-bold text-sm flex items-center justify-center">
-                3
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Moteur de Commandes V1 (Order Engine 3D)</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Le cœur opérationnel de votre atelier. Suivez en temps réel le statut de fabrication, l'état des versements financiers et l'urgence de la livraison pour ne plus jamais subir de retards.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-[20px] bg-[#FAF9FE] border border-[#EDE9F6] space-y-2">
-              <div className="p-3 bg-white rounded-[14px] border border-gray-100 shadow-2xs space-y-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>Veste Blazer & Pantalon</span>
-                  <span className="text-[#7C3AED]">#042</span>
+              <div className="flex items-center space-x-3 pt-4 border-t border-gray-200/60">
+                <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center">
+                  AD
                 </div>
-                <div className="flex gap-1 text-[10px] font-bold">
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">EN CONFECTION</span>
-                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">ACOMPTE PARTIEL</span>
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">À TEMPS</span>
+                <div>
+                  <div className="text-xs font-extrabold text-gray-900">Awa Diallo</div>
+                  <div className="text-[11px] text-gray-500 font-medium">Atelier Mode & Couture, Dakar</div>
                 </div>
               </div>
-            </div>
-          </div>
+            </article>
 
-          {/* Feature 4 & 5 Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-gray-100 shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-600 font-bold text-sm flex items-center justify-center">
-                4
+            {/* Testimonial 3 */}
+            <article className="p-6 rounded-[24px] bg-[#FAF9FE] border border-gray-200/80 space-y-4 relative flex flex-col justify-between">
+              <div className="space-y-3">
+                <Quote size={28} className="text-[#7C3AED]/30" />
+                <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-semibold italic">
+                  "Les relances WhatsApp en 1 clic évitent les appels longs. Un vrai soutien pour mon atelier !"
+                </p>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Agenda & Planning des Essayages</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Organisez vos rendez-vous de prise de mesures, d'essayage et de remise de colis dans un calendrier mensuel clair pour réguler les visites en atelier.
-              </p>
-            </div>
-
-            <div className="p-6 sm:p-8 rounded-[28px] bg-white border border-gray-100 shadow-xs space-y-3">
-              <div className="w-10 h-10 rounded-full bg-purple-500/10 text-[#7C3AED] font-bold text-sm flex items-center justify-center">
-                5
+              <div className="flex items-center space-x-3 pt-4 border-t border-gray-200/60">
+                <div className="w-10 h-10 rounded-full bg-amber-600 text-white font-extrabold text-xs flex items-center justify-center">
+                  KM
+                </div>
+                <div>
+                  <div className="text-xs font-extrabold text-gray-900">Koffi Mensah</div>
+                  <div className="text-[11px] text-gray-500 font-medium">Styliste Sur-Mesure, Lomé</div>
+                </div>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Relances WhatsApp & SMS Automatisées</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Prévenez vos clients en 1 clic dès que leur habit est prêt ou envoyez un rappel courtois pour le règlement du solde restant.
-              </p>
-            </div>
+            </article>
           </div>
         </div>
       </section>
 
-      {/* 6. PRÉSENTATION DE L'INTERFACE TAYLAXIS (Interactive Demo) */}
-      <section className="py-16 sm:py-24 bg-[#0C0A27] text-white px-4 sm:px-8">
-        <div className="max-w-6xl mx-auto space-y-10">
-          <div className="text-center max-w-2xl mx-auto space-y-3">
-            <span className="text-xs font-bold text-[#A78BFA] uppercase tracking-wider bg-white/10 px-3 py-1 rounded-full border border-white/15">
-              Interface SaaS Moderne
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Une application conçue pour les smartphones d'atelier
-            </h2>
-            <p className="text-sm text-white/70">
-              Navigation fluide à une main, mode sombre/clair réactif et boutons d'action rapide métier.
-            </p>
-          </div>
-
-          {/* Interactive Navigation Selector Tabs */}
-          <div className="flex flex-wrap justify-center gap-2">
-            {[
-              { id: 'dashboard', label: '1. Dashboard Opérationnel' },
-              { id: 'clients', label: '2. Fiche & Mensurations' },
-              { id: 'commandes', label: '3. Suivie de Commande 3D' },
-              { id: 'agenda', label: '4. Agenda & RDV' },
-              { id: 'relances', label: '5. Relances WhatsApp' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActivePreviewTab(tab.id as any)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  activePreviewTab === tab.id
-                    ? 'bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/40 scale-105'
-                    : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/15'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Screen Showcase Container */}
-          <div className="max-w-3xl mx-auto p-4 sm:p-6 rounded-[28px] bg-white/5 border border-white/15 backdrop-blur-md shadow-2xl">
-            {activePreviewTab === 'dashboard' && (
-              <div className="space-y-4 animate-fadeIn">
-                <h4 className="text-sm font-bold text-[#A78BFA]">Indicateurs Clés & Alertes de Retard</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="p-3 rounded-[14px] bg-[#059669] text-white font-bold">CA du jour: 85 000 F</div>
-                  <div className="p-3 rounded-[14px] bg-[#6D28D9] text-white font-bold">CA du mois: 1 240 000 F</div>
-                  <div className="p-3 rounded-[14px] bg-[#EA580C] text-white font-bold">Encours: 18 (2 retards)</div>
-                  <div className="p-3 rounded-[14px] bg-[#2563EB] text-white font-bold">À encaisser: 350 000 F</div>
-                </div>
-              </div>
-            )}
-
-            {activePreviewTab === 'clients' && (
-              <div className="space-y-3 animate-fadeIn">
-                <h4 className="text-sm font-bold text-[#A78BFA]">Consulter & Éditer les Mensurations Client</h4>
-                <div className="p-3 rounded-[16px] bg-white/10 text-white text-xs space-y-1.5">
-                  <div className="font-bold text-emerald-400">Mensurations Enregistrées :</div>
-                  <div>• Tour de poitrine : 102 cm</div>
-                  <div>• Tour de taille : 88 cm</div>
-                  <div>• Carrure épaules : 46 cm</div>
-                </div>
-              </div>
-            )}
-
-            {activePreviewTab === 'commandes' && (
-              <div className="space-y-3 animate-fadeIn">
-                <h4 className="text-sm font-bold text-[#A78BFA]">Prochaine Action Principale Unique (Order Engine)</h4>
-                <div className="p-3 rounded-[16px] bg-white/10 text-white text-xs space-y-2">
-                  <div className="font-bold">Commande #038 - Agbada Traditionnel</div>
-                  <div className="p-2.5 rounded-[12px] bg-[#7C3AED] text-white text-center font-extrabold cursor-pointer hover:bg-[#6D28D9] transition-all">
-                    Marquer Prête pour Essayage ✂️
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activePreviewTab === 'agenda' && (
-              <div className="space-y-3 animate-fadeIn">
-                <h4 className="text-sm font-bold text-[#A78BFA]">Planning des Rendez-vous d'Essayage & Livraisons</h4>
-                <div className="p-3 rounded-[16px] bg-white/10 text-white text-xs space-y-1">
-                  <div className="font-bold text-amber-300">Aujourd'hui à 15:00 :</div>
-                  <div>Essayage Veste Costume avec M. Koffi A.</div>
-                </div>
-              </div>
-            )}
-
-            {activePreviewTab === 'relances' && (
-              <div className="space-y-3 animate-fadeIn">
-                <h4 className="text-sm font-bold text-[#A78BFA]">Boutons de Contact Direct WhatsApp / Téléphone</h4>
-                <div className="grid grid-cols-3 gap-2 text-xs text-center font-bold">
-                  <div className="p-2 rounded-[10px] bg-emerald-500/20 text-emerald-300">Appeler 📞</div>
-                  <div className="p-2 rounded-[10px] bg-green-500/20 text-green-300">WhatsApp 💬</div>
-                  <div className="p-2 rounded-[10px] bg-blue-500/20 text-blue-300">SMS 📱</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 7. LES AVANTAGES POUR LE TAILLEUR */}
-      <section id="avantages" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3 py-1 rounded-full">
-            Ce que Taylaxis change pour vous
+      {/* 8. FAQ SECTION (Accordion List) */}
+      <section id="faq" className="py-16 sm:py-24 px-4 sm:px-8 max-w-4xl mx-auto space-y-12">
+        <div className="text-center space-y-3">
+          <span className="text-xs font-extrabold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3.5 py-1 rounded-full border border-[#7C3AED]/20">
+            FAQ
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Les bénéfices concrets au quotidien dans votre atelier
+          <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight">
+            Questions fréquentes
           </h2>
+          <p className="text-sm sm:text-base text-gray-600 font-medium">
+            Tout ce que vous devez savoir sur la plateforme Taylaxis
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-[#7C3AED]/40 hover:scale-105 transition-all">
-            <div className="w-12 h-12 rounded-full bg-purple-100 text-[#7C3AED] mx-auto flex items-center justify-center animate-bounce-subtle">
-              <Zap size={24} />
-            </div>
-            <h3 className="text-base font-bold text-gray-900">Gain de Temps de 2h/Jour</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Consacrez plus de temps à la coupe et à la création plutôt qu'à chercher des notes de mesures.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-emerald-400 hover:scale-105 transition-all">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
-              <TrendingUp size={24} />
-            </div>
-            <h3 className="text-base font-bold text-gray-900">+30% d'Encaissements</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Zéro solde oublié : vous récupérez l'intégralité des acomptes dus sur chaque vêtement.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-blue-400 hover:scale-105 transition-all">
-            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 mx-auto flex items-center justify-center">
-              <Award size={24} />
-            </div>
-            <h3 className="text-base font-bold text-gray-900">Image & Crédibilité</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Impressionnez vos clients avec un suivi numérique digne des plus grandes maisons de couture.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-amber-400 hover:scale-105 transition-all">
-            <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 mx-auto flex items-center justify-center">
-              <Lock size={24} />
-            </div>
-            <h3 className="text-base font-bold text-gray-900">Sauvegarde Cloud</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Même en cas de perte de votre smartphone, toutes vos mensurations et fiches restent sécurisées.
-            </p>
-          </div>
+        <div className="space-y-3">
+          {[
+            {
+              q: "Est-ce que Taylaxis remplace mes cahiers de couture ?",
+              a: "Oui ! Taylaxis digitalise vos fiches de mensurations, le registre de vos commandes et le suivi des acomptes pour que vous ne perdiez plus aucune donnée.",
+            },
+            {
+              q: "Mes mensurations et données sont-elles sécurisées ?",
+              a: "Absolument. Vos fiches clients et mensurations sont chiffrées et sauvegardées en sécurité. Même si vous changez de téléphone, vos données sont conservées.",
+            },
+            {
+              q: "Puis-je utiliser Taylaxis sur mobile sans application app store ?",
+              a: "Oui ! Taylaxis est une Progressive Web App (PWA). Vous pouvez l'installer directement sur votre écran d'accueil en 1 seul clic sans passer par un app store.",
+            },
+            {
+              q: "Y a-t-il un engagement ou une carte bancaire requise ?",
+              a: "Aucun engagement ni carte bancaire. Vous pouvez démarrer gratuitement en 30 secondes et utiliser l'application au quotidien.",
+            },
+          ].map((item, idx) => {
+            const isOpen = openFaqIndex === idx;
+            return (
+              <div
+                key={idx}
+                className="rounded-[20px] bg-white border border-gray-200/80 overflow-hidden transition-all shadow-2xs"
+              >
+                <button
+                  onClick={() => toggleFaq(idx)}
+                  className="w-full p-5 flex items-center justify-between text-left font-extrabold text-sm sm:text-base text-gray-900 cursor-pointer"
+                >
+                  <span>{item.q}</span>
+                  <ChevronDown
+                    size={20}
+                    className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#7C3AED]' : ''}`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-gray-600 leading-relaxed font-medium border-t border-gray-100">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* 8. SECTION PRÊT À MIEUX GÉRER VOTRE ATELIER ? & CTA FINAL */}
+      {/* 9. FINAL CTA BANNER (Exact Revizion Section) */}
       <section className="py-16 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto">
         <div className="p-8 sm:p-14 rounded-[36px] bg-gradient-to-br from-[#0C0A27] via-[#1D1850] to-[#3155C8] text-white text-center space-y-6 shadow-2xl relative overflow-hidden border border-white/15">
           <div className="absolute top-0 right-0 w-72 h-72 bg-[#7C3AED]/30 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-white/10 text-xs font-bold text-[#A78BFA] border border-white/15">
-            <Sparkles size={14} />
-            <span>Passez à la vitesse supérieure</span>
-          </div>
-
           <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
-            Prêt à mieux gérer votre atelier de couture ?
+            Prêt à transformer la gestion de votre atelier ?
           </h2>
 
           <p className="text-sm sm:text-base text-white/85 max-w-xl mx-auto font-medium">
-            Rejoignez dès aujourd'hui les ateliers africains qui ont choisi la sérénité et le professionnalisme avec Taylaxis.
+            Rejoignez des centaines de tailleurs et créateurs qui réussissent avec Taylaxis.
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-9 py-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-base rounded-full cursor-pointer shadow-xl shadow-[#7C3AED]/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-9 py-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-base rounded-xl cursor-pointer shadow-xl shadow-[#7C3AED]/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-2"
             >
-              <span>Commencer maintenant</span>
+              <span>Commencer gratuitement</span>
               <ArrowRight size={18} />
-            </button>
-
-            <button
-              onClick={handleInstallApp}
-              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-base rounded-full border border-white/20 cursor-pointer shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-2"
-            >
-              <Download size={18} className="text-[#A78BFA]" />
-              <span>Télécharger l'application</span>
             </button>
           </div>
 
-          <p className="text-xs text-white/60 font-medium">Gratuit • Démarrage rapide en 30 secondes • Sans engagement</p>
+          <span className="text-xs text-white/60 font-medium block pt-1">Aucune carte requise • Démarrage en 30 secondes</span>
         </div>
       </section>
 
-      {/* 9. FOOTER */}
-      <footer className="bg-[#080619] text-white/70 py-10 px-4 sm:px-8 border-t border-white/10 text-xs">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={onGetStarted}>
-            <div className="w-7 h-7 rounded-[10px] bg-[#7C3AED] flex items-center justify-center text-white font-bold">
-              <Scissors size={14} className="rotate-45" />
+      {/* 10. FOOTER (Exact Revizion Column Layout) */}
+      <footer className="bg-[#080619] text-white/70 py-12 px-4 sm:px-8 border-t border-white/10 text-xs">
+        <div className="max-w-6xl mx-auto space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Brand column */}
+            <div className="space-y-3 md:col-span-1">
+              <div className="flex items-center space-x-2 cursor-pointer" onClick={onGetStarted}>
+                <div className="w-8 h-8 rounded-[10px] bg-[#7C3AED] flex items-center justify-center text-white font-bold">
+                  <Scissors size={16} className="rotate-45" />
+                </div>
+                <span className="text-lg font-black text-white">Taylaxis</span>
+              </div>
+              <p className="text-xs text-white/60 font-medium leading-relaxed">
+                L'assistant intelligent pour vos révisions et confections en atelier de couture.
+              </p>
             </div>
-            <span className="text-base font-extrabold text-white">Taylaxis</span>
+
+            {/* Links Columns */}
+            <div className="space-y-2">
+              <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">Produit</h4>
+              <ul className="space-y-2 font-medium">
+                <li><a href="#features" className="hover:text-white transition-colors">Fonctionnalités</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Tarifs</a></li>
+                <li><a href="#how-it-works" className="hover:text-white transition-colors">Comment ça marche</a></li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">Ressources</h4>
+              <ul className="space-y-2 font-medium">
+                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="https://wa.me/22890123456" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Support WhatsApp</a></li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">Légal</h4>
+              <ul className="space-y-2 font-medium">
+                <li><a href="#" className="hover:text-white transition-colors">Confidentialité</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">CGU</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Mentions légales</a></li>
+              </ul>
+            </div>
           </div>
 
-          <div>
-            © {new Date().getFullYear()} Taylaxis. La solution SaaS métier pour les tailleurs et ateliers de couture.
-          </div>
-
-          <div className="flex space-x-4 font-semibold text-white/80">
-            <button onClick={onGetStarted} className="hover:text-white cursor-pointer">Accueil App</button>
-            <button onClick={handleInstallApp} className="hover:text-white cursor-pointer flex items-center space-x-1">
-              <Download size={13} className="text-[#A78BFA]" />
-              <span>Télécharger</span>
-            </button>
-            <a href="https://wa.me/22890123456" target="_blank" rel="noreferrer" className="hover:text-white">Support WhatsApp</a>
+          <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-white/50 text-[11px]">
+            <p>© {new Date().getFullYear()} Taylaxis. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
 
-      {/* 10. SMART SCROLL-TRIGGERED PWA INSTALL BANNER (Appears after scrolling > 120px) */}
+      {/* 11. SMART SCROLL-TRIGGERED PWA INSTALL BANNER */}
       {showScrollInstallBanner && !isStandalone && (
         <div className="fixed inset-x-0 bottom-4 sm:bottom-6 z-50 max-w-md mx-auto px-3.5 pointer-events-none">
           <div className="pointer-events-auto p-4 rounded-[24px] bg-[#0C0A27]/95 text-white border border-[#7C3AED]/50 shadow-2xl backdrop-blur-xl animate-fadeIn space-y-3">
@@ -864,7 +829,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         </div>
       )}
 
-      {/* 11. PWA INSTALLATION GUIDE MODAL (For iOS Safari vs Android Chrome) */}
+      {/* 12. PWA INSTALLATION GUIDE MODAL */}
       {showInstallGuideModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-[#120F38] border border-white/20 rounded-[28px] max-w-md w-full p-6 text-white space-y-5 shadow-2xl relative">

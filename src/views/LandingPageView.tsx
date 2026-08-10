@@ -285,18 +285,18 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 </div>
               </div>
 
-              {/* 1. Top-Right Floating Pill (Matching Revizion Screenshot 5 Placement) */}
-              <div className="absolute top-8 right-3 sm:right-6 p-2 px-3.5 rounded-[16px] bg-white/95 border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl backdrop-blur-md animate-float-reverse z-30">
-                <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center">
+              {/* 1. Right Floating Notification Pill (Anchored to top-right edge & upper row) */}
+              <div className="absolute top-10 -right-3 sm:-right-6 p-2 px-3 sm:px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float-reverse z-30 pointer-events-none select-none">
+                <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 size={13} />
                 </div>
-                <span>Confection prête !</span>
+                <span className="whitespace-nowrap">Confection prête !</span>
               </div>
 
-              {/* 2. Left Border Overlapping Pill (Matching Revizion Screenshot 5 Placement) */}
-              <div className="absolute top-1/2 -translate-y-1/2 -left-5 sm:-left-8 p-2 px-3.5 rounded-[16px] bg-white/95 border border-gray-200/80 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl backdrop-blur-md animate-float z-30">
-                <span className="text-[9px] text-gray-500 font-bold uppercase leading-tight">Soldes encaissés</span>
-                <span className="text-xs font-black text-[#06B6D4] leading-tight">100%</span>
+              {/* 2. Left Floating Notification Pill (Anchored to left edge, centered vertically) */}
+              <div className="absolute top-1/2 -translate-y-1/2 -left-3 sm:-left-7 p-2 px-3.5 rounded-[18px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl shadow-gray-900/10 backdrop-blur-md animate-float z-30 pointer-events-none select-none">
+                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider leading-none">Soldes encaissés</span>
+                <span className="text-xs font-black text-[#06B6D4] leading-tight mt-0.5">100%</span>
               </div>
             </div>
           </div>

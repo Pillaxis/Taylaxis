@@ -13,6 +13,7 @@ import { MoiView } from './views/MoiView';
 import { AuthView } from './views/AuthView';
 import { LandingPageView } from './views/LandingPageView';
 import { NotificationsModal } from './components/common/NotificationsModal';
+import { PendingPlanPaymentModal } from './components/common/PendingPlanPaymentModal';
 import { MOCK_CLIENTS, MOCK_MEASUREMENTS_COSTUME, GARMENT_TYPES, GARMENT_TYPE_PRESETS } from './data/mockData';
 import type { Client, Order, StatusType } from './types';
 import { OrderEngine } from './services/orderEngine';
@@ -229,6 +230,16 @@ export const AppContent: React.FC = () => {
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+
+  const [showPendingPlanModal, setShowPendingPlanModal] = useState<boolean>(() => {
+    return localStorage.getItem('taylaxis_pending_plan_v1') === 'PRO';
+  });
+
+  React.useEffect(() => {
+    if (user && localStorage.getItem('taylaxis_pending_plan_v1') === 'PRO') {
+      setShowPendingPlanModal(true);
+    }
+  }, [user]);
 
   // Form states
   const [newClientName, setNewClientName] = useState('');
@@ -1082,6 +1093,15 @@ export const AppContent: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {showPendingPlanModal && (
+        <PendingPlanPaymentModal
+          onClose={() => setShowPendingPlanModal(false)}
+          onSuccess={() => {
+            setShowPendingPlanModal(false);
+          }}
+        />
       )}
     </div>
   );

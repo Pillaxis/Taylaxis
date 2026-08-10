@@ -133,6 +133,11 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
+  const handleSelectProPlan = () => {
+    localStorage.setItem('taylaxis_pending_plan_v1', 'PRO');
+    handleGetStartedWithInstall();
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF9FE] text-gray-900 font-sans selection:bg-[#06B6D4]/20 relative">
       {/* 1. HEADER / NAVBAR (Crisp Light Theme matching revizion.ai) */}
@@ -544,7 +549,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </div>
 
             <button
-              onClick={handleGetStartedWithInstall}
+              onClick={handleSelectProPlan}
               className="w-full py-3.5 rounded-xl bg-[#06B6D4] hover:bg-[#0891B2] text-white font-extrabold text-sm transition-all cursor-pointer shadow-lg shadow-[#06B6D4]/40 text-center"
             >
               Essayer Pro gratuitement

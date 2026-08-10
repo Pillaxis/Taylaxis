@@ -36,9 +36,10 @@ import type {
 
 interface MoiViewProps {
   onSignOut?: () => void;
+  onViewLandingPage?: () => void;
 }
 
-export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
+export const MoiView: React.FC<MoiViewProps> = ({ onSignOut, onViewLandingPage }) => {
   const { textScale, setTextScale, brandColor, setBrandColor } = useTheme();
 
   // State data
@@ -389,6 +390,24 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
           <span>Modifier le profil</span>
         </button>
       </div>
+
+      {onViewLandingPage && (
+        <button
+          onClick={onViewLandingPage}
+          className="w-full p-4 bg-gradient-to-r from-[#0C0A27] via-[#1D1850] to-[#3155C8] text-white rounded-[22px] flex items-center justify-between text-left cursor-pointer hover:opacity-95 transition-all shadow-md active:scale-98 border border-white/10"
+        >
+          <div className="flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] text-white flex items-center justify-center font-bold shadow-xs">
+              🌐
+            </div>
+            <div>
+              <div className="text-body-strong font-extrabold text-white">Landing Page Officielle Taylaxis</div>
+              <div className="text-caption text-white/70 font-medium">Présentation complète de la plateforme SaaS</div>
+            </div>
+          </div>
+          <ChevronRight size={20} className="text-[#A78BFA]" />
+        </button>
+      )}
 
       {/* SECTION 1: PROFIL ET ATELIER */}
       <div className="space-y-3">

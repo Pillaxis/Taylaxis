@@ -35,7 +35,19 @@ export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('accueil');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [viewingMensurations, setViewingMensurations] = useState<boolean>(false);
-  const [showLandingPage, setShowLandingPage] = useState<boolean>(false);
+  const [showLandingPage, setShowLandingPage] = useState<boolean>(() => {
+    return window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing';
+  });
+
+  React.useEffect(() => {
+    const checkLandingHash = () => {
+      if (window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing') {
+        setShowLandingPage(true);
+      }
+    };
+    window.addEventListener('hashchange', checkLandingHash);
+    return () => window.removeEventListener('hashchange', checkLandingHash);
+  }, []);
 
   // Auth state with localStorage session persistence
   const [user, setUser] = useState<any>(() => {
@@ -551,7 +563,7 @@ export const AppContent: React.FC = () => {
           />
         );
       case 'moi':
-        return <MoiView onSignOut={handleSignOut} />;
+        return <MoiView onSignOut={handleSignOut} onViewLandingPage={() => setShowLandingPage(true)} />;
       default:
         return (
           <AccueilView

@@ -13,7 +13,7 @@ export interface PaymentConfig {
 
 export const getPaymentConfig = (): PaymentConfig => {
   return {
-    fedaPayPublicKey: import.meta.env.VITE_FEDAPAY_PUBLIC_KEY || '',
+    fedaPayPublicKey: import.meta.env.VITE_FEDAPAY_PUBLIC_KEY || 'pk_live_dKHNwYdLIFa2Nw5YYys1mfim',
     cinetPaySiteId: import.meta.env.VITE_CINETPAY_SITE_ID || '',
     cinetPayApiKey: import.meta.env.VITE_CINETPAY_API_KEY || '',
     paystackPublicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '',

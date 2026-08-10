@@ -52,22 +52,33 @@ export const paymentService = {
         console.log('Initiating FedaPay transaction for', options.amountFCFA, 'FCFA');
         // FedaPay Checkout Script / Modal integration
         if ((window as any).FedaPay) {
+          const customerData: any = {
+            email: options.customerEmail || 'client@taylaxis.com',
+            lastname: options.customerName || 'Tailleur Taylaxis',
+          };
+          if (options.customerPhone && options.customerPhone.trim().length > 3) {
+            customerData.phone_number = {
+              number: options.customerPhone.replace(/\s+/g, ''),
+            };
+          }
+
+          const isLive = config.fedaPayPublicKey.startsWith('pk_live');
           const widget = (window as any).FedaPay.init({
             public_key: config.fedaPayPublicKey,
+            environment: isLive ? 'live' : 'sandbox',
             transaction: {
               amount: options.amountFCFA,
               description: options.description,
             },
-            customer: {
-              email: options.customerEmail || 'client@taylaxis.com',
-              lastname: options.customerName,
-              phone_number: {
-                number: options.customerPhone || '',
-              },
-            },
+            customer: customerData,
             onComplete: (resp: any) => {
-              if (resp.reason === (window as any).FedaPay.CHECKOUT_COMPLETED) {
-                options.onSuccess?.(resp.transaction?.id || `feda_${Date.now()}`);
+              console.log('FedaPay response:', resp);
+              const isCompleted =
+                resp.reason === 'CHECKOUT COMPLETE' ||
+                resp.reason === (window as any).FedaPay?.CHECKOUT_COMPLETED;
+
+              if (isCompleted && resp.transaction) {
+                options.onSuccess?.(String(resp.transaction.id || `feda_${Date.now()}`));
               } else {
                 options.onError?.('Paiement annulé ou non finalisé.');
               }

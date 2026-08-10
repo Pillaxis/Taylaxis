@@ -243,6 +243,7 @@ export const AppContent: React.FC = () => {
   const [newOrderTitle, setNewOrderTitle] = useState('');
   const [newOrderPrice, setNewOrderPrice] = useState('');
   const [newOrderClient, setNewOrderClient] = useState(MOCK_CLIENTS[0]?.name || '');
+  const [newOrderClientId, setNewOrderClientId] = useState<string>(MOCK_CLIENTS[0]?.id || '');
 
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
   const [initialClientTab, setInitialClientTab] = useState<'info' | 'mensurations' | 'commandes' | 'paiements'>('info');
@@ -354,7 +355,6 @@ export const AppContent: React.FC = () => {
       };
 
       OrderService.saveOrder(initialOrder);
-      setOrders((prev) => [initialOrder, ...prev]);
     }
 
     if (SupabaseService.isReady()) {
@@ -362,6 +362,9 @@ export const AppContent: React.FC = () => {
     }
 
     setClients((prev) => [newClient, ...prev]);
+    setOrders(OrderService.getOrders());
+    setNewOrderClientId(newClientId);
+    setNewOrderClient(newClientName.trim());
 
     setNewClientName('');
     setNewClientPhone('');
@@ -384,7 +387,13 @@ export const AppContent: React.FC = () => {
     if (!newOrderTitle || !newOrderPrice) return;
 
     const price = parseInt(newOrderPrice, 10) || 0;
-    const matchedClient = clients.find((c) => c.name === newOrderClient) || clients[0] || { name: newOrderClient || 'Client atelier', id: `c_${Date.now()}`, customMeasurements: MOCK_MEASUREMENTS_COSTUME };
+    const matchedClient =
+      clients.find((c) => c.id === newOrderClientId) ||
+      clients.find((c) => c.name === newOrderClient) ||
+      clients[0];
+
+    if (!matchedClient) return;
+
     const clientMeasurements = matchedClient.customMeasurements || MOCK_MEASUREMENTS_COSTUME;
 
     OrderService.createOrder(
@@ -398,6 +407,19 @@ export const AppContent: React.FC = () => {
         deliveryDate: 'Dans 7 jours',
       },
       clientMeasurements
+    );
+
+    // Increment client's ordersCount and update lastOrderDate
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === matchedClient.id
+          ? {
+              ...c,
+              ordersCount: (c.ordersCount || 0) + 1,
+              lastOrderDate: "Aujourd'hui",
+            }
+          : c
+      )
     );
 
     setOrders(OrderService.getOrders());
@@ -498,13 +520,18 @@ export const AppContent: React.FC = () => {
             onPayOrder={handlePayOrder}
             onOrderUpdated={(updated) => {
               setOrders(OrderService.getOrders());
-              // Also sync client measurements if the order has a measurement snapshot
-              const clientIdx = clients.findIndex(c => c.id === updated.clientId);
-              if (clientIdx >= 0 && updated.measurementSnapshot && updated.measurementSnapshot.measurements.length > 0) {
+              const clientIdx = clients.findIndex((c) => c.id === updated.clientId);
+              if (clientIdx >= 0) {
                 const updatedClients = [...clients];
+                const prevClient = updatedClients[clientIdx];
                 updatedClients[clientIdx] = {
-                  ...updatedClients[clientIdx],
-                  customMeasurements: updated.measurementSnapshot.measurements,
+                  ...prevClient,
+                  ordersCount: (prevClient.ordersCount || 0) + 1,
+                  lastOrderDate: "Aujourd'hui",
+                  customMeasurements:
+                    updated.measurementSnapshot?.measurements && updated.measurementSnapshot.measurements.length > 0
+                      ? updated.measurementSnapshot.measurements
+                      : prevClient.customMeasurements,
                 };
                 setClients(updatedClients);
               }
@@ -940,20 +967,22 @@ export const AppContent: React.FC = () => {
                 <div>
                   <label className="text-caption text-secondary font-medium block mb-1">Client</label>
                   <select
-                    value={newOrderClient}
+                    value={newOrderClientId || (clients[0]?.id || '')}
                     onChange={(e) => {
                       const val = e.target.value;
                       if (val === '__ADD_NEW__') {
                         setShowNewOrderModal(false);
                         setShowNewClientModal(true);
                       } else {
-                        setNewOrderClient(val);
+                        setNewOrderClientId(val);
+                        const matched = clients.find((c) => c.id === val);
+                        if (matched) setNewOrderClient(matched.name);
                       }
                     }}
                     className="w-full px-4 py-2.5 bg-surface-alt border border-subtle rounded-[14px] text-body text-primary focus:outline-none focus:border-[#7C3AED]"
                   >
                     {clients.map((c) => (
-                      <option key={c.id} value={c.name}>
+                      <option key={c.id} value={c.id}>
                         {c.name} ({c.phone})
                       </option>
                     ))}

@@ -612,7 +612,7 @@ export const AppContent: React.FC = () => {
           />
         );
       case 'moi':
-        return <MoiView onSignOut={handleSignOut} onViewLandingPage={() => setShowLandingPage(true)} />;
+        return <MoiView onSignOut={handleSignOut} />;
       default:
         return (
           <AccueilView
@@ -716,7 +716,6 @@ export const AppContent: React.FC = () => {
           onBack={handleBackFromClient}
           onNotificationClick={() => setShowNotificationsModal(true)}
           unreadCount={unreadNotificationsCount}
-          onViewLandingPage={() => setShowLandingPage(true)}
         />
 
         {/* Dynamic Main View */}

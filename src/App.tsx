@@ -36,6 +36,8 @@ export const AppContent: React.FC = () => {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [viewingMensurations, setViewingMensurations] = useState<boolean>(false);
   const [showLandingPage, setShowLandingPage] = useState<boolean>(() => {
+    const saved = localStorage.getItem('taylaxis_active_session_v1');
+    if (!saved) return true; // Show Landing Page by default for all visitors!
     return window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing';
   });
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Scissors,
   UserPlus,
@@ -17,6 +17,10 @@ import {
   Award,
   Lock,
   Banknote,
+  Download,
+  Smartphone,
+  Share,
+  X,
 } from 'lucide-react';
 
 interface LandingPageViewProps {
@@ -27,10 +31,84 @@ interface LandingPageViewProps {
 export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, onLogin }) => {
   const [activePreviewTab, setActivePreviewTab] = useState<'dashboard' | 'clients' | 'commandes' | 'agenda' | 'relances'>('dashboard');
 
+  // PWA & Scroll Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
+  const [showScrollInstallBanner, setShowScrollInstallBanner] = useState(false);
+  const [hasDismissedBanner, setHasDismissedBanner] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState<boolean>(() => {
+    return localStorage.getItem('taylaxis_app_installed_v1') === 'true';
+  });
+
+  useEffect(() => {
+    // 1. Check if running inside installed standalone PWA app
+    const checkStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://');
+
+    setIsStandalone(checkStandalone);
+
+    // 2. Listen for PWA beforeinstallprompt
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsAlreadyInstalled(true);
+      localStorage.setItem('taylaxis_app_installed_v1', 'true');
+      setShowScrollInstallBanner(false);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // 3. Detect iOS UserAgent
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
+    setIsIOS(isIosDevice);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  // 4. Scroll Listener: Automatically propose installation after scrolling a little bit (120px)
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 120 && !hasDismissedBanner && !isStandalone && !isAlreadyInstalled) {
+        setShowScrollInstallBanner(true);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [hasDismissedBanner, isStandalone, isAlreadyInstalled]);
+
+  // Install trigger handler
+  const handleInstallApp = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          setIsAlreadyInstalled(true);
+          localStorage.setItem('taylaxis_app_installed_v1', 'true');
+          setShowScrollInstallBanner(false);
+        }
+        setDeferredPrompt(null);
+      });
+    } else {
+      setShowInstallGuideModal(true);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#FAF9FE] text-gray-900 font-sans selection:bg-[#7C3AED]/20">
+    <div className="min-h-screen bg-[#FAF9FE] text-gray-900 font-sans selection:bg-[#7C3AED]/20 relative">
       {/* 1. TOP NAVIGATION BAR */}
-      <header className="sticky top-0 z-50 bg-[#0C0A27]/95 backdrop-blur-md border-b border-white/10 text-white py-3.5 px-4 sm:px-8">
+      <header className="sticky top-0 z-40 bg-[#0C0A27]/95 backdrop-blur-md border-b border-white/10 text-white py-3.5 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2.5 cursor-pointer" onClick={onGetStarted}>
@@ -48,21 +126,33 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             <a href="#avantages" className="hover:text-white transition-colors">Avantages</a>
           </nav>
 
-          {/* Action CTAs */}
-          <div className="flex items-center space-x-3">
+          {/* Action CTAs: Télécharger l'App & Connexion */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Prominent Download Button in Header */}
+            <button
+              onClick={handleInstallApp}
+              className="px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95"
+              title="Installer l'application Taylaxis"
+            >
+              <Download size={14} className="text-[#A78BFA]" />
+              <span className="hidden xs:inline">Installer l'application</span>
+              <span className="xs:hidden">App</span>
+            </button>
+
             {onLogin && (
               <button
                 onClick={onLogin}
-                className="px-4 py-2 text-xs sm:text-sm font-bold text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
               >
-                Se connecter
+                Connexion
               </button>
             )}
+
             <button
               onClick={onGetStarted}
               className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#3155C8] text-white text-xs sm:text-sm font-extrabold rounded-full hover:opacity-95 shadow-md shadow-[#7C3AED]/30 active:scale-95 transition-all cursor-pointer flex items-center space-x-1.5"
             >
-              <span>Commencer maintenant</span>
+              <span>Démarrer</span>
               <ArrowRight size={15} />
             </button>
           </div>
@@ -95,7 +185,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             Taylaxis vous aide à gérer vos clients, leurs mensurations, vos commandes, vos rendez-vous et vos relances, au même endroit.
           </p>
 
-          {/* Hero Main CTA */}
+          {/* Hero Main CTAs: Commencer maintenant + Bouton Télécharger l'App */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={onGetStarted}
@@ -105,10 +195,20 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <ArrowRight size={18} />
             </button>
 
-            <div className="text-xs text-white/60 font-medium flex items-center gap-1.5 pt-1 sm:pt-0">
-              <ShieldCheck size={16} className="text-emerald-400" />
-              <span>Accès immédiat • Sans carte bancaire</span>
-            </div>
+            {/* Direct App Download Button in Hero */}
+            <button
+              onClick={handleInstallApp}
+              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/15 text-white font-bold text-base rounded-[20px] backdrop-blur-md border border-white/20 cursor-pointer shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2.5"
+            >
+              <Download size={18} className="text-[#A78BFA]" />
+              <span>Installer l'application sur Mobile</span>
+              <Smartphone size={18} className="text-white/80" />
+            </button>
+          </div>
+
+          <div className="text-xs text-white/60 font-medium flex items-center justify-center gap-1.5 pt-1">
+            <ShieldCheck size={16} className="text-emerald-400" />
+            <span>Accès immédiat • Installation en 1 clic sans app store</span>
           </div>
 
           {/* App & Dashboard Interactive Mockup Showcase + 5 Core Functions */}
@@ -652,6 +752,14 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <span>Commencer maintenant</span>
               <ArrowRight size={18} />
             </button>
+
+            <button
+              onClick={handleInstallApp}
+              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-base rounded-full border border-white/20 cursor-pointer shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2"
+            >
+              <Download size={18} className="text-[#A78BFA]" />
+              <span>Télécharger l'application</span>
+            </button>
           </div>
 
           <p className="text-xs text-white/60 font-medium">Gratuit • Démarrage en 30 secondes • Sans engagement</p>
@@ -674,10 +782,129 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
           <div className="flex space-x-4 font-semibold text-white/80">
             <button onClick={onGetStarted} className="hover:text-white cursor-pointer">Accueil App</button>
+            <button onClick={handleInstallApp} className="hover:text-white cursor-pointer flex items-center space-x-1">
+              <Download size={13} className="text-[#A78BFA]" />
+              <span>Télécharger</span>
+            </button>
             <a href="https://wa.me/22890123456" target="_blank" rel="noreferrer" className="hover:text-white">Support WhatsApp</a>
           </div>
         </div>
       </footer>
+
+      {/* 10. SMART SCROLL-TRIGGERED PWA INSTALL BANNER (Appears after scrolling > 120px) */}
+      {showScrollInstallBanner && !isStandalone && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 p-4 rounded-[24px] bg-[#0C0A27]/95 text-white border border-[#7C3AED]/50 shadow-2xl backdrop-blur-xl animate-fadeIn space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center space-x-3">
+              <div className="w-11 h-11 rounded-[16px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white font-bold shadow-lg shadow-[#7C3AED]/40 flex-shrink-0">
+                <Smartphone size={24} />
+              </div>
+              <div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[10px] font-bold text-[#A78BFA] bg-[#7C3AED]/20 px-2 py-0.5 rounded-full border border-[#7C3AED]/40">
+                    Proposer à l'utilisateur
+                  </span>
+                </div>
+                <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug mt-0.5">
+                  Installez l'application Taylaxis sur votre écran d'accueil
+                </h4>
+                <p className="text-[11px] text-white/75 leading-tight mt-0.5">
+                  Accès instantané 1-clic, fonctionnel même hors-ligne dans votre atelier.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setShowScrollInstallBanner(false);
+                setHasDismissedBanner(true);
+              }}
+              className="text-white/60 hover:text-white p-1.5 rounded-full bg-white/10 cursor-pointer flex-shrink-0"
+              title="Fermer"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-2 pt-1 border-t border-white/10">
+            <button
+              onClick={handleInstallApp}
+              className="flex-1 py-2.5 px-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#7C3AED]/40 hover:opacity-95 cursor-pointer active:scale-95 transition-all flex items-center justify-center space-x-1.5 border border-white/20"
+            >
+              <Download size={15} />
+              <span>Installer l'application immédiatement</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setShowScrollInstallBanner(false);
+                setHasDismissedBanner(true);
+              }}
+              className="px-3 py-2.5 text-xs text-white/60 hover:text-white font-medium cursor-pointer"
+            >
+              Plus tard
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 11. PWA INSTALLATION GUIDE MODAL (For iOS Safari vs Android Chrome) */}
+      {showInstallGuideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#120F38] border border-white/20 rounded-[28px] max-w-md w-full p-6 text-white space-y-5 shadow-2xl relative">
+            <button
+              type="button"
+              onClick={() => setShowInstallGuideModal(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white p-1.5 rounded-full bg-white/10 cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 rounded-[16px] bg-[#7C3AED]/20 border border-[#7C3AED]/40 flex items-center justify-center text-[#7C3AED]">
+                <Smartphone size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Installer Taylaxis sur Mobile</h3>
+                <p className="text-xs text-white/70">Utilisez l'application en plein écran comme sur les stores</p>
+              </div>
+            </div>
+
+            {isIOS ? (
+              <div className="p-4 rounded-[18px] bg-white/5 border border-white/10 space-y-3 text-xs">
+                <p className="font-bold text-[#7C3AED] flex items-center space-x-1.5">
+                  <Share size={15} />
+                  <span>Sur iPhone / iPad (Safari) :</span>
+                </p>
+                <ol className="list-decimal pl-4 space-y-2 text-white/90 leading-relaxed font-medium">
+                  <li>Appuyez sur le bouton <strong>Partager</strong> en bas de votre navigateur Safari.</li>
+                  <li>Faites défiler le menu puis appuyez sur <strong>"Sur l'écran d'accueil"</strong>.</li>
+                  <li>Validez en appuyant sur <strong>Ajouter</strong> en haut à droite.</li>
+                </ol>
+              </div>
+            ) : (
+              <div className="p-4 rounded-[18px] bg-white/5 border border-white/10 space-y-3 text-xs">
+                <p className="font-bold text-[#7C3AED] flex items-center space-x-1.5">
+                  <Download size={15} />
+                  <span>Sur Android / Chrome :</span>
+                </p>
+                <ol className="list-decimal pl-4 space-y-2 text-white/90 leading-relaxed font-medium">
+                  <li>Appuyez sur le menu <strong>Options (⋮)</strong> en haut à droite de Chrome.</li>
+                  <li>Sélectionnez <strong>"Installer l'application"</strong> ou <strong>"Ajouter à l'écran d'accueil"</strong>.</li>
+                  <li>Confirmez l'installation pour avoir l'icône Taylaxis sur votre téléphone.</li>
+                </ol>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowInstallGuideModal(false)}
+              className="w-full py-3 rounded-[14px] bg-[#7C3AED] text-white font-bold text-xs hover:bg-[#6D28D9] cursor-pointer transition-colors shadow-md"
+            >
+              Compris, j'installe maintenant
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

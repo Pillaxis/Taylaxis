@@ -2,8 +2,21 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const FEDAPAY_SECRET_KEY = process.env.FEDAPAY_SECRET_KEY || '';
+
+async function getAuthenticatedUser(req: VercelRequest) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+
+  const token = authHeader.replace('Bearer ', '');
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
+
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+  if (error || !data.user) return null;
+  return data.user;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -21,7 +34,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const transactionId = req.query.transactionId || req.body?.transactionId;
-    const userId = req.query.userId || req.body?.userId;
+    const userIdReq = req.query.userId || req.body?.userId;
+
+    // 1. Verify Authentication
+    const authUser = await getAuthenticatedUser(req);
+    if (!authUser) {
+      return res.status(401).json({ error: 'Non authentifié. Veuillez transmettre un jeton d\'accès valide.' });
+    }
+
+    const verifiedUserId = authUser.id;
+    if (userIdReq && userIdReq !== verifiedUserId) {
+      return res.status(403).json({ error: 'Accès non autorisé pour cet utilisateur.' });
+    }
 
     if (!transactionId) {
       return res.status(400).json({ error: 'Identifiant de transaction manquant.' });
@@ -36,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? 'https://sandbox-api.fedapay.com/v1'
       : 'https://api.fedapay.com/v1';
 
-    // 1. Fetch real transaction status directly from FedaPay Server API
+    // 2. Fetch real transaction status directly from FedaPay Server API
     const fedaRes = await fetch(`${fedaBaseUrl}/transactions/${transactionId}`, {
       method: 'GET',
       headers: {
@@ -60,14 +84,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const customMetadata = transaction.custom_metadata || {};
     const featureIntent = customMetadata.feature_intent || '';
 
-    // 2. If approved, activate PRO subscription in Supabase
-    if (isApproved && userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    // 3. If approved, activate PRO subscription in Supabase securely
+    if (isApproved && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const now = new Date();
       const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
       await supabaseAdmin.from('subscriptions').upsert({
-        user_id: userId,
+        user_id: verifiedUserId,
         plan: 'pro',
         status: 'active',
         transaction_id: String(transactionId),
@@ -81,7 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       await supabaseAdmin.from('payment_transactions').upsert({
         feda_transaction_id: String(transactionId),
-        user_id: userId,
+        user_id: verifiedUserId,
         amount: Number(transaction.amount || 5000),
         currency: 'XOF',
         status: 'approved',

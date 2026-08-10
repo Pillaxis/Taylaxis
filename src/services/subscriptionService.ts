@@ -19,10 +19,10 @@ export interface LimitCheckResult {
 }
 
 export const FREE_LIMITS = {
-  maxClients: 10,
-  maxMeasurements: 10,
-  maxOrdersMonthly: 5,
-  maxAppointmentsMonthly: 5,
+  maxClients: 5,
+  maxMeasurements: 5,
+  maxOrdersMonthly: 10,
+  maxAppointmentsMonthly: 10,
   advancedRelances: false,
   advancedStats: false,
   advancedSearch: false,
@@ -30,6 +30,19 @@ export const FREE_LIMITS = {
 
 export class SubscriptionService {
   private static localCache: Record<string, UserSubscription> = {};
+
+  private static async getAuthHeaders(): Promise<Record<string, string>> {
+    if (!isSupabaseConfigured || !supabase) return {};
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) {
+        return { Authorization: `Bearer ${data.session.access_token}` };
+      }
+    } catch (e) {
+      console.warn('Could not get auth session token:', e);
+    }
+    return {};
+  }
 
   /**
    * Save feature intent before auth or payment (e.g. 'relances', 'stats', 'clients', 'orders', 'agenda')
@@ -120,7 +133,7 @@ export class SubscriptionService {
   }
 
   /**
-   * Check if action is allowed based on user plan limits
+   * Check if action is allowed based on user plan limits (Client side evaluation)
    */
   static checkLimit(
     userId: string | null | undefined,
@@ -151,7 +164,7 @@ export class SubscriptionService {
             allowed: false,
             limit: FREE_LIMITS.maxMeasurements,
             current: currentCount,
-            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxMeasurements} fiches du forfait gratuit.`,
+            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxMeasurements} fiches de mensuration du forfait gratuit.`,
             featureName: 'Mensurations Illimitées',
           };
         }
@@ -208,7 +221,40 @@ export class SubscriptionService {
   }
 
   /**
-   * Initiate FedaPay transaction via Serverless API
+   * Perform authoritative server-side limit check via Serverless API
+   */
+  static async checkLimitOnServer(resourceType: string): Promise<LimitCheckResult> {
+    try {
+      const authHeaders = await this.getAuthHeaders();
+      const res = await fetch('/api/check-limits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
+        body: JSON.stringify({ resourceType }),
+      });
+
+      if (!res.ok) {
+        return { allowed: false, message: 'Erreur de vérification des limites serveur.' };
+      }
+
+      const data = await res.json();
+      return {
+        allowed: Boolean(data.allowed),
+        limit: data.limit,
+        current: data.current,
+        message: data.message,
+        featureName: data.featureName,
+      };
+    } catch (e) {
+      console.error('checkLimitOnServer exception:', e);
+      return { allowed: true }; // Fallback client
+    }
+  }
+
+  /**
+   * Initiate FedaPay transaction via Serverless API with JWT auth
    */
   static async createFedaPayment(params: {
     userId: string;
@@ -216,11 +262,16 @@ export class SubscriptionService {
     name?: string;
     phone?: string;
     featureIntent?: string;
+    idempotencyKey?: string;
   }): Promise<{ success: boolean; url?: string; token?: string; transactionId?: string; error?: string }> {
     try {
+      const authHeaders = await this.getAuthHeaders();
       const res = await fetch('/api/create-feda-transaction', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify(params),
       });
 
@@ -242,16 +293,20 @@ export class SubscriptionService {
   }
 
   /**
-   * Verify FedaPay payment completion via Serverless API
+   * Verify FedaPay payment completion via Serverless API with JWT auth
    */
   static async verifyTransaction(
     transactionId: string,
     userId: string
   ): Promise<{ isPro: boolean; status: string; featureIntent?: string; error?: string }> {
     try {
+      const authHeaders = await this.getAuthHeaders();
       const res = await fetch('/api/verify-feda-transaction', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders,
+        },
         body: JSON.stringify({ transactionId, userId }),
       });
 

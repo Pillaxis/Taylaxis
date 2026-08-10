@@ -14,6 +14,61 @@ export default defineConfig(({ mode }) => {
         name: 'taylaxis-api-dev-server',
         configureServer(server) {
           server.middlewares.use(async (req, res, next) => {
+            if (req.url?.startsWith('/api/check-limits') && req.method === 'POST') {
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ allowed: true, plan: 'dev' }));
+              return;
+            }
+
+            if (req.url?.startsWith('/api/verify-feda-transaction') && (req.method === 'POST' || req.method === 'GET')) {
+              let bodyStr = '';
+              req.on('data', (chunk) => { bodyStr += chunk; });
+              req.on('end', async () => {
+                try {
+                  const body = JSON.parse(bodyStr || '{}');
+                  const secretKey = env.FEDAPAY_SECRET_KEY || process.env.FEDAPAY_SECRET_KEY || '';
+                  const txId = body.transactionId;
+
+                  if (!secretKey || !txId) {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ isPro: false, status: 'unconfigured' }));
+                    return;
+                  }
+
+                  const isSandbox = secretKey.startsWith('sk_sandbox');
+                  const fedaBaseUrl = isSandbox ? 'https://sandbox-api.fedapay.com/v1' : 'https://api.fedapay.com/v1';
+
+                  const fedaRes = await fetch(`${fedaBaseUrl}/transactions/${txId}`, {
+                    headers: { Authorization: `Bearer ${secretKey}` },
+                  });
+
+                  if (fedaRes.ok) {
+                    const fedaData = (await fedaRes.json()) as any;
+                    const transaction = fedaData.v1?.transaction || fedaData.transaction || fedaData;
+                    const realStatus = (transaction.status || '').toLowerCase();
+                    const isApproved = realStatus === 'approved' || realStatus === 'transferred';
+                    const featureIntent = transaction.custom_metadata?.feature_intent || '';
+
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ success: isApproved, isPro: isApproved, status: realStatus, featureIntent }));
+                    return;
+                  }
+
+                  res.statusCode = 200;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ isPro: false, status: 'pending' }));
+                } catch (e: any) {
+                  res.statusCode = 500;
+                  res.setHeader('Content-Type', 'application/json');
+                  res.end(JSON.stringify({ error: e.message }));
+                }
+              });
+              return;
+            }
+
             if (req.url?.startsWith('/api/create-feda-transaction') && req.method === 'POST') {
               let bodyStr = '';
               req.on('data', (chunk) => {

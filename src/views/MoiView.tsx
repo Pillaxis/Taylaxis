@@ -311,12 +311,13 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
     const targetPlan = plans[planId];
 
     if (targetPlan.priceFCFA > 0) {
-      showToast('Création du paiement FedaPay...');
+      showToast('Connexion à la passerelle FedaPay...');
       const serverRes = await SubscriptionService.createFedaPayment({
         userId: userProfile.id,
         email: userProfile.email,
         name: userProfile.fullName,
         phone: userProfile.phone,
+        featureIntent: 'pro_upgrade',
       });
 
       if (serverRes.success && serverRes.url) {
@@ -330,28 +331,30 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         customerName: userProfile.fullName || 'Tailleur Taylaxis',
         customerEmail: userProfile.email,
         customerPhone: userProfile.phone,
-        onSuccess: (txId) => {
-          const newPlan = userService.saveSubscriptionPlan(targetPlan);
-          setSubscription(newPlan);
-          setShowSubscriptionModal(false);
-          showToast(`Succès ! Abonnement ${newPlan.name} activé (Réf: ${txId}) !`);
+        onSuccess: async (txId) => {
+          const verifyRes = await SubscriptionService.verifyTransaction(txId, userProfile.id);
+          if (verifyRes.isPro) {
+            setShowSubscriptionModal(false);
+            showToast(`Succès ! Abonnement ${targetPlan.name} activé avec succès (Réf: ${txId}) !`);
+            const liveSub = await SubscriptionService.fetchUserSubscription(userProfile.id);
+            if (liveSub.isPro) {
+              setSubscription({ ...targetPlan, status: 'active' });
+            }
+          } else {
+            showToast('Paiement non confirmé par FedaPay.');
+          }
         },
         onError: (err) => {
-          showToast(`Paiement: ${err}`);
+          showToast(`Paiement non finalisé : ${err}`);
         },
       });
 
-      if (!launched) {
-        const newPlan = userService.saveSubscriptionPlan(targetPlan);
-        setSubscription(newPlan);
-        setShowSubscriptionModal(false);
-        showToast(`Abonnement ${newPlan.name} activé (Mode démonstration).`);
+      if (!launched && !serverRes.success) {
+        showToast(serverRes.error || 'Impossible de lancer FedaPay. Vérifiez vos clés et votre connexion.');
       }
     } else {
-      const newPlan = userService.saveSubscriptionPlan(targetPlan);
-      setSubscription(newPlan);
       setShowSubscriptionModal(false);
-      showToast(`Formule ${newPlan.name} sélectionnée !`);
+      showToast(`Votre compte utilise la Formule ${targetPlan.name}.`);
     }
   };
 

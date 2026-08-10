@@ -12,7 +12,6 @@ import {
   Zap,
   TrendingUp,
   Sparkles,
-  ChevronRight,
   AlertTriangle,
   Award,
   Lock,
@@ -38,7 +37,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
   const [hasDismissedBanner, setHasDismissedBanner] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState<boolean>(() => {
+  const [isAlreadyInstalled] = useState<boolean>(() => {
     return localStorage.getItem('taylaxis_app_installed_v1') === 'true';
   });
 
@@ -58,7 +57,6 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
     };
 
     const handleAppInstalled = () => {
-      setIsAlreadyInstalled(true);
       localStorage.setItem('taylaxis_app_installed_v1', 'true');
       setShowScrollInstallBanner(false);
     };
@@ -77,7 +75,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
     };
   }, []);
 
-  // 4. Scroll Listener: Automatically propose installation after scrolling a little bit (120px)
+  // 4. Scroll Listener: Automatically propose installation after scrolling (120px)
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 120 && !hasDismissedBanner && !isStandalone && !isAlreadyInstalled) {
@@ -94,7 +92,6 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((choiceResult: any) => {
         if (choiceResult.outcome === 'accepted') {
-          setIsAlreadyInstalled(true);
           localStorage.setItem('taylaxis_app_installed_v1', 'true');
           setShowScrollInstallBanner(false);
         }
@@ -112,37 +109,40 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center space-x-2.5 cursor-pointer" onClick={onGetStarted}>
-            <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white shadow-lg shadow-[#7C3AED]/30">
+            <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white shadow-lg shadow-[#7C3AED]/30 animate-pulse-glow">
               <Scissors size={20} className="rotate-45" />
             </div>
-            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Taylaxis</span>
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-white leading-none">Taylaxis</span>
+              <span className="text-[10px] font-extrabold text-[#A78BFA] tracking-wider uppercase">Atelier & Couture</span>
+            </div>
           </div>
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-white/80">
-            <a href="#valeur" className="hover:text-white transition-colors">La Valeur</a>
+            <a href="#valeur" className="hover:text-white transition-colors">La Transformation</a>
             <a href="#probleme" className="hover:text-white transition-colors">Le Problème</a>
-            <a href="#fonctionnalites" className="hover:text-white transition-colors">Fonctionnalités</a>
-            <a href="#avantages" className="hover:text-white transition-colors">Avantages</a>
+            <a href="#fonctionnalites" className="hover:text-white transition-colors">Les 5 Piliers</a>
+            <a href="#avantages" className="hover:text-white transition-colors">Bénéfices Tailleur</a>
           </nav>
 
           {/* Action CTAs: Télécharger l'App & Connexion */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Prominent Download Button in Header */}
+          <div className="flex items-center space-x-1.5 sm:space-x-3">
+            {/* Download Button in Header */}
             <button
               onClick={handleInstallApp}
-              className="px-3 sm:px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95"
-              title="Installer l'application Taylaxis"
+              className="px-2.5 sm:px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold rounded-full transition-all cursor-pointer flex items-center space-x-1.5 active:scale-95 flex-shrink-0"
+              title="Installer l'application Taylaxis sur téléphone"
             >
               <Download size={14} className="text-[#A78BFA]" />
-              <span className="hidden xs:inline">Installer l'application</span>
+              <span className="hidden xs:inline">Installer l'app</span>
               <span className="xs:hidden">App</span>
             </button>
 
             {onLogin && (
               <button
                 onClick={onLogin}
-                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer flex-shrink-0"
               >
                 Connexion
               </button>
@@ -150,7 +150,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
             <button
               onClick={onGetStarted}
-              className="px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#3155C8] text-white text-xs sm:text-sm font-extrabold rounded-full hover:opacity-95 shadow-md shadow-[#7C3AED]/30 active:scale-95 transition-all cursor-pointer flex items-center space-x-1.5"
+              className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#3155C8] text-white text-xs sm:text-sm font-extrabold rounded-full hover:opacity-95 shadow-md shadow-[#7C3AED]/30 active:scale-95 transition-all cursor-pointer flex items-center space-x-1.5 flex-shrink-0"
             >
               <span>Démarrer</span>
               <ArrowRight size={15} />
@@ -159,46 +159,62 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         </div>
       </header>
 
-      {/* 2. HERO SECTION (Centré) */}
+      {/* 2. HERO SECTION (Centré + 100% Thématique Tailleurs) */}
       <section className="bg-[#0C0A27] text-white pt-12 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-8 relative overflow-hidden">
-        {/* Subtle background ambient lighting glows */}
+        {/* Ambient background glows */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#7C3AED]/20 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute -top-20 -right-20 w-80 h-80 bg-[#3155C8]/20 rounded-full blur-[100px] pointer-events-none" />
 
+        {/* Micro-Animated Floating Badges (Side Flanks for Desktop) */}
+        <div className="hidden lg:flex absolute left-8 top-1/3 p-3.5 rounded-[22px] bg-white/10 backdrop-blur-xl border border-white/20 text-left space-y-1 animate-float shadow-2xl max-w-[210px] z-20">
+          <div className="flex items-center space-x-2 text-xs font-extrabold text-emerald-400">
+            <Ruler size={16} />
+            <span>Mensurations 3D</span>
+          </div>
+          <p className="text-[11px] text-white/80 leading-tight">Poitrine, carré & longueurs congelés à la coupe</p>
+        </div>
+
+        <div className="hidden lg:flex absolute right-8 top-1/3 p-3.5 rounded-[22px] bg-white/10 backdrop-blur-xl border border-white/20 text-left space-y-1 animate-float-reverse shadow-2xl max-w-[210px] z-20">
+          <div className="flex items-center space-x-2 text-xs font-extrabold text-amber-300">
+            <Scissors size={16} />
+            <span>Zéro Solde Oublié</span>
+          </div>
+          <p className="text-[11px] text-white/80 leading-tight">100% des acomptes & soldes réclamés</p>
+        </div>
+
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
-          {/* Badge Tag */}
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-xs font-bold text-[#A78BFA] animate-fadeIn">
-            <Sparkles size={14} className="text-[#A78BFA]" />
-            <span>Le SaaS N°1 des Ateliers de Couture Africains</span>
+          {/* Unmistakable Tailor Tag Badge */}
+          <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#7C3AED]/30 via-purple-500/20 to-[#3155C8]/30 border border-[#7C3AED]/50 backdrop-blur-md text-xs sm:text-sm font-extrabold text-[#C084FC] shadow-lg shadow-[#7C3AED]/20 animate-pulse-glow">
+            <Scissors size={16} className="text-[#A78BFA] rotate-45" />
+            <span>✂️ APPLICATION MÉTIER N°1 DES TAILLEURS & ATELIERS DE COUTURE 🧵</span>
           </div>
 
           {/* Centered Main Title */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
-            Oubliez vos cahiers.<br />
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.12]">
+            Oubliez vos cahiers d'atelier.<br />
             <span className="bg-gradient-to-r from-[#A78BFA] via-[#C084FC] to-[#818CF8] bg-clip-text text-transparent">
-              Gérez votre atelier comme un pro.
+              Gérez vos clients, mensurations & confections sur-mesure comme un pro.
             </span>
           </h1>
 
           {/* Centered Subtitle */}
-          <p className="text-base sm:text-xl text-white/80 max-w-2xl mx-auto font-medium leading-relaxed">
-            Taylaxis vous aide à gérer vos clients, leurs mensurations, vos commandes, vos rendez-vous et vos relances, au même endroit.
+          <p className="text-base sm:text-xl text-white/85 max-w-2xl mx-auto font-medium leading-relaxed">
+            Spécialement conçu pour les tailleurs, couturiers, stylistes et ateliers de confection. Gardez le contrôle total sur vos commandes et livraisons.
           </p>
 
-          {/* Hero Main CTAs: Commencer maintenant + Bouton Télécharger l'App */}
+          {/* Hero Main CTAs */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-base rounded-[20px] hover:opacity-95 cursor-pointer shadow-xl shadow-[#7C3AED]/40 active:scale-98 transition-all flex items-center justify-center space-x-2.5 border border-white/20"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-base rounded-[20px] hover:scale-105 cursor-pointer shadow-xl shadow-[#7C3AED]/40 active:scale-98 transition-all flex items-center justify-center space-x-2.5 border border-white/20 animate-pulse-glow"
             >
               <span>Commencer maintenant</span>
               <ArrowRight size={18} />
             </button>
 
-            {/* Direct App Download Button in Hero */}
             <button
               onClick={handleInstallApp}
-              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/15 text-white font-bold text-base rounded-[20px] backdrop-blur-md border border-white/20 cursor-pointer shadow-lg active:scale-98 transition-all flex items-center justify-center space-x-2.5"
+              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/15 text-white font-bold text-base rounded-[20px] backdrop-blur-md border border-white/20 cursor-pointer shadow-lg hover:scale-105 active:scale-98 transition-all flex items-center justify-center space-x-2.5"
             >
               <Download size={18} className="text-[#A78BFA]" />
               <span>Installer l'application sur Mobile</span>
@@ -208,110 +224,114 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
           <div className="text-xs text-white/60 font-medium flex items-center justify-center gap-1.5 pt-1">
             <ShieldCheck size={16} className="text-emerald-400" />
-            <span>Accès immédiat • Installation en 1 clic sans app store</span>
+            <span>Accès immédiat • Conçu pour une prise en main à une main en atelier</span>
           </div>
 
           {/* App & Dashboard Interactive Mockup Showcase + 5 Core Functions */}
           <div className="pt-10 sm:pt-14 space-y-8">
-            {/* The 5 Main Functions Header Pills */}
+            {/* The 5 Main Functions Header Pills with Icons */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 text-left">
-              <div className="p-3 rounded-[16px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1">
+              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-[#7C3AED] transition-all">
                 <div className="flex items-center space-x-1.5 text-xs font-bold text-[#A78BFA]">
                   <UserPlus size={14} />
-                  <span>1. Client</span>
+                  <span>1. Clients</span>
                 </div>
-                <p className="text-[11px] text-white/70 leading-tight">Ajouter vos contacts & fiches</p>
+                <p className="text-[11px] text-white/70 leading-tight">Fiches & répertoires atelier</p>
               </div>
 
-              <div className="p-3 rounded-[16px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1">
+              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-emerald-400 transition-all">
                 <div className="flex items-center space-x-1.5 text-xs font-bold text-emerald-400">
                   <Ruler size={14} />
                   <span>2. Mensurations</span>
                 </div>
-                <p className="text-[11px] text-white/70 leading-tight">Noter les mesures précises</p>
+                <p className="text-[11px] text-white/70 leading-tight">Mesures congelées par vêtement</p>
               </div>
 
-              <div className="p-3 rounded-[16px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1">
+              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-amber-400 transition-all">
                 <div className="flex items-center space-x-1.5 text-xs font-bold text-amber-400">
                   <Scissors size={14} />
-                  <span>3. Commande</span>
+                  <span>3. Confections</span>
                 </div>
-                <p className="text-[11px] text-white/70 leading-tight">Ajouter les confection 3D</p>
+                <p className="text-[11px] text-white/70 leading-tight">Moteur 3D de commande</p>
               </div>
 
-              <div className="p-3 rounded-[16px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1">
+              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 hover:border-blue-400 transition-all">
                 <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-400">
                   <Calendar size={14} />
-                  <span>4. Rendez-vous</span>
+                  <span>4. Essayages</span>
                 </div>
-                <p className="text-[11px] text-white/70 leading-tight">Planifier les essayages</p>
+                <p className="text-[11px] text-white/70 leading-tight">Planning des rendez-vous</p>
               </div>
 
-              <div className="p-3 rounded-[16px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 col-span-2 sm:col-span-1">
+              <div className="p-3.5 rounded-[18px] bg-white/10 border border-white/15 backdrop-blur-md space-y-1 col-span-2 sm:col-span-1 hover:border-purple-300 transition-all">
                 <div className="flex items-center space-x-1.5 text-xs font-bold text-purple-300">
                   <MessageCircle size={14} />
-                  <span>5. Relance</span>
+                  <span>5. Relances</span>
                 </div>
-                <p className="text-[11px] text-white/70 leading-tight">Relancer par WhatsApp</p>
+                <p className="text-[11px] text-white/70 leading-tight">Envoi WhatsApp 1-clic</p>
               </div>
             </div>
 
             {/* Simulated App Dashboard Container */}
-            <div className="p-4 sm:p-6 rounded-[28px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4 text-left max-w-3xl mx-auto">
+            <div className="p-4 sm:p-6 rounded-[28px] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl space-y-4 text-left max-w-3xl mx-auto relative">
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                  <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                  <span className="text-xs text-white/60 font-mono ml-2">app.taylaxis.com</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-xs font-extrabold text-white tracking-wide">En direct de l'atelier Taylaxis</span>
                 </div>
                 <span className="text-[11px] font-bold text-[#A78BFA] bg-[#7C3AED]/20 px-2.5 py-0.5 rounded-full border border-[#7C3AED]/40">
-                  Aperçu Direct Taylaxis V1
+                  Interface Atelier 100% Dynamique
                 </span>
               </div>
 
-              {/* Mock Stat Cards 2x2 */}
+              {/* Stat Cards 2x2 */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <div className="p-3 rounded-[16px] bg-[#059669] text-white space-y-1">
+                <div className="p-3 rounded-[16px] bg-[#059669] text-white space-y-1 shadow-md">
                   <div className="text-[10px] opacity-90">CA du jour</div>
                   <div className="text-lg font-extrabold">85 000 FCFA</div>
                   <div className="text-[9px] opacity-80">↗ +12% vs hier</div>
                 </div>
 
-                <div className="p-3 rounded-[16px] bg-[#6D28D9] text-white space-y-1">
+                <div className="p-3 rounded-[16px] bg-[#6D28D9] text-white space-y-1 shadow-md">
                   <div className="text-[10px] opacity-90">CA du mois</div>
                   <div className="text-lg font-extrabold">1 240 000 FCFA</div>
-                  <div className="text-[9px] opacity-80">↗ +18% vs mois dernier</div>
+                  <div className="text-[9px] opacity-80">↗ +18% ce mois</div>
                 </div>
 
-                <div className="p-3 rounded-[16px] bg-[#EA580C] text-white space-y-1">
+                <div className="p-3 rounded-[16px] bg-[#EA580C] text-white space-y-1 shadow-md">
                   <div className="text-[10px] opacity-90">Commandes en cours</div>
-                  <div className="text-lg font-extrabold">18</div>
-                  <div className="text-[9px] opacity-80">⏱ 2 en retard</div>
+                  <div className="text-lg font-extrabold">18 confections</div>
+                  <div className="text-[9px] opacity-80">⏱ 2 urgentes</div>
                 </div>
 
-                <div className="p-3 rounded-[16px] bg-[#2563EB] text-white space-y-1">
+                <div className="p-3 rounded-[16px] bg-[#2563EB] text-white space-y-1 shadow-md">
                   <div className="text-[10px] opacity-90">À encaisser</div>
                   <div className="text-lg font-extrabold">350 000 FCFA</div>
-                  <div className="text-[9px] opacity-80">Sur 12 commandes</div>
+                  <div className="text-[9px] opacity-80">Sur 12 clients</div>
                 </div>
               </div>
 
               {/* Mock upcoming delivery list */}
-              <div className="p-3 rounded-[18px] bg-white text-gray-900 space-y-2">
+              <div className="p-3.5 rounded-[18px] bg-white text-gray-900 space-y-2 shadow-lg">
                 <div className="text-xs font-extrabold text-gray-900 flex items-center justify-between">
-                  <span>Livraisons prochaines</span>
-                  <span className="text-[10px] text-[#7C3AED] font-bold">Voir tout</span>
+                  <span className="flex items-center gap-1.5">
+                    <Scissors size={14} className="text-[#7C3AED]" />
+                    Prochaine livraison à effectuer
+                  </span>
+                  <span className="text-[10px] text-[#7C3AED] font-bold">Rappel prêt</span>
                 </div>
-                <div className="p-2 rounded-[12px] bg-gray-50 flex items-center justify-between text-xs">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">K</div>
+                <div className="p-2.5 rounded-[14px] bg-gray-50 flex items-center justify-between text-xs border border-gray-100">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="w-8 h-8 rounded-full bg-[#7C3AED] text-white font-extrabold flex items-center justify-center text-xs">K</div>
                     <div>
-                      <div className="font-bold text-gray-900">Commande #024</div>
-                      <div className="text-[10px] text-gray-500">Kossi A.</div>
+                      <div className="font-extrabold text-gray-900">Costume 3 Pièces Sur-Mesure</div>
+                      <div className="text-[10px] text-gray-500 font-medium">Client : Kossi Mensah • +228 90 12 34 56</div>
                     </div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">En retard</span>
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center gap-1">
+                    <CheckCircle2 size={12} />
+                    Prêt
+                  </span>
                 </div>
               </div>
             </div>
@@ -322,14 +342,14 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
       {/* 3. SECTION VALEUR & TRANSFORMATION */}
       <section id="valeur" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3 py-1 rounded-full">
+          <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3.5 py-1 rounded-full">
             La Transformation de Votre Atelier
           </span>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+          <h2 className="text-2xl sm:text-4xl font-black text-gray-900 tracking-tight">
             Ne vendez plus de simples vêtements. Offrez un service d'exception à vos clients.
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">
-            Taylaxis ne se contente pas de remplacer vos cahiers : l'application transforme votre atelier en une entreprise structurée, crédible et rentable.
+          <p className="text-sm sm:text-base text-gray-600 font-medium">
+            Taylaxis ne se contente pas de remplacer vos cahiers : l'application transforme votre atelier en une entreprise structurée, crédible et hautement rentable.
           </p>
         </div>
 
@@ -342,7 +362,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 <XCircle size={22} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-red-900">Avant : Le Cahier Traditionnel</h3>
+                <h3 className="text-lg font-bold text-red-900">Avant : Le Cahier Tradionnel</h3>
                 <p className="text-xs text-red-600">Désordre, retards et pertes financières</p>
               </div>
             </div>
@@ -447,7 +467,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         </div>
       </section>
 
-      {/* 5. LES 5 FONCTIONNALITÉS PRINCIPALES (Visuels Explicatifs) */}
+      {/* 5. LES 5 FONCTIONNALITÉS PRINCIPALES */}
       <section id="fonctionnalites" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider bg-[#F3E8FF] px-3 py-1 rounded-full">
@@ -456,7 +476,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
           <h2 className="text-2xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
             Les 5 piliers pour piloter votre atelier de couture
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 font-medium">
             Tout ce dont un tailleur professionnel a besoin, réuni dans une interface fluide et intuitive.
           </p>
         </div>
@@ -472,10 +492,6 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                 Créez une fiche pour chaque client avec son nom, numéro de téléphone, adresse et historique complet d'achats. Retrouvez n'importe quel profil en 1 clic grâce à la recherche instantanée.
               </p>
-              <div className="pt-1 flex items-center space-x-2 text-xs font-bold text-[#7C3AED]">
-                <span>Enregistrer un nouveau client</span>
-                <ChevronRight size={14} />
-              </div>
             </div>
 
             <div className="p-4 rounded-[20px] bg-[#FAF9FE] border border-[#EDE9F6] space-y-2">
@@ -600,7 +616,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 onClick={() => setActivePreviewTab(tab.id as any)}
                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   activePreviewTab === tab.id
-                    ? 'bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/40'
+                    ? 'bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/40 scale-105'
                     : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/15'
                 }`}
               >
@@ -640,7 +656,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 <h4 className="text-sm font-bold text-[#A78BFA]">Prochaine Action Principale Unique (Order Engine)</h4>
                 <div className="p-3 rounded-[16px] bg-white/10 text-white text-xs space-y-2">
                   <div className="font-bold">Commande #038 - Agbada Traditionnel</div>
-                  <div className="p-2.5 rounded-[12px] bg-[#7C3AED] text-white text-center font-extrabold cursor-pointer">
+                  <div className="p-2.5 rounded-[12px] bg-[#7C3AED] text-white text-center font-extrabold cursor-pointer hover:bg-[#6D28D9] transition-all">
                     Marquer Prête pour Essayage ✂️
                   </div>
                 </div>
@@ -683,43 +699,43 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center">
-            <div className="w-12 h-12 rounded-full bg-purple-100 text-[#7C3AED] mx-auto flex items-center justify-center">
+          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-[#7C3AED]/40 hover:scale-105 transition-all">
+            <div className="w-12 h-12 rounded-full bg-purple-100 text-[#7C3AED] mx-auto flex items-center justify-center animate-bounce-subtle">
               <Zap size={24} />
             </div>
             <h3 className="text-base font-bold text-gray-900">Gain de Temps de 2h/Jour</h3>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Consacrez plus de temps à la couture et à la création plutôt qu'à chercher des bouts de papier.
+              Consacrez plus de temps à la coupe et à la création plutôt qu'à chercher des notes de mesures.
             </p>
           </div>
 
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center">
+          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-emerald-400 hover:scale-105 transition-all">
             <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
               <TrendingUp size={24} />
             </div>
             <h3 className="text-base font-bold text-gray-900">+30% d'Encaissements</h3>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Zéro solde oublié : vous récupérez l'intégralité des sommes dues sur chaque vêtement confectionné.
+              Zéro solde oublié : vous récupérez l'intégralité des acomptes dus sur chaque vêtement.
             </p>
           </div>
 
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center">
+          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-blue-400 hover:scale-105 transition-all">
             <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 mx-auto flex items-center justify-center">
               <Award size={24} />
             </div>
-            <h3 className="text-base font-bold text-gray-900">Image & Crédibilité Top</h3>
+            <h3 className="text-base font-bold text-gray-900">Image & Crédibilité</h3>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Impressionnez vos clients avec un suivi numérique digne des plus grands ateliers de mode.
+              Impressionnez vos clients avec un suivi numérique digne des plus grandes maisons de couture.
             </p>
           </div>
 
-          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center">
+          <div className="p-6 rounded-[24px] bg-white border border-gray-100 shadow-xs space-y-3 text-center hover:border-amber-400 hover:scale-105 transition-all">
             <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 mx-auto flex items-center justify-center">
               <Lock size={24} />
             </div>
-            <h3 className="text-base font-bold text-gray-900">Sécurité & Cloud</h3>
+            <h3 className="text-base font-bold text-gray-900">Sauvegarde Cloud</h3>
             <p className="text-xs text-gray-600 leading-relaxed">
-              Même si vous perdez votre smartphone, vos mensurations et commandes restent protégées en sécurité.
+              Même en cas de perte de votre smartphone, toutes vos mensurations et fiches restent sécurisées.
             </p>
           </div>
         </div>
@@ -728,26 +744,25 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
       {/* 8. SECTION PRÊT À MIEUX GÉRER VOTRE ATELIER ? & CTA FINAL */}
       <section className="py-16 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto">
         <div className="p-8 sm:p-14 rounded-[36px] bg-gradient-to-br from-[#0C0A27] via-[#1D1850] to-[#3155C8] text-white text-center space-y-6 shadow-2xl relative overflow-hidden border border-white/15">
-          {/* Subtle light effect */}
           <div className="absolute top-0 right-0 w-72 h-72 bg-[#7C3AED]/30 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 text-xs font-bold text-[#A78BFA] border border-white/15">
+          <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-white/10 text-xs font-bold text-[#A78BFA] border border-white/15">
             <Sparkles size={14} />
             <span>Passez à la vitesse supérieure</span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight max-w-2xl mx-auto">
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
             Prêt à mieux gérer votre atelier de couture ?
           </h2>
 
-          <p className="text-sm sm:text-base text-white/80 max-w-xl mx-auto font-medium">
+          <p className="text-sm sm:text-base text-white/85 max-w-xl mx-auto font-medium">
             Rejoignez dès aujourd'hui les ateliers africains qui ont choisi la sérénité et le professionnalisme avec Taylaxis.
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-9 py-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-base rounded-full cursor-pointer shadow-xl shadow-[#7C3AED]/40 active:scale-95 transition-all flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-9 py-4 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-base rounded-full cursor-pointer shadow-xl shadow-[#7C3AED]/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-2"
             >
               <span>Commencer maintenant</span>
               <ArrowRight size={18} />
@@ -755,14 +770,14 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
             <button
               onClick={handleInstallApp}
-              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-base rounded-full border border-white/20 cursor-pointer shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2"
+              className="w-full sm:w-auto px-7 py-4 bg-white/10 hover:bg-white/20 text-white font-bold text-base rounded-full border border-white/20 cursor-pointer shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-2"
             >
               <Download size={18} className="text-[#A78BFA]" />
               <span>Télécharger l'application</span>
             </button>
           </div>
 
-          <p className="text-xs text-white/60 font-medium">Gratuit • Démarrage en 30 secondes • Sans engagement</p>
+          <p className="text-xs text-white/60 font-medium">Gratuit • Démarrage rapide en 30 secondes • Sans engagement</p>
         </div>
       </section>
 
@@ -797,20 +812,20 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
           <div className="pointer-events-auto p-4 rounded-[24px] bg-[#0C0A27]/95 text-white border border-[#7C3AED]/50 shadow-2xl backdrop-blur-xl animate-fadeIn space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center space-x-3">
-                <div className="w-11 h-11 rounded-[16px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white font-bold shadow-lg shadow-[#7C3AED]/40 flex-shrink-0">
+                <div className="w-11 h-11 rounded-[16px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white font-bold shadow-lg shadow-[#7C3AED]/40 flex-shrink-0 animate-pulse-glow">
                   <Smartphone size={24} />
                 </div>
                 <div>
                   <div className="flex items-center space-x-1.5">
                     <span className="text-[10px] font-bold text-[#A78BFA] bg-[#7C3AED]/20 px-2 py-0.5 rounded-full border border-[#7C3AED]/40">
-                      Proposer à l'utilisateur
+                      Installer l'application Taylaxis
                     </span>
                   </div>
                   <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug mt-0.5">
-                    Installez l'application Taylaxis sur votre écran d'accueil
+                    Installez Taylaxis sur votre écran d'accueil
                   </h4>
                   <p className="text-[11px] text-white/75 leading-tight mt-0.5">
-                    Accès instantané 1-clic, fonctionnel même hors-ligne dans votre atelier.
+                    Accès instantané 1-clic, fonctionnel en atelier.
                   </p>
                 </div>
               </div>
@@ -832,7 +847,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 className="flex-1 py-2.5 px-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#7C3AED]/40 hover:opacity-95 cursor-pointer active:scale-95 transition-all flex items-center justify-center space-x-1.5 border border-white/20"
               >
                 <Download size={15} />
-                <span>Installer l'application immédiatement</span>
+                <span>Installer l'application maintenant</span>
               </button>
 
               <button

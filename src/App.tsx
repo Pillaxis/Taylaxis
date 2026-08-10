@@ -35,6 +35,20 @@ export const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('accueil');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [viewingMensurations, setViewingMensurations] = useState<boolean>(false);
+  // One-time database reset for clean slate
+  React.useLayoutEffect(() => {
+    const RESET_KEY = 'taylaxis_db_clean_v3';
+    if (!localStorage.getItem(RESET_KEY)) {
+      localStorage.removeItem('taylaxis_clients_v1');
+      localStorage.removeItem('taylaxis_orders_v2');
+      localStorage.removeItem('taylaxis_orders_v1');
+      localStorage.removeItem('taylaxis_registered_accounts_v1');
+      localStorage.removeItem('taylaxis_user_profile');
+      localStorage.removeItem('taylaxis_workshop_profile');
+      localStorage.setItem(RESET_KEY, 'true');
+    }
+  }, []);
+
   const [showLandingPage, setShowLandingPage] = useState<boolean>(() => {
     const saved = localStorage.getItem('taylaxis_active_session_v1');
     if (!saved) return true; // Show Landing Page by default for all visitors!

@@ -169,18 +169,18 @@ export const AppContent: React.FC = () => {
     }
   }, []);
 
-  // Load Full-Stack Supabase Data on startup
+  // Load Full-Stack Supabase Data on startup (Isolated per user)
   React.useEffect(() => {
     async function loadCloudData() {
-      if (SupabaseService.isReady()) {
-        const cloudClients = await SupabaseService.fetchClients();
-        if (cloudClients.length > 0) {
-          setClients(cloudClients);
-        }
-        const cloudOrders = await SupabaseService.fetchOrders();
-        if (cloudOrders.length > 0) {
-          setOrders(cloudOrders);
-        }
+      if (user && SupabaseService.isReady()) {
+        const cloudClients = await SupabaseService.fetchClients(user.id);
+        setClients(cloudClients);
+
+        const cloudOrders = await SupabaseService.fetchOrders(user.id);
+        setOrders(cloudOrders);
+      } else if (!user) {
+        setClients([]);
+        setOrders([]);
       }
     }
     loadCloudData();

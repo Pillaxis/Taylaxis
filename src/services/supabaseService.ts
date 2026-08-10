@@ -11,14 +11,18 @@ export class SupabaseService {
   }
 
   /**
-   * Fetch all clients from Supabase database
+   * Fetch all clients for a specific user from Supabase database
    */
-  static async fetchClients(): Promise<Client[]> {
+  static async fetchClients(userId?: string): Promise<Client[]> {
     if (!this.isReady() || !supabase) return [];
     try {
-      const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('clients').select('*').order('created_at', { ascending: false });
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+      const { data, error } = await query;
       if (error) {
-        console.warn('Supabase fetchClients error:', error.message);
+        console.warn('Supabase fetchClients notice:', error.message);
         return [];
       }
       return (data || []).map((row) => ({
@@ -47,14 +51,18 @@ export class SupabaseService {
   }
 
   /**
-   * Fetch all orders from Supabase database
+   * Fetch all orders for a specific user from Supabase database
    */
-  static async fetchOrders(): Promise<Order[]> {
+  static async fetchOrders(userId?: string): Promise<Order[]> {
     if (!this.isReady() || !supabase) return [];
     try {
-      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+      const { data, error } = await query;
       if (error) {
-        console.warn('Supabase fetchOrders error:', error.message);
+        console.warn('Supabase fetchOrders notice:', error.message);
         return [];
       }
 
@@ -92,12 +100,14 @@ export class SupabaseService {
   }
 
   /**
-   * Save a new client to Supabase
+   * Save a new client to Supabase linked to user_id
    */
-  static async saveClient(client: Client): Promise<boolean> {
+  static async saveClient(client: Client, userId?: string): Promise<boolean> {
     if (!this.isReady() || !supabase) return false;
     try {
       const { error } = await supabase.from('clients').insert({
+        id: client.id,
+        user_id: userId,
         name: client.name,
         phone: client.phone,
         initials: client.initials,

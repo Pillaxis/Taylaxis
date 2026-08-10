@@ -251,11 +251,14 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   <span className="w-3 h-3 rounded-full bg-[#FF5F56] shadow-xs" />
                   <span className="w-3 h-3 rounded-full bg-[#FFBD2E] shadow-xs" />
                   <span className="w-3 h-3 rounded-full bg-[#27C93F] shadow-xs" />
-                  <span className="text-xs font-bold text-gray-500 font-sans ml-2">Mes Commandes</span>
+                  <span className="text-xs sm:text-sm font-extrabold text-gray-700 font-sans ml-2">Mes Commandes</span>
                 </div>
-                <span className="text-[10.5px] font-black text-[#7C3AED] bg-[#F3E8FF] px-2.5 py-0.5 rounded-full border border-[#E9D5FF]">
-                  ● Live Atelier
-                </span>
+
+                {/* Highly Visible Live Atelier Badge */}
+                <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#7C3AED] text-white text-xs font-black shadow-md shadow-[#7C3AED]/25">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                  <span>Live Atelier</span>
+                </div>
               </div>
 
               {/* Taylaxis Atelier Document List (3 Ultra-Crisp Cards) */}
@@ -303,8 +306,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 </div>
               </div>
 
-              {/* 1. Floating Notification Badge (Top-Right: Sticking out of Top-Right Border) */}
-              <div className="absolute -top-5 right-5 sm:right-8 lg:right-10 p-2.5 px-4 rounded-[20px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float-reverse z-30 pointer-events-none select-none">
+              {/* 1. Floating Notification Badge (Top-Right: Shifted slightly so Live Atelier remains 100% unobscured) */}
+              <div className="absolute -top-6 right-3 sm:right-6 lg:right-8 p-2.5 px-4 rounded-[20px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float-reverse z-30 pointer-events-none select-none">
                 <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 size={15} />
                 </div>

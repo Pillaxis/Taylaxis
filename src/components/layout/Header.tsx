@@ -66,10 +66,10 @@ export const Header: React.FC<HeaderProps> = ({
           {onViewLandingPage && (
             <button
               onClick={onViewLandingPage}
-              className="px-2.5 py-1 text-[11px] font-bold text-[#A78BFA] bg-white/10 border border-white/15 hover:bg-white/20 rounded-full transition-all cursor-pointer active:scale-95 flex items-center space-x-1"
+              className="px-2 sm:px-2.5 py-1 text-[10px] sm:text-[11px] font-bold text-[#A78BFA] bg-white/10 border border-white/15 hover:bg-white/20 rounded-full transition-all cursor-pointer active:scale-95 flex items-center space-x-1 flex-shrink-0"
               title="Voir la Landing Page Officielle Taylaxis"
             >
-              <span>🌐 Landing Page</span>
+              <span>🌐 Landing</span>
             </button>
           )}
 

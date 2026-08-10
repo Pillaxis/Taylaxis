@@ -546,15 +546,17 @@ export const CommandesView: React.FC<CommandesViewProps> = ({
         }))}
       </div>
 
-      {/* Floating Add Order Button (+) in bottom right corner */}
-      <button
-        onClick={handleOpenNewOrderModal}
-        className="fixed bottom-20 right-4 z-40 w-14 h-14 rounded-full bg-[#7C3AED] text-white shadow-xl hover:bg-[#6D28D9] flex items-center justify-center transition-all transform active:scale-90 cursor-pointer ring-4 ring-[#7C3AED]/20"
-        title="Créer une nouvelle commande"
-        aria-label="Créer une nouvelle commande"
-      >
-        <Plus size={26} className="stroke-[2.5]" />
-      </button>
+      {/* Pure Circular Floating Action Button (FAB) (+) aligned inside app container */}
+      <div className="fixed inset-x-0 bottom-20 z-40 max-w-md md:max-w-2xl lg:max-w-4xl mx-auto px-4 pointer-events-none flex justify-end">
+        <button
+          onClick={handleOpenNewOrderModal}
+          className="pointer-events-auto w-13 h-13 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white rounded-full shadow-2xl hover:shadow-purple-500/40 flex items-center justify-center cursor-pointer active:scale-95 transition-all border border-white/20 group ring-4 ring-[#7C3AED]/15"
+          title="Créer une nouvelle commande"
+          aria-label="Créer une nouvelle commande"
+        >
+          <Plus size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+        </button>
+      </div>
 
       {/* Full Order Detail Modal */}
       {selectedOrder && (

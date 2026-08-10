@@ -793,56 +793,58 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
       {/* 10. SMART SCROLL-TRIGGERED PWA INSTALL BANNER (Appears after scrolling > 120px) */}
       {showScrollInstallBanner && !isStandalone && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 p-4 rounded-[24px] bg-[#0C0A27]/95 text-white border border-[#7C3AED]/50 shadow-2xl backdrop-blur-xl animate-fadeIn space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center space-x-3">
-              <div className="w-11 h-11 rounded-[16px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white font-bold shadow-lg shadow-[#7C3AED]/40 flex-shrink-0">
-                <Smartphone size={24} />
-              </div>
-              <div>
-                <div className="flex items-center space-x-1.5">
-                  <span className="text-[10px] font-bold text-[#A78BFA] bg-[#7C3AED]/20 px-2 py-0.5 rounded-full border border-[#7C3AED]/40">
-                    Proposer à l'utilisateur
-                  </span>
+        <div className="fixed inset-x-0 bottom-4 sm:bottom-6 z-50 max-w-md mx-auto px-3.5 pointer-events-none">
+          <div className="pointer-events-auto p-4 rounded-[24px] bg-[#0C0A27]/95 text-white border border-[#7C3AED]/50 shadow-2xl backdrop-blur-xl animate-fadeIn space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center space-x-3">
+                <div className="w-11 h-11 rounded-[16px] bg-gradient-to-tr from-[#7C3AED] to-[#3155C8] flex items-center justify-center text-white font-bold shadow-lg shadow-[#7C3AED]/40 flex-shrink-0">
+                  <Smartphone size={24} />
                 </div>
-                <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug mt-0.5">
-                  Installez l'application Taylaxis sur votre écran d'accueil
-                </h4>
-                <p className="text-[11px] text-white/75 leading-tight mt-0.5">
-                  Accès instantané 1-clic, fonctionnel même hors-ligne dans votre atelier.
-                </p>
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-[10px] font-bold text-[#A78BFA] bg-[#7C3AED]/20 px-2 py-0.5 rounded-full border border-[#7C3AED]/40">
+                      Proposer à l'utilisateur
+                    </span>
+                  </div>
+                  <h4 className="text-xs sm:text-sm font-extrabold text-white leading-snug mt-0.5">
+                    Installez l'application Taylaxis sur votre écran d'accueil
+                  </h4>
+                  <p className="text-[11px] text-white/75 leading-tight mt-0.5">
+                    Accès instantané 1-clic, fonctionnel même hors-ligne dans votre atelier.
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  setShowScrollInstallBanner(false);
+                  setHasDismissedBanner(true);
+                }}
+                className="text-white/60 hover:text-white p-1.5 rounded-full bg-white/10 cursor-pointer flex-shrink-0"
+                title="Fermer"
+              >
+                <X size={16} />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setShowScrollInstallBanner(false);
-                setHasDismissedBanner(true);
-              }}
-              className="text-white/60 hover:text-white p-1.5 rounded-full bg-white/10 cursor-pointer flex-shrink-0"
-              title="Fermer"
-            >
-              <X size={16} />
-            </button>
-          </div>
 
-          <div className="flex items-center space-x-2 pt-1 border-t border-white/10">
-            <button
-              onClick={handleInstallApp}
-              className="flex-1 py-2.5 px-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#7C3AED]/40 hover:opacity-95 cursor-pointer active:scale-95 transition-all flex items-center justify-center space-x-1.5 border border-white/20"
-            >
-              <Download size={15} />
-              <span>Installer l'application immédiatement</span>
-            </button>
+            <div className="flex items-center space-x-2 pt-1 border-t border-white/10">
+              <button
+                onClick={handleInstallApp}
+                className="flex-1 py-2.5 px-4 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#3155C8] text-white font-extrabold text-xs rounded-full shadow-lg shadow-[#7C3AED]/40 hover:opacity-95 cursor-pointer active:scale-95 transition-all flex items-center justify-center space-x-1.5 border border-white/20"
+              >
+                <Download size={15} />
+                <span>Installer l'application immédiatement</span>
+              </button>
 
-            <button
-              onClick={() => {
-                setShowScrollInstallBanner(false);
-                setHasDismissedBanner(true);
-              }}
-              className="px-3 py-2.5 text-xs text-white/60 hover:text-white font-medium cursor-pointer"
-            >
-              Plus tard
-            </button>
+              <button
+                onClick={() => {
+                  setShowScrollInstallBanner(false);
+                  setHasDismissedBanner(true);
+                }}
+                className="px-3 py-2.5 text-xs text-white/60 hover:text-white font-medium cursor-pointer"
+              >
+                Plus tard
+              </button>
+            </div>
           </div>
         </div>
       )}

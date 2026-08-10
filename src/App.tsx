@@ -611,7 +611,6 @@ export const AppContent: React.FC = () => {
     return (
       <AuthView
         onAuthSuccess={(u) => handleSetUser(u)}
-        onViewLandingPage={() => setShowLandingPage(true)}
       />
     );
   }

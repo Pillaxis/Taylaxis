@@ -241,12 +241,12 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
           {/* Premium Mac Window Mockup Container (Exact CVPillar & Revizion Ultra-Clean Design) */}
           <div className="pt-8 sm:pt-12 relative max-w-xl mx-auto">
             {/* Subtle Glowing Radial Backdrop */}
-            <div className="absolute -inset-2 bg-gradient-to-r from-[#7C3AED]/15 via-[#06B6D4]/15 to-[#7C3AED]/15 rounded-[36px] blur-2xl opacity-70" />
+            <div className="absolute -inset-2 bg-gradient-to-r from-[#7C3AED]/20 via-[#06B6D4]/20 to-[#7C3AED]/20 rounded-[36px] blur-2xl opacity-75" />
 
             {/* Main Window Mockup Container */}
-            <div className="rounded-[28px] bg-white border border-gray-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] overflow-hidden text-left relative animate-float">
+            <div className="rounded-[28px] bg-white border border-gray-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] text-left relative animate-float">
               {/* Ultra-Clean Mac OS Window Control Header Bar */}
-              <div className="bg-[#F8FAFC] border-b border-gray-200/60 px-4 sm:px-5 py-3 flex items-center justify-between">
+              <div className="bg-[#F8FAFC] border-b border-gray-200/60 px-4 sm:px-5 py-3 rounded-t-[28px] flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="w-3 h-3 rounded-full bg-[#FF5F56] shadow-xs" />
                   <span className="w-3 h-3 rounded-full bg-[#FFBD2E] shadow-xs" />
@@ -262,7 +262,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               </div>
 
               {/* Taylaxis Atelier Document List (3 Ultra-Crisp Cards) */}
-              <div className="p-4 sm:p-5 space-y-2.5 bg-white">
+              <div className="p-4 sm:p-5 space-y-2.5 bg-white rounded-b-[28px]">
                 {/* Row 1 */}
                 <div className="p-3.5 rounded-[18px] bg-[#F8FAFC] border border-gray-100 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-3.5">
@@ -306,8 +306,8 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 </div>
               </div>
 
-              {/* 1. Floating Notification Badge (Top-Right: Shifted slightly so Live Atelier remains 100% unobscured) */}
-              <div className="absolute -top-6 right-3 sm:right-6 lg:right-8 p-2.5 px-4 rounded-[20px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float-reverse z-30 pointer-events-none select-none">
+              {/* 1. Floating Notification Badge (Top-Right: Sticking out of Top-Right Border) */}
+              <div className="absolute -top-5 right-4 sm:right-6 lg:right-8 p-2.5 px-4 rounded-[20px] bg-white border border-gray-200/90 text-gray-900 font-extrabold text-xs flex items-center space-x-2.5 shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float-reverse z-30 pointer-events-none select-none">
                 <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 size={15} />
                 </div>
@@ -315,7 +315,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               </div>
 
               {/* 2. Floating Notification Badge (Left: Sticking out of Left Border) */}
-              <div className="absolute top-[58%] -left-5 sm:-left-8 lg:-left-10 -translate-y-1/2 p-3 px-4 rounded-[20px] bg-white/95 border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float z-30 pointer-events-none select-none">
+              <div className="absolute top-[58%] -left-5 sm:-left-8 lg:-left-10 -translate-y-1/2 p-3 px-4 rounded-[20px] bg-white border border-gray-200/90 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-[0_15px_35px_rgba(0,0,0,0.12)] backdrop-blur-xl animate-float z-30 pointer-events-none select-none">
                 <span className="text-[9.5px] font-bold text-gray-500 uppercase tracking-widest leading-none">Soldes encaissés</span>
                 <span className="text-sm sm:text-base font-black text-[#06B6D4] leading-tight mt-1">100%</span>
               </div>
@@ -710,7 +710,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 <span className="text-lg font-black text-white">Taylaxis</span>
               </div>
               <p className="text-xs text-white/60 font-medium leading-relaxed">
-                La solution SaaS métier pour les tailleurs et ateliers de couture.
+                La solution métier pour les tailleurs et ateliers de couture.
               </p>
             </div>
 

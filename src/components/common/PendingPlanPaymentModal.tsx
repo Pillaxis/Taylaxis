@@ -19,6 +19,11 @@ export const PendingPlanPaymentModal: React.FC<PendingPlanPaymentModalProps> = (
   const profile = userService.getUserProfile();
   const workshop = userService.getWorkshopProfile();
 
+  React.useEffect(() => {
+    // Automatically trigger FedaPay payment gateway upon landing after login
+    handleConfirmAndPay();
+  }, []);
+
   const handleConfirmAndPay = async () => {
     setLoading(true);
     setErrorMsg(null);

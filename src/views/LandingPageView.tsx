@@ -285,18 +285,18 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 </div>
               </div>
 
-              {/* 1. Top-Right Floating Pill Overlapping Main Mockup */}
-              <div className="absolute -top-4 right-4 sm:right-6 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-2xl animate-float-reverse z-30">
-                <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center">
-                  <CheckCircle2 size={14} />
+              {/* 1. Top-Right Floating Pill (Matching Revizion Screenshot 5 Placement) */}
+              <div className="absolute top-8 right-3 sm:right-6 p-2 px-3.5 rounded-[16px] bg-white/95 border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl backdrop-blur-md animate-float-reverse z-30">
+                <div className="w-5.5 h-5.5 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center">
+                  <CheckCircle2 size={13} />
                 </div>
                 <span>Confection prête !</span>
               </div>
 
-              {/* 2. Bottom-Left Floating Pill Overlapping Main Mockup */}
-              <div className="absolute -bottom-4 left-4 sm:left-6 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-2xl animate-float z-30">
-                <span className="text-[9.5px] text-gray-500 font-bold uppercase">Soldes encaissés</span>
-                <span className="text-xs font-black text-[#06B6D4]">100%</span>
+              {/* 2. Left Border Overlapping Pill (Matching Revizion Screenshot 5 Placement) */}
+              <div className="absolute top-1/2 -translate-y-1/2 -left-5 sm:-left-8 p-2 px-3.5 rounded-[16px] bg-white/95 border border-gray-200/80 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl backdrop-blur-md animate-float z-30">
+                <span className="text-[9px] text-gray-500 font-bold uppercase leading-tight">Soldes encaissés</span>
+                <span className="text-xs font-black text-[#06B6D4] leading-tight">100%</span>
               </div>
             </div>
           </div>

@@ -15,7 +15,6 @@ import {
   EyeOff,
   RefreshCw,
   KeyRound,
-  ShieldCheck,
   Share,
   X,
 } from 'lucide-react';
@@ -56,25 +55,18 @@ const saveRegisteredAccount = (account: RegisteredAccount) => {
 
 type AuthStep =
   | 'IDENTIFIER'
-  | 'NEW_USER_OTP'
   | 'NEW_USER_PASSWORD'
   | 'EXISTING_USER_PASSWORD'
-  | 'FORGOT_PASSWORD_OTP'
-  | 'FORGOT_PASSWORD_NEW_PASSWORD';
+  | 'FORGOT_PASSWORD';
 
 export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
-  // Navigation & Step State
+  // Step & Loading state
   const [step, setStep] = useState<AuthStep>('IDENTIFIER');
   const [loading, setLoading] = useState(false);
 
-  // User Credentials & Inputs
+  // User Inputs
   const [identifier, setIdentifier] = useState('');
   const [detectedType, setDetectedType] = useState<'email' | 'phone'>('email');
-
-  const [otpCode, setOtpCode] = useState('');
-  const [otpResendTimer, setOtpResendTimer] = useState(60);
-  const [canResendOtp, setCanResendOtp] = useState(false);
-  const [testGeneratedOtp, setTestGeneratedOtp] = useState<string | null>(null);
 
   const [userName, setUserName] = useState('');
   const [workshopName, setWorkshopName] = useState('');
@@ -86,7 +78,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // PWA App installation state
+  // PWA Installation state
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallGuideModal, setShowInstallGuideModal] = useState(false);
   const [showAlreadyInstalledModal, setShowAlreadyInstalledModal] = useState(false);
@@ -97,7 +89,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   });
 
   useEffect(() => {
-    // Check PWA standalone mode
     const checkStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true ||
@@ -130,28 +121,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     };
   }, []);
 
-  // Timer for OTP Resend
-  useEffect(() => {
-    let interval: any = null;
-    if ((step === 'NEW_USER_OTP' || step === 'FORGOT_PASSWORD_OTP') && otpResendTimer > 0) {
-      setCanResendOtp(false);
-      interval = setInterval(() => {
-        setOtpResendTimer((prev) => {
-          if (prev <= 1) {
-            setCanResendOtp(true);
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [step, otpResendTimer]);
-
-  // Automatic identifier type detection (email vs phone)
+  // Automatic identifier type detection
   const handleIdentifierChange = (value: string) => {
     setIdentifier(value);
     setErrorMsg(null);
@@ -187,42 +157,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     return true;
   };
 
-  // Helper to send OTP code
-  const triggerSendOtp = async (targetIdentifier: string, isReset: boolean = false) => {
-    setLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
-
-    // Generate a 6-digit test OTP code for local fallback or testing
-    const simulatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setTestGeneratedOtp(simulatedOtp);
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        if (detectedType === 'email') {
-          if (isReset) {
-            await supabase.auth.resetPasswordForEmail(targetIdentifier.trim());
-          } else {
-            await supabase.auth.signInWithOtp({ email: targetIdentifier.trim() });
-          }
-        } else {
-          await supabase.auth.signInWithOtp({ phone: targetIdentifier.trim() });
-        }
-      } catch (e: any) {
-        console.warn('Supabase OTP notice:', e?.message || e);
-      }
-    }
-
-    setOtpResendTimer(60);
-    setCanResendOtp(false);
-    setLoading(false);
-
-    setSuccessMsg(
-      `Un code de vérification à 6 chiffres a été envoyé à ${targetIdentifier}. (Code démo : ${simulatedOtp})`
-    );
-  };
-
-  // STEP 1: Handle Identifier Entry (Check Account Existence)
+  // STEP 1: Handle Identifier Entry (Direct path detection without OTP)
   const handleIdentifierSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateIdentifier()) return;
@@ -249,79 +184,22 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
           accountExists = true;
         }
       } catch {
-        // Ignore RLS or table errors
+        // Ignore RLS errors
       }
     }
 
     setLoading(false);
 
     if (accountExists) {
-      // Existing User -> Ask for Password
+      // Existing User -> Ask for password
       setStep('EXISTING_USER_PASSWORD');
     } else {
-      // New User -> Send OTP first
-      await triggerSendOtp(identifier);
-      setStep('NEW_USER_OTP');
-    }
-  };
-
-  // STEP 2A: Verify New User OTP
-  const handleVerifyNewUserOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode.trim() || otpCode.trim().length < 4) {
-      setErrorMsg('Veuillez entrer le code à 6 chiffres reçu.');
-      return;
-    }
-
-    setLoading(true);
-    setErrorMsg(null);
-    let isVerified = false;
-
-    // Check Supabase OTP verification if configured
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const tokenStr = otpCode.trim();
-        const { error } =
-          detectedType === 'email'
-            ? await supabase.auth.verifyOtp({
-                email: identifier.trim(),
-                token: tokenStr,
-                type: 'email',
-              })
-            : await supabase.auth.verifyOtp({
-                phone: identifier.trim(),
-                token: tokenStr,
-                type: 'sms',
-              });
-
-        if (!error) {
-          isVerified = true;
-        }
-      } catch {
-        // Fallback to test OTP check
-      }
-    }
-
-    // Demo/Test OTP check fallback
-    if (!isVerified) {
-      if (testGeneratedOtp && otpCode.trim() === testGeneratedOtp) {
-        isVerified = true;
-      } else if (otpCode.trim() === '123456' || otpCode.trim().length === 6) {
-        isVerified = true;
-      }
-    }
-
-    setLoading(false);
-
-    if (isVerified) {
-      setSuccessMsg('Vérification réussie ! Définissez maintenant votre mot de passe.');
+      // New User -> Go directly to password creation (ZERO OTP!)
       setStep('NEW_USER_PASSWORD');
-    } else {
-      setErrorMsg('Le code entré est incorrect ou a expiré. Veuillez vérifier ou renvoyer le code.');
     }
   };
 
-  // STEP 2B: Create Password & Complete Registration for New User
+  // STEP 2A: New User Registration & Direct Auto-Login (ZERO OTP)
   const handleCreateNewUserAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -413,7 +291,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
 
     setLoading(false);
 
-    // DIRECT AUTO-LOGIN AND REDIRECT TO APP
+    // DIRECT AUTO-LOGIN AND IMMEDIATE REDIRECT TO APP
     onAuthSuccess({
       id: newUserId,
       email: detectedType === 'email' ? cleanedIdentifier : undefined,
@@ -422,7 +300,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     });
   };
 
-  // STEP 3: Handle Login for Existing User
+  // STEP 2B: Existing User Login & Direct Redirect
   const handleExistingUserLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
@@ -436,7 +314,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     let loginSuccess = false;
     let authUserObj: any = null;
 
-    // Try Supabase Auth Login
+    // Supabase Auth Login
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } =
@@ -512,58 +390,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     }
   };
 
-  // STEP 4A: Forgot Password - Verify OTP
-  const handleVerifyForgotPasswordOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode.trim() || otpCode.trim().length < 4) {
-      setErrorMsg('Veuillez entrer le code de récupération reçu.');
-      return;
-    }
-
-    setLoading(true);
-    setErrorMsg(null);
-    let isVerified = false;
-
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const tokenStr = otpCode.trim();
-        const { error } =
-          detectedType === 'email'
-            ? await supabase.auth.verifyOtp({
-                email: identifier.trim(),
-                token: tokenStr,
-                type: 'recovery',
-              })
-            : await supabase.auth.verifyOtp({
-                phone: identifier.trim(),
-                token: tokenStr,
-                type: 'recovery',
-              });
-        if (!error) isVerified = true;
-      } catch {
-        // Fallback
-      }
-    }
-
-    if (!isVerified) {
-      if (testGeneratedOtp && otpCode.trim() === testGeneratedOtp) {
-        isVerified = true;
-      } else if (otpCode.trim() === '123456' || otpCode.trim().length === 6) {
-        isVerified = true;
-      }
-    }
-
-    setLoading(false);
-
-    if (isVerified) {
-      setSuccessMsg('Code validé ! Saisissez votre nouveau mot de passe.');
-      setStep('FORGOT_PASSWORD_NEW_PASSWORD');
-    } else {
-      setErrorMsg('Code de récupération invalide ou expiré.');
-    }
-  };
-
-  // STEP 4B: Forgot Password - Update New Password & Auto-Connect
+  // STEP 3: Forgot Password Reset & Reconnect
   const handleUpdateForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
@@ -640,7 +467,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
 
   return (
     <div className="min-h-screen bg-[#0C0A27] flex flex-col justify-center px-4 py-8 relative overflow-hidden text-white selection:bg-[#7C3AED]/30">
-      {/* Background ambient lighting glows */}
+      {/* Ambient background glows */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#7C3AED]/25 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#2563EB]/25 rounded-full blur-3xl pointer-events-none" />
 
@@ -654,21 +481,20 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
           <h1 className="text-3xl font-extrabold text-white tracking-tight pt-1">Taylaxis</h1>
 
           <p className="text-xs sm:text-sm text-white/70 font-medium max-w-xs leading-relaxed">
-            Espace d'accès atelier : mensurations, confections et finances.
+            Gestion professionnelle de vos confections, clients et finances d'atelier.
           </p>
         </div>
 
         {/* Main Single-Entry Auth Card */}
         <div className="p-6 rounded-[28px] bg-white/10 backdrop-blur-xl border border-white/15 shadow-2xl space-y-5 relative">
-          {/* Back Button (if beyond initial step) */}
+          {/* Back Button (if beyond step 1) */}
           {step !== 'IDENTIFIER' && (
             <button
               type="button"
               onClick={() => {
                 setErrorMsg(null);
                 setSuccessMsg(null);
-                if (step === 'NEW_USER_PASSWORD') setStep('NEW_USER_OTP');
-                else setStep('IDENTIFIER');
+                setStep('IDENTIFIER');
               }}
               className="inline-flex items-center space-x-1.5 text-xs font-bold text-white/70 hover:text-white transition-colors cursor-pointer"
             >
@@ -699,18 +525,6 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
               </div>
             )}
 
-            {step === 'NEW_USER_OTP' && (
-              <div className="space-y-1">
-                <h2 className="text-xl font-black text-white flex items-center space-x-2">
-                  <ShieldCheck size={20} className="text-[#06B6D4]" />
-                  <span>Vérification de sécurité</span>
-                </h2>
-                <p className="text-xs text-white/70 font-medium">
-                  Un code de confirmation a été envoyé à <strong className="text-white">{identifier}</strong>.
-                </p>
-              </div>
-            )}
-
             {step === 'NEW_USER_PASSWORD' && (
               <div className="space-y-1">
                 <h2 className="text-xl font-black text-white flex items-center space-x-2">
@@ -723,20 +537,11 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
               </div>
             )}
 
-            {step === 'FORGOT_PASSWORD_OTP' && (
-              <div className="space-y-1">
-                <h2 className="text-xl font-black text-white">Mot de passe oublié</h2>
-                <p className="text-xs text-white/70 font-medium">
-                  Entrez le code de vérification envoyé à <strong className="text-white">{identifier}</strong>.
-                </p>
-              </div>
-            )}
-
-            {step === 'FORGOT_PASSWORD_NEW_PASSWORD' && (
+            {step === 'FORGOT_PASSWORD' && (
               <div className="space-y-1">
                 <h2 className="text-xl font-black text-white">Nouveau mot de passe</h2>
                 <p className="text-xs text-white/70 font-medium">
-                  Saisissez et confirmez votre nouveau mot de passe.
+                  Saisissez et confirmez votre nouveau mot de passe pour <strong className="text-white">{identifier}</strong>.
                 </p>
               </div>
             )}
@@ -803,57 +608,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
             </form>
           )}
 
-          {/* STEP 2A: OTP Verification for New User */}
-          {step === 'NEW_USER_OTP' && (
-            <form onSubmit={handleVerifyNewUserOtp} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/90 block">Code de vérification (6 chiffres)</label>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  autoFocus
-                  placeholder="123456"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full text-center tracking-[0.5em] text-2xl font-mono py-3 rounded-[16px] bg-black/30 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-[#06B6D4] transition-all"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 rounded-[16px] bg-[#06B6D4] hover:bg-[#0891B2] text-white font-black text-sm active:scale-98 transition-all shadow-lg shadow-[#06B6D4]/30 flex items-center justify-center space-x-2 cursor-pointer"
-              >
-                {loading ? (
-                  <RefreshCw size={18} className="animate-spin" />
-                ) : (
-                  <>
-                    <span>Vérifier le code</span>
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-
-              <div className="text-center pt-1">
-                {canResendOtp ? (
-                  <button
-                    type="button"
-                    onClick={() => triggerSendOtp(identifier)}
-                    className="text-xs font-bold text-[#A78BFA] hover:text-white underline cursor-pointer transition-colors"
-                  >
-                    Renvoyer un nouveau code OTP
-                  </button>
-                ) : (
-                  <span className="text-xs text-white/50 font-medium">
-                    Renvoyer le code dans <strong className="text-white">{otpResendTimer}s</strong>
-                  </span>
-                )}
-              </div>
-            </form>
-          )}
-
-          {/* STEP 2B: Password Setup for New User */}
+          {/* STEP 2A: Direct Password Creation for New User (ZERO OTP) */}
           {step === 'NEW_USER_PASSWORD' && (
             <form onSubmit={handleCreateNewUserAccount} className="space-y-3.5">
               <div className="space-y-1.5">
@@ -941,15 +696,14 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
                   <RefreshCw size={18} className="animate-spin" />
                 ) : (
                   <>
-                    <span>Créer mon compte et accéder</span>
-                    <ArrowRight size={18} />
+                    <span>Créer mon compte →</span>
                   </>
                 )}
               </button>
             </form>
           )}
 
-          {/* STEP 3: Password for Existing User */}
+          {/* STEP 2B: Existing User Password Login */}
           {step === 'EXISTING_USER_PASSWORD' && (
             <form onSubmit={handleExistingUserLogin} className="space-y-4">
               <div className="space-y-1.5">
@@ -978,10 +732,9 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={async () => {
+                  onClick={() => {
                     setErrorMsg(null);
-                    await triggerSendOtp(identifier, true);
-                    setStep('FORGOT_PASSWORD_OTP');
+                    setStep('FORGOT_PASSWORD');
                   }}
                   className="text-xs font-bold text-[#A78BFA] hover:text-white underline cursor-pointer transition-colors"
                 >
@@ -998,66 +751,15 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
                   <RefreshCw size={18} className="animate-spin" />
                 ) : (
                   <>
-                    <span>Se connecter</span>
-                    <ArrowRight size={18} />
+                    <span>Se connecter →</span>
                   </>
                 )}
               </button>
             </form>
           )}
 
-          {/* STEP 4A: Forgot Password - OTP Verification */}
-          {step === 'FORGOT_PASSWORD_OTP' && (
-            <form onSubmit={handleVerifyForgotPasswordOtp} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-white/90 block">Code de récupération (6 chiffres)</label>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  autoFocus
-                  placeholder="123456"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full text-center tracking-[0.5em] text-2xl font-mono py-3 rounded-[16px] bg-black/30 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:border-[#7C3AED] transition-all"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 rounded-[16px] bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-black text-sm active:scale-98 transition-all shadow-lg shadow-[#7C3AED]/30 flex items-center justify-center space-x-2 cursor-pointer"
-              >
-                {loading ? (
-                  <RefreshCw size={18} className="animate-spin" />
-                ) : (
-                  <>
-                    <span>Vérifier le code</span>
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-
-              <div className="text-center pt-1">
-                {canResendOtp ? (
-                  <button
-                    type="button"
-                    onClick={() => triggerSendOtp(identifier, true)}
-                    className="text-xs font-bold text-[#A78BFA] hover:text-white underline cursor-pointer transition-colors"
-                  >
-                    Renvoyer le code
-                  </button>
-                ) : (
-                  <span className="text-xs text-white/50 font-medium">
-                    Renvoyer le code dans <strong className="text-white">{otpResendTimer}s</strong>
-                  </span>
-                )}
-              </div>
-            </form>
-          )}
-
-          {/* STEP 4B: Forgot Password - Set New Password */}
-          {step === 'FORGOT_PASSWORD_NEW_PASSWORD' && (
+          {/* STEP 3: Forgot Password Reset & Reconnect */}
+          {step === 'FORGOT_PASSWORD' && (
             <form onSubmit={handleUpdateForgotPassword} className="space-y-3.5">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-white/90 block">Nouveau mot de passe (min 6 caractères)</label>
@@ -1114,8 +816,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
                   <RefreshCw size={18} className="animate-spin" />
                 ) : (
                   <>
-                    <span>Valider et accéder à l'atelier</span>
-                    <ArrowRight size={18} />
+                    <span>Valider et accéder à l'atelier →</span>
                   </>
                 )}
               </button>

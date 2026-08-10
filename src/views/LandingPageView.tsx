@@ -13,9 +13,9 @@ import {
   Shirt,
   Menu,
   FileText,
-  Layers,
-  HelpCircle,
-  MessageSquare,
+  Users,
+  Ruler,
+  Calendar,
 } from 'lucide-react';
 
 interface LandingPageViewProps {
@@ -305,63 +305,63 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         </div>
       </section>
 
-      {/* 3. SECTION 1: FONCTIONNALITÉS (Tailor Application Content + Revizion 4-Card Architecture) */}
+      {/* 3. SECTION 1: FONCTIONNALITÉS */}
       <section id="features" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-xs font-extrabold text-[#0D9488] uppercase tracking-wider bg-[#CCFBF1] px-4 py-1.5 rounded-full">
+          <span className="text-xs font-extrabold text-[#7C3AED] uppercase tracking-wider bg-[#7C3AED]/10 border border-[#7C3AED]/30 px-4 py-1.5 rounded-full">
             FONCTIONNALITÉS
           </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-            Tout ce qu'il faut pour réussir votre atelier
+          <h2 className="text-3xl sm:text-4xl font-black text-[#0C0A27] tracking-tight">
+            Tout ce qu’il faut pour gérer votre atelier.
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 font-medium">
-            Des outils intelligents qui s'adaptent au quotidien du tailleur sur-mesure
+          <p className="text-sm sm:text-base text-gray-600 font-medium max-w-2xl mx-auto leading-relaxed">
+            Clients, mensurations, commandes et rendez-vous : Taylaxis centralise l’essentiel de votre activité.
           </p>
         </div>
 
         {/* 4 White Feature Cards Grid (1 Row of 4 Cards) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1 */}
-          <article className="p-8 rounded-[24px] bg-white border border-gray-200/70 shadow-sm hover:shadow-xl transition-all space-y-4">
-            <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
-              <FileText size={24} />
+          <article className="p-8 rounded-[24px] bg-white border border-gray-200/80 shadow-xs hover:shadow-xl hover:border-[#7C3AED]/40 transition-all space-y-4 text-left">
+            <div className="w-12 h-12 rounded-[16px] bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center font-bold">
+              <Users size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Fiches & Mensurations 3D</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Gérez vos clients</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Vos mensurations clients (poitrine, longueur, carrure) congelées sur chaque vêtement sans rature.
+              Ajoutez, consultez et organisez toutes les informations de vos clients au même endroit.
             </p>
           </article>
 
           {/* Card 2 */}
-          <article className="p-8 rounded-[24px] bg-white border border-gray-200/70 shadow-sm hover:shadow-xl transition-all space-y-4">
-            <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
-              <Layers size={24} />
+          <article className="p-8 rounded-[24px] bg-white border border-gray-200/80 shadow-xs hover:shadow-xl hover:border-[#7C3AED]/40 transition-all space-y-4 text-left">
+            <div className="w-12 h-12 rounded-[16px] bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center font-bold">
+              <Ruler size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Suivi des Confections</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Enregistrez les mensurations</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Suivi 3D en temps réel : en cours de couture, prête pour essayage, à livrer et archivée.
+              Conservez les mensurations de chaque client et retrouvez-les facilement au moment de créer une commande.
             </p>
           </article>
 
           {/* Card 3 */}
-          <article className="p-8 rounded-[24px] bg-white border border-gray-200/70 shadow-sm hover:shadow-xl transition-all space-y-4">
-            <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
-              <HelpCircle size={24} />
+          <article className="p-8 rounded-[24px] bg-white border border-gray-200/80 shadow-xs hover:shadow-xl hover:border-[#7C3AED]/40 transition-all space-y-4 text-left">
+            <div className="w-12 h-12 rounded-[16px] bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center font-bold">
+              <Scissors size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Acomptes & Trésorerie</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Gérez vos commandes</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Calcul automatique des soldes restants et versements enregistrés pour zéro perte financière.
+              Créez et suivez les commandes de vos clients avec une organisation claire de votre activité.
             </p>
           </article>
 
           {/* Card 4 */}
-          <article className="p-8 rounded-[24px] bg-white border border-gray-200/70 shadow-sm hover:shadow-xl transition-all space-y-4">
-            <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
-              <MessageSquare size={24} />
+          <article className="p-8 rounded-[24px] bg-white border border-gray-200/80 shadow-xs hover:shadow-xl hover:border-[#7C3AED]/40 transition-all space-y-4 text-left">
+            <div className="w-12 h-12 rounded-[16px] bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center font-bold">
+              <Calendar size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Relances WhatsApp 1-Clic</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Planifiez vos rendez-vous</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Prévenez vos clients par SMS ou WhatsApp dès que leur tenue est prête pour l'essayage.
+              Organisez vos essayages, prises de mesures, livraisons et autres rendez-vous avec vos clients.
             </p>
           </article>
         </div>

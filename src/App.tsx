@@ -53,30 +53,28 @@ export const AppContent: React.FC = () => {
   }, []);
 
   const [showLandingPage, setShowLandingPage] = useState<boolean>(() => {
-    const isStandaloneApp =
+    const isRealStandalonePWA =
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true ||
-      document.referrer.includes('android-app://') ||
-      localStorage.getItem('taylaxis_app_installed_v1') === 'true';
+      document.referrer.includes('android-app://');
 
-    if (isStandaloneApp) {
-      return false; // Installed PWA app ALWAYS bypasses landing page and shows AuthView directly!
+    if (isRealStandalonePWA) {
+      return false; // Real installed PWA window ALWAYS bypasses landing page and shows AuthView directly!
     }
 
     const saved = localStorage.getItem('taylaxis_active_session_v1');
-    if (!saved) return true; // Show Landing Page for web visitors!
+    if (!saved) return true; // Show Landing Page by default for unauthenticated web visitors!
     return window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing';
   });
 
   React.useEffect(() => {
     const checkStandaloneAndHash = () => {
-      const isStandaloneApp =
+      const isRealStandalonePWA =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as any).standalone === true ||
-        document.referrer.includes('android-app://') ||
-        localStorage.getItem('taylaxis_app_installed_v1') === 'true';
+        document.referrer.includes('android-app://');
 
-      if (isStandaloneApp) {
+      if (isRealStandalonePWA) {
         setShowLandingPage(false);
       } else if (window.location.hash === '#landing' || window.location.hash === '#presentation' || window.location.pathname === '/landing') {
         setShowLandingPage(true);

@@ -239,10 +239,10 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </button>
           </div>
 
-          {/* Compact Mockup Container (Exact Revizion Screenshot 4 Size & 2 Floating Badges) */}
+          {/* Compact Mockup Container with Animated Main Mockup & 2 Overlapping Floating Badges */}
           <div className="pt-8 sm:pt-10 relative max-w-xl mx-auto">
-            {/* Main Window Mockup Capture (Compact) */}
-            <div className="p-4 sm:p-5 rounded-[24px] bg-white border border-gray-200/80 shadow-2xl text-left space-y-3 relative">
+            {/* Main Window Mockup Capture in Movement (Compact & Floating) */}
+            <div className="p-4 sm:p-5 rounded-[24px] bg-white border border-gray-200/80 shadow-2xl text-left space-y-3 relative animate-float">
               {/* Window Header */}
               <div className="flex items-center justify-between border-b border-gray-100 pb-2.5">
                 <div className="flex items-center space-x-1.5">
@@ -284,21 +284,20 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-extrabold">En atelier</span>
                 </div>
               </div>
-            </div>
 
-            {/* ONLY 2 FLOATING MINI MOCKUPS IN MOVEMENT (Matching Revizion Screenshot 4) */}
-            {/* 1. Top-Right Floating Pill */}
-            <div className="absolute -top-3 -right-3 sm:-right-6 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-xl animate-float z-20">
-              <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center">
-                <CheckCircle2 size={14} />
+              {/* 1. Top-Right Floating Pill Overlapping Main Mockup */}
+              <div className="absolute -top-4 right-4 sm:right-6 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-2 shadow-2xl animate-float-reverse z-30">
+                <div className="w-6 h-6 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center">
+                  <CheckCircle2 size={14} />
+                </div>
+                <span>Confection prête !</span>
               </div>
-              <span>Confection prête !</span>
-            </div>
 
-            {/* 2. Bottom-Left Floating Pill */}
-            <div className="absolute -bottom-3 -left-3 sm:-left-6 p-2 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-xl animate-float-reverse z-20">
-              <span className="text-[9.5px] text-gray-500 font-bold uppercase">Soldes encaissés</span>
-              <span className="text-xs font-black text-[#06B6D4]">100%</span>
+              {/* 2. Bottom-Left Floating Pill Overlapping Main Mockup */}
+              <div className="absolute -bottom-4 left-4 sm:left-6 p-2.5 px-3.5 rounded-[18px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex flex-col text-left shadow-2xl animate-float z-30">
+                <span className="text-[9.5px] text-gray-500 font-bold uppercase">Soldes encaissés</span>
+                <span className="text-xs font-black text-[#06B6D4]">100%</span>
+              </div>
             </div>
           </div>
         </div>

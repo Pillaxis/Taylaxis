@@ -199,7 +199,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         )}
       </header>
 
-      {/* 2. HERO SECTION (Exact Revizion Screenshot 1 Layout with Live Mockups in Movement) */}
+      {/* 2. HERO SECTION (Exact Revizion Visual Architecture with Tailor Application Content) */}
       <section className="pt-12 sm:pt-16 pb-16 sm:pb-24 px-4 sm:px-8 relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] via-[#FAF9FE] to-[#FAF9FE]">
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10">
           {/* Hero Badge Pill */}
@@ -210,15 +210,15 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
           {/* Hero Main Title */}
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-[1.15]">
-            Transformez vos cours en<br />
+            Transformez la gestion de votre atelier en<br />
             <span className="bg-gradient-to-r from-[#06B6D4] via-[#0891B2] to-[#7C3AED] bg-clip-text text-transparent">
-              outils de révision
+              outils de confection intelligents
             </span>
           </h1>
 
           {/* Hero Subtitle */}
           <p className="text-base sm:text-xl text-gray-600 max-w-2xl mx-auto font-medium leading-relaxed">
-            Importez vos documents. Taylaxis génère automatiquement résumés, fiches et quiz personnalisés pour réussir vos examens.
+            Saisissez vos clients. Taylaxis génère automatiquement vos fiches de mensurations, le suivi 3D de vos vêtements et vos relances d'acomptes par WhatsApp.
           </p>
 
           {/* Hero CTAs */}
@@ -253,12 +253,12 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   <Star key={i} size={16} fill="currentColor" />
                 ))}
               </div>
-              <span className="text-amber-500 font-extrabold text-sm">4.8 / 5</span>
-              <span className="text-gray-500 text-xs font-medium">• Utilisé par plus de 10 000 étudiants</span>
+              <span className="text-amber-500 font-extrabold text-sm">4.9 / 5</span>
+              <span className="text-gray-500 text-xs font-medium">• Utilisé par plus de 500+ ateliers et tailleurs</span>
             </div>
           </div>
 
-          {/* Hero Visual Mockup Container (Window Capture + 2 Floating Mini-Mockups in Movement) */}
+          {/* Hero Visual Mockup Container (Taylaxis Application Capture + 2 Floating Mini-Mockups in Movement) */}
           <div className="pt-8 sm:pt-12 relative max-w-3xl mx-auto">
             {/* Main Window Mockup Capture */}
             <div className="p-4 sm:p-6 rounded-[28px] bg-white border border-gray-200/80 shadow-2xl text-left space-y-4 relative">
@@ -268,10 +268,10 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   <span className="w-3 h-3 rounded-full bg-red-400" />
                   <span className="w-3 h-3 rounded-full bg-yellow-400" />
                   <span className="w-3 h-3 rounded-full bg-green-400" />
-                  <span className="text-xs text-gray-500 font-mono ml-2">Mes Documents</span>
+                  <span className="text-xs text-gray-500 font-mono ml-2">Taylaxis — Accueil Atelier</span>
                 </div>
                 <span className="text-[11px] font-bold text-[#06B6D4] bg-[#ECFEFF] px-2.5 py-0.5 rounded-full border border-[#CFFAFE]">
-                  Taylaxis V1 Live
+                  ● Live Atelier
                 </span>
               </div>
 
@@ -304,15 +304,15 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                   </div>
                 </div>
 
-                {/* Sample Document Items (Matching Revizion mockup style) */}
+                {/* Tailor Application Items */}
                 <div className="p-3.5 rounded-[16px] bg-[#F8FAFC] border border-gray-200/60 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-[12px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
-                      <FileText size={20} />
+                      <Scissors size={20} />
                     </div>
                     <div>
-                      <div className="text-sm font-extrabold text-gray-900">Psychologie cognitive</div>
-                      <div className="text-xs text-gray-500 font-medium">32 fiches • 15 quiz</div>
+                      <div className="text-sm font-extrabold text-gray-900">Costume 3 Pièces Sur-Mesure</div>
+                      <div className="text-xs text-gray-500 font-medium">Client : Kossi Mensah • 6 mensurations congelées</div>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-[#CCFBF1] text-[#0D9488] text-xs font-extrabold">Prêt</span>
@@ -324,11 +324,11 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                       <FileText size={20} />
                     </div>
                     <div>
-                      <div className="text-sm font-extrabold text-gray-900">Droit constitutionnel</div>
-                      <div className="text-xs text-gray-500 font-medium">24 fiches • 10 quiz</div>
+                      <div className="text-sm font-extrabold text-gray-900">Robe de Soirée & Pagne</div>
+                      <div className="text-xs text-gray-500 font-medium">Cliente : Aminata Diallo • Solde versé: 50 000 FCFA</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-extrabold">Prêt</span>
+                  <span className="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-extrabold">En atelier</span>
                 </div>
               </div>
             </div>
@@ -338,31 +338,31 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <div className="w-7 h-7 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center">
                 <CheckCircle2 size={16} />
               </div>
-              <span>Quiz généré !</span>
+              <span>Confection prête !</span>
             </div>
 
             {/* Floating Mini-Mockup 2 (Bottom Left in Movement - animate-float-reverse) */}
             <div className="absolute -bottom-5 -left-3 sm:-left-6 p-3 px-4 rounded-[20px] bg-white border border-gray-200/80 text-gray-900 font-extrabold text-xs flex items-center space-x-3 shadow-xl animate-float-reverse z-20">
               <div className="flex flex-col text-left">
-                <span className="text-[10px] text-gray-500 font-bold uppercase">Score moyen</span>
-                <span className="text-sm font-black text-[#06B6D4]">86%</span>
+                <span className="text-[10px] text-gray-500 font-bold uppercase">Soldes encaissés</span>
+                <span className="text-sm font-black text-[#06B6D4]">100%</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. SECTION 1: FONCTIONNALITÉS (Exact Revizion Screenshot 2 Layout) */}
+      {/* 3. SECTION 1: FONCTIONNALITÉS (Tailor Application Content + Revizion 4-Card Architecture) */}
       <section id="features" className="py-16 sm:py-24 px-4 sm:px-8 max-w-6xl mx-auto space-y-12">
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs font-extrabold text-[#0D9488] uppercase tracking-wider bg-[#CCFBF1] px-4 py-1.5 rounded-full">
             FONCTIONNALITÉS
           </span>
           <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-            Tout ce qu'il faut pour réussir
+            Tout ce qu'il faut pour réussir votre atelier
           </h2>
           <p className="text-sm sm:text-base text-gray-600 font-medium">
-            Des outils intelligents qui s'adaptent à votre façon d'apprendre
+            Des outils intelligents qui s'adaptent au quotidien du tailleur sur-mesure
           </p>
         </div>
 
@@ -373,9 +373,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
               <FileText size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Résumés structurés</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Fiches & Mensurations 3D</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Vos cours transformés en résumés clairs avec les points clés mis en évidence.
+              Vos mensurations clients (poitrine, longueur, carrure) congelées sur chaque vêtement sans rature.
             </p>
           </article>
 
@@ -384,9 +384,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
               <Layers size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Fiches de révision</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Suivi des Confections</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Flashcards générées automatiquement avec suivi de votre progression.
+              Suivi 3D en temps réel : en cours de couture, prête pour essayage, à livrer et archivée.
             </p>
           </article>
 
@@ -395,9 +395,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
               <HelpCircle size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Quiz personnalisés</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Acomptes & Trésorerie</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Des questions ciblées sur vos points faibles pour progresser rapidement.
+              Calcul automatique des soldes restants et versements enregistrés pour zéro perte financière.
             </p>
           </article>
 
@@ -406,15 +406,15 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             <div className="w-12 h-12 rounded-[16px] bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center font-bold">
               <MessageSquare size={24} />
             </div>
-            <h3 className="text-lg font-extrabold text-gray-900">Assistant dédié</h3>
+            <h3 className="text-lg font-extrabold text-gray-900">Relances WhatsApp 1-Clic</h3>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-              Posez vos questions et obtenez des explications claires sur vos cours.
+              Prévenez vos clients par SMS ou WhatsApp dès que leur tenue est prête pour l'essayage.
             </p>
           </article>
         </div>
       </section>
 
-      {/* 4. SECTION 2: COMMENT ÇA MARCHE (Exact Revizion Screenshot 3 - Exactly 3 Steps Grid) */}
+      {/* 4. SECTION 2: COMMENT ÇA MARCHE (Tailor Application Content + Exactly 3 Steps Grid) */}
       <section id="how-it-works" className="py-16 sm:py-24 bg-white border-y border-gray-200/60 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -425,20 +425,20 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               Simple comme 1, 2, 3
             </h2>
             <p className="text-sm sm:text-base text-gray-600 font-medium">
-              De vos documents à vos révisions en quelques secondes
+              De la prise de mesure à la livraison du vêtement en quelques secondes
             </p>
           </div>
 
-          {/* 3 Step Cards Grid (Exact Revizion Screenshot 3) */}
+          {/* 3 Step Cards Grid (Tailor Application Process) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
             {/* Step 1 */}
             <article className="p-8 sm:p-10 rounded-[28px] bg-[#FAF9FE] border border-gray-200/70 text-center space-y-4 shadow-xs">
               <div className="w-14 h-14 rounded-full bg-[#06B6D4] text-white font-black text-xl flex items-center justify-center mx-auto shadow-md">
                 1
               </div>
-              <h3 className="text-xl font-extrabold text-gray-900">Importez</h3>
+              <h3 className="text-xl font-extrabold text-gray-900">Enregistrez</h3>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-                Glissez-déposez vos PDF, Word ou images de cours.
+                Saisissez votre client et ses mensurations précises (poitrine, longueur, carrure).
               </p>
             </article>
 
@@ -447,9 +447,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <div className="w-14 h-14 rounded-full bg-[#06B6D4] text-white font-black text-xl flex items-center justify-center mx-auto shadow-md">
                 2
               </div>
-              <h3 className="text-xl font-extrabold text-gray-900">Générez</h3>
+              <h3 className="text-xl font-extrabold text-gray-900">Confectionnez</h3>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-                L'application analyse et crée résumés, fiches et quiz.
+                L'application suit l'avancement du vêtement et enregistre les acomptes perçus.
               </p>
             </article>
 
@@ -458,9 +458,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <div className="w-14 h-14 rounded-full bg-[#06B6D4] text-white font-black text-xl flex items-center justify-center mx-auto shadow-md">
                 3
               </div>
-              <h3 className="text-xl font-extrabold text-gray-900">Révisez</h3>
+              <h3 className="text-xl font-extrabold text-gray-900">Livrez & Encaissez</h3>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
-                Apprenez efficacement sur tous vos appareils.
+                Prévenez le client par WhatsApp et percevez le solde en toute sérénité.
               </p>
             </article>
           </div>
@@ -477,7 +477,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             Choisissez votre plan
           </h2>
           <p className="text-sm sm:text-base text-gray-600 font-medium">
-            Commencez gratuitement, évoluez selon vos besoins
+            Commencez gratuitement, évoluez selon les besoins de votre atelier
           </p>
         </div>
 
@@ -485,9 +485,9 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
           {/* Plan 1: Gratuit */}
           <div className="p-8 rounded-[28px] bg-white border border-gray-200/80 shadow-xs flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <h3 className="text-xl font-extrabold text-gray-900">Gratuit</h3>
+              <h3 className="text-xl font-extrabold text-gray-900">Découverte</h3>
               <div className="flex items-baseline space-x-1">
-                <span className="text-4xl font-black text-gray-900">0€</span>
+                <span className="text-4xl font-black text-gray-900">0 FCFA</span>
                 <span className="text-sm text-gray-500 font-medium">/mois</span>
               </div>
               <p className="text-xs text-gray-500 font-medium">Pour découvrir Taylaxis</p>
@@ -495,19 +495,19 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <ul className="space-y-3 pt-2 text-xs sm:text-sm text-gray-700 font-medium">
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>2 documents</span>
+                  <span>Jusqu'à 10 clients</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Résumés automatiques</span>
+                  <span>Fiches de mensurations basiques</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>20 questions IA / jour</span>
+                  <span>Gestion des commandes</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Fiches basiques</span>
+                  <span>Support communautaire</span>
                 </li>
               </ul>
             </div>
@@ -527,33 +527,33 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-xl font-extrabold text-white">Pro</h3>
+              <h3 className="text-xl font-extrabold text-white">Atelier Pro</h3>
               <div className="flex items-baseline space-x-1">
-                <span className="text-4xl font-black text-white">9,90€</span>
+                <span className="text-4xl font-black text-white">9 900 FCFA</span>
                 <span className="text-sm text-white/70 font-medium">/mois</span>
               </div>
-              <p className="text-xs text-[#06B6D4] font-medium">Pour les utilisateurs sérieux</p>
+              <p className="text-xs text-[#06B6D4] font-medium">Pour les tailleurs & ateliers sérieux</p>
 
               <ul className="space-y-3 pt-2 text-xs sm:text-sm text-white/90 font-medium">
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Documents illimités</span>
+                  <span>Clients & mensurations illimités</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Quiz illimités</span>
+                  <span>Instantanés 3D de coupe congelés</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Assistant IA avancé</span>
+                  <span>Relances WhatsApp & SMS 1-Clic</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Statistiques détaillées</span>
+                  <span>Rapports financiers CA du jour/mois</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Support prioritaire</span>
+                  <span>Support prioritaire 7j/7</span>
                 </li>
               </ul>
             </div>
@@ -579,7 +579,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               Ils nous font confiance
             </h2>
             <p className="text-sm sm:text-base text-gray-600 font-medium">
-              Découvrez ce que nos utilisateurs disent de Taylaxis
+              Découvrez ce que les tailleurs et créateurs de mode disent de Taylaxis
             </p>
           </div>
 
@@ -588,16 +588,16 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <div className="space-y-3">
                 <Quote size={28} className="text-[#06B6D4]/30" />
                 <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-semibold italic">
-                  "Je gagne facilement 3h par semaine sur la création de fiches. Indispensable pour mon atelier !"
+                  "Je gagne facilement 2h par jour sur la recherche de fiches. Mes clients sont impressionnés !"
                 </p>
               </div>
               <div className="flex items-center space-x-3 pt-4 border-t border-gray-200/60">
                 <div className="w-10 h-10 rounded-full bg-[#06B6D4] text-white font-extrabold text-xs flex items-center justify-center">
-                  LM
+                  LK
                 </div>
                 <div>
-                  <div className="text-xs font-extrabold text-gray-900">Léa Martin</div>
-                  <div className="text-[11px] text-gray-500 font-medium">L3 Droit, Sorbonne</div>
+                  <div className="text-xs font-extrabold text-gray-900">Léandre Kouassi</div>
+                  <div className="text-[11px] text-gray-500 font-medium">Maître Tailleur, Cotonou</div>
                 </div>
               </div>
             </article>
@@ -606,16 +606,16 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <div className="space-y-3">
                 <Quote size={28} className="text-[#06B6D4]/30" />
                 <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-semibold italic">
-                  "Les quiz ciblent exactement mes points faibles. Mes notes ont augmenté dès le premier mois."
+                  "Plus aucun solde d'acompte oublié. Mon chiffre d'affaires a augmenté de 25% dès le premier mois."
                 </p>
               </div>
               <div className="flex items-center space-x-3 pt-4 border-t border-gray-200/60">
                 <div className="w-10 h-10 rounded-full bg-[#7C3AED] text-white font-extrabold text-xs flex items-center justify-center">
-                  TK
+                  AD
                 </div>
                 <div>
-                  <div className="text-xs font-extrabold text-gray-900">Thomas Koné</div>
-                  <div className="text-[11px] text-gray-500 font-medium">École d'ingénieurs, Lyon</div>
+                  <div className="text-xs font-extrabold text-gray-900">Awa Diallo</div>
+                  <div className="text-[11px] text-gray-500 font-medium">Atelier Mode, Dakar</div>
                 </div>
               </div>
             </article>
@@ -624,16 +624,16 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <div className="space-y-3">
                 <Quote size={28} className="text-[#06B6D4]/30" />
                 <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-semibold italic">
-                  "L'assistant explique super bien. Un vrai game changer pour mes projets."
+                  "Les relances WhatsApp en 1 clic évitent les appels longs. Un vrai soutien pour mon atelier !"
                 </p>
               </div>
               <div className="flex items-center space-x-3 pt-4 border-t border-gray-200/60">
                 <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-extrabold text-xs flex items-center justify-center">
-                  AS
+                  KM
                 </div>
                 <div>
-                  <div className="text-xs font-extrabold text-gray-900">Ananya Singh</div>
-                  <div className="text-[11px] text-gray-500 font-medium">Master Business, HEC</div>
+                  <div className="text-xs font-extrabold text-gray-900">Koffi Mensah</div>
+                  <div className="text-[11px] text-gray-500 font-medium">Styliste Sur-Mesure, Lomé</div>
                 </div>
               </div>
             </article>
@@ -658,20 +658,20 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
         <div className="space-y-3">
           {[
             {
-              q: "Est-ce que Taylaxis remplace mes révisions ?",
-              a: "Non, Taylaxis automatise la préparation (résumés, fiches) pour que vous passiez plus de temps à comprendre et mémoriser activement.",
+              q: "Est-ce que Taylaxis remplace mes cahiers de couture ?",
+              a: "Oui ! Taylaxis digitalise vos fiches de mensurations, le registre de vos commandes et le suivi des acomptes pour ne plus rien perdre.",
             },
             {
-              q: "Mes documents sont-ils sécurisés ?",
-              a: "Absolument. Vos documents sont chiffrés et stockés de manière sécurisée. Ils ne sont jamais utilisés pour entraîner des modèles tiers.",
+              q: "Mes mensurations et données sont-elles sécurisées ?",
+              a: "Absolument. Vos fiches clients et mensurations sont chiffrées et sauvegardées en sécurité sur nos serveurs.",
             },
             {
-              q: "Puis-je utiliser Taylaxis sur mobile ?",
-              a: "Oui ! L'interface est entièrement responsive. Révisez vos fiches et passez des quiz depuis n'importe quel appareil.",
+              q: "Puis-je utiliser Taylaxis sur mon smartphone ?",
+              a: "Oui ! Taylaxis est une Progressive Web App (PWA). Vous pouvez l'installer sur votre écran d'accueil en 1 clic.",
             },
             {
-              q: "Y a-t-il un engagement ?",
-              a: "Aucun engagement. Vous pouvez passer d'un plan à l'autre ou annuler à tout moment en un clic.",
+              q: "Y a-t-il un engagement ou une carte bancaire requise ?",
+              a: "Aucun engagement ni carte bancaire. Vous pouvez démarrer gratuitement en 30 secondes et l'utiliser au quotidien.",
             },
           ].map((item, idx) => {
             const isOpen = openFaqIndex === idx;
@@ -705,11 +705,11 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
       <section className="py-16 sm:py-20 px-4 sm:px-8 max-w-5xl mx-auto">
         <div className="p-8 sm:p-14 rounded-[36px] bg-gradient-to-br from-[#0C0A27] via-[#1D1850] to-[#3155C8] text-white text-center space-y-6 shadow-2xl relative overflow-hidden border border-white/15">
           <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-2xl mx-auto">
-            Prêt à transformer vos révisions ?
+            Prêt à transformer la gestion de votre atelier ?
           </h2>
 
           <p className="text-sm sm:text-base text-white/85 max-w-xl mx-auto font-medium">
-            Rejoignez des milliers d'utilisateurs qui réussissent avec Taylaxis.
+            Rejoignez des centaines de tailleurs et créateurs qui réussissent avec Taylaxis.
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -722,7 +722,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </button>
           </div>
 
-          <span className="text-xs text-white/60 font-medium block pt-1">Aucune carte requise</span>
+          <span className="text-xs text-white/60 font-medium block pt-1">Aucune carte requise • Démarrage en 30 secondes</span>
         </div>
       </section>
 
@@ -738,7 +738,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
                 <span className="text-lg font-black text-white">Taylaxis</span>
               </div>
               <p className="text-xs text-white/60 font-medium leading-relaxed">
-                L'assistant intelligent pour vos révisions et confections.
+                La solution SaaS métier pour les tailleurs et ateliers de couture.
               </p>
             </div>
 
@@ -755,7 +755,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
               <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">Ressources</h4>
               <ul className="space-y-2 font-medium">
                 <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Support</a></li>
+                <li><a href="https://wa.me/22890123456" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Support WhatsApp</a></li>
               </ul>
             </div>
 

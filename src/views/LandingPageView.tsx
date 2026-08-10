@@ -102,6 +102,33 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
     }
   };
 
+  const triggerInstallIfAvailable = () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult: any) => {
+          if (choiceResult.outcome === 'accepted') {
+            localStorage.setItem('taylaxis_app_installed_v1', 'true');
+            setShowScrollInstallBanner(false);
+          }
+          setDeferredPrompt(null);
+        });
+      } catch (err) {
+        console.warn('Install prompt notice:', err);
+      }
+    }
+  };
+
+  const handleGetStartedWithInstall = () => {
+    triggerInstallIfAvailable();
+    if (onGetStarted) onGetStarted();
+  };
+
+  const handleLoginWithInstall = () => {
+    triggerInstallIfAvailable();
+    if (onLogin) onLogin();
+  };
+
   const toggleFaq = (index: number) => {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
@@ -112,7 +139,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-gray-200/70 text-gray-900 py-3.5 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           {/* Brand Logo */}
-          <div className="flex items-center space-x-2.5 cursor-pointer" onClick={onGetStarted}>
+          <div className="flex items-center space-x-2.5 cursor-pointer" onClick={handleGetStartedWithInstall}>
             <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-[#06B6D4] to-[#7C3AED] flex items-center justify-center text-white shadow-md shadow-[#06B6D4]/30 animate-pulse-glow">
               <Scissors size={20} className="rotate-45" />
             </div>
@@ -142,7 +169,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
             {onLogin && (
               <button
-                onClick={onLogin}
+                onClick={handleLoginWithInstall}
                 className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all cursor-pointer"
               >
                 Connexion
@@ -150,7 +177,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             )}
 
             <button
-              onClick={onGetStarted}
+              onClick={handleGetStartedWithInstall}
               className="px-4.5 py-2.5 bg-[#06B6D4] hover:bg-[#0891B2] text-white text-xs sm:text-sm font-extrabold rounded-xl shadow-md shadow-[#06B6D4]/30 active:scale-95 transition-all cursor-pointer flex items-center space-x-1.5"
             >
               <span>Commencer</span>
@@ -222,7 +249,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
           {/* CTAs */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <button
-              onClick={onGetStarted}
+              onClick={handleGetStartedWithInstall}
               className="w-full sm:w-auto px-8 py-3.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-base rounded-xl shadow-lg shadow-[#7C3AED]/30 hover:scale-105 active:scale-98 transition-all flex items-center justify-center space-x-2 cursor-pointer"
             >
               <span>Commencer</span>
@@ -517,7 +544,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
             </div>
 
             <button
-              onClick={onGetStarted}
+              onClick={handleGetStartedWithInstall}
               className="w-full py-3.5 rounded-xl bg-[#06B6D4] hover:bg-[#0891B2] text-white font-extrabold text-sm transition-all cursor-pointer shadow-lg shadow-[#06B6D4]/40 text-center"
             >
               Essayer Pro gratuitement
@@ -672,7 +699,7 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={onGetStarted}
+              onClick={handleGetStartedWithInstall}
               className="w-full sm:w-auto px-9 py-4 bg-[#06B6D4] hover:bg-[#0891B2] text-white font-extrabold text-base rounded-xl cursor-pointer shadow-xl shadow-[#06B6D4]/40 hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-2"
             >
               <span>Commencer gratuitement</span>

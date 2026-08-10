@@ -157,10 +157,29 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
     return true;
   };
 
+  const triggerInstallIfAvailable = () => {
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult: any) => {
+          if (choiceResult.outcome === 'accepted') {
+            localStorage.setItem('taylaxis_app_installed_v1', 'true');
+            setIsAlreadyInstalled(true);
+          }
+          setDeferredPrompt(null);
+        });
+      } catch (err) {
+        console.warn('Install prompt notice:', err);
+      }
+    }
+  };
+
   // STEP 1: Handle Identifier Entry (Direct path detection without OTP)
   const handleIdentifierSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateIdentifier()) return;
+
+    triggerInstallIfAvailable();
 
     setLoading(true);
     setErrorMsg(null);
@@ -203,6 +222,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
   const handleCreateNewUserAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    triggerInstallIfAvailable();
 
     if (!password) {
       setErrorMsg('Veuillez saisir votre mot de passe.');
@@ -307,6 +327,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onAuthSuccess }) => {
       setErrorMsg('Veuillez entrer votre mot de passe.');
       return;
     }
+    triggerInstallIfAvailable();
 
     setLoading(true);
     setErrorMsg(null);

@@ -735,21 +735,21 @@ export const AppContent: React.FC = () => {
     handleSetUser(null);
   };
 
-  if (loadingAuth) {
-    return (
-      <div className="min-h-screen bg-[#0C0A27] flex flex-col items-center justify-center text-white space-y-4">
-        <div className="w-12 h-12 rounded-full border-4 border-[#7C3AED] border-t-transparent animate-spin" />
-        <p className="text-sm font-semibold tracking-wide">Chargement de votre atelier Taylaxis...</p>
-      </div>
-    );
-  }
-
   if (showLandingPage) {
     return (
       <LandingPageView
         onGetStarted={() => setShowLandingPage(false)}
         onLogin={() => setShowLandingPage(false)}
       />
+    );
+  }
+
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen bg-[#0C0A27] flex flex-col items-center justify-center text-white space-y-4">
+        <div className="w-12 h-12 rounded-full border-4 border-[#7C3AED] border-t-transparent animate-spin" />
+        <p className="text-sm font-semibold tracking-wide">Chargement de votre atelier Taylaxis...</p>
+      </div>
     );
   }
 

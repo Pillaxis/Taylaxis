@@ -23,10 +23,10 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Payment SDK Scripts (FedaPay, CinetPay, Paystack) -->
-    <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7"></script>
-    <script src="https://cdn.cinetpay.com/seamless/main.js"></script>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <!-- Payment SDK Scripts (FedaPay, CinetPay, Paystack) loaded asynchronously -->
+    <script src="https://cdn.fedapay.com/checkout.js?v=1.1.7" defer></script>
+    <script src="https://cdn.cinetpay.com/seamless/main.js" defer></script>
+    <script src="https://js.paystack.co/v1/inline.js" defer></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

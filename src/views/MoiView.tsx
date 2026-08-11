@@ -5,15 +5,13 @@ import {
   CreditCard,
   Receipt,
   Bell,
-  Palette,
   Shield,
-  Lock,
   FileText,
   HelpCircle,
-  Info,
   LogOut,
   Trash2,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Camera,
   Check,
@@ -21,6 +19,15 @@ import {
   AlertTriangle,
   Send,
   MessageCircle,
+  Users,
+  BookOpen,
+  Globe,
+  RefreshCw,
+  WifiOff,
+  LifeBuoy,
+  Tv,
+  Sliders,
+  Sparkles,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { userService } from '../services/userService';
@@ -49,6 +56,13 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
   const [subscription, setSubscription] = useState<SubscriptionPlan>(() => userService.getSubscriptionPlan());
   const [payments] = useState<TaylaxisPayment[]>(() => userService.getPayments());
   const [notifications, setNotifications] = useState<NotificationSettings>(() => userService.getNotificationSettings());
+
+  // Accordion state (all closed by default)
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const toggleSection = (key: string) => {
+    setOpenSection((prev) => (prev === key ? null : key));
+  };
 
   // UI Toast / Feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -267,9 +281,9 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         priceFCFA: 0,
         status: 'active',
         period: 'mensuel',
-        features: ['Jusqu\'à 15 clients', 'Agenda de base', 'Reçus simples'],
-        maxClients: 15,
-        maxOrdersMonth: 20,
+        features: ['Jusqu\'à 5 clients', '10 commandes / mois', '10 rendez-vous / mois'],
+        maxClients: 5,
+        maxOrdersMonth: 10,
       },
       PRO: {
         id: 'PRO',
@@ -281,8 +295,8 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         nextBillingDate: 'Dans 30 jours',
         features: [
           'Clients illimités',
-          'Catalogues de mensurations sur-mesure',
-          'Rappels WhatsApp & SMS',
+          'Mensurations sur-mesure illimitées',
+          'Relances WhatsApp & SMS',
           'Impression reçus PDF & Logo Atelier',
           'Sauvegarde Cloud automatique',
         ],
@@ -416,10 +430,10 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* Main Profile Header Card */}
+      {/* Main Profile Card */}
       <div className="bg-surface rounded-[24px] p-5 border border-subtle flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
         <div className="flex items-center space-x-4 w-full sm:w-auto">
-          <div className="relative group">
+          <div className="relative group flex-shrink-0">
             {profileAvatarUrl ? (
               <img
                 src={profileAvatarUrl}
@@ -440,371 +454,557 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
             </button>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2">
-              <h2 className="text-h2 font-bold text-primary">{userProfile.fullName}</h2>
+              <h2 className="text-h2 font-bold text-primary truncate">{userProfile.fullName}</h2>
               {userProfile.isVerified && (
-                <span className="inline-flex items-center text-[11px] font-bold text-[#10B981] bg-[#D1FAE5] dark:bg-[#064E3B] dark:text-[#6EE7B7] px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center text-[11px] font-bold text-[#10B981] bg-[#D1FAE5] dark:bg-[#064E3B] dark:text-[#6EE7B7] px-2 py-0.5 rounded-full flex-shrink-0">
                   <ShieldCheck size={12} className="mr-0.5" />
                   Vérifié
                 </span>
               )}
             </div>
-            <p className="text-caption text-secondary font-medium mt-0.5">
-              {userProfile.role} • {workshop.name}
+            <p className="text-caption text-secondary font-medium mt-0.5 truncate">
+              {workshop.name}
             </p>
-            <p className="text-caption text-tertiary">{userProfile.phone}</p>
+            <p className="text-caption text-tertiary truncate">
+              {userProfile.role || 'Maître Tailleur & Créateur de Mode'}
+            </p>
           </div>
         </div>
 
         <button
           onClick={handleOpenEditProfile}
-          className="w-full sm:w-auto px-4 py-2.5 bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20 text-[#7C3AED] rounded-[14px] text-caption font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5"
+          className="w-full sm:w-auto px-4 py-2.5 bg-[#7C3AED]/10 hover:bg-[#7C3AED]/20 text-[#7C3AED] rounded-[14px] text-caption font-bold transition-all cursor-pointer flex items-center justify-center space-x-1.5 flex-shrink-0"
         >
           <User size={16} />
-          <span>Modifier le profil</span>
+          <span>Modifier mon profil</span>
         </button>
       </div>
 
-      {/* SECTION 1: PROFIL ET ATELIER */}
-      <div className="space-y-3">
-        <label className="text-micro font-bold text-secondary tracking-wider block px-1">
-          Compte & Atelier
-        </label>
+      {/* ACCORDION SECTIONS (All closed by default) */}
+      <div className="space-y-4">
 
-        <div className="bg-surface rounded-[20px] border border-subtle divide-y divide-subtle overflow-hidden shadow-xs">
-          {/* Mon Profil */}
+        {/* ACCORDION 1: MON ATELIER */}
+        <div className="bg-surface rounded-[24px] border border-subtle overflow-hidden shadow-xs transition-all duration-300">
           <button
-            onClick={handleOpenEditProfile}
+            onClick={() => toggleSection('atelier')}
             className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center">
-                <User size={20} />
-              </div>
-              <div>
-                <div className="text-body font-semibold text-primary">Mon Profil</div>
-                <div className="text-caption text-tertiary">Nom, téléphone, email & langue</div>
-              </div>
-            </div>
-            <ChevronRight size={18} className="text-tertiary" />
-          </button>
-
-          {/* Mon Atelier */}
-          <button
-            onClick={handleOpenEditWorkshop}
-            className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 text-[#2563EB] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 text-[#2563EB] flex items-center justify-center flex-shrink-0">
                 <Building size={20} />
               </div>
               <div>
-                <div className="text-body font-semibold text-primary">Mon Atelier</div>
-                <div className="text-caption text-tertiary">{workshop.name} • Horaires & Adresse</div>
+                <h3 className="text-body-strong font-bold text-primary">Mon atelier</h3>
+                <p className="text-caption text-tertiary">{workshop.name} • Informations, horaires & équipe</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-tertiary" />
+            <div className="text-tertiary p-1">
+              {openSection === 'atelier' ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </div>
           </button>
+
+          {openSection === 'atelier' && (
+            <div className="border-t border-subtle divide-y divide-subtle bg-surface-alt/30 animate-fadeIn">
+              {/* Informations de l'atelier */}
+              <button
+                onClick={handleOpenEditWorkshop}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Building size={18} className="text-[#2563EB]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Informations de l'atelier</div>
+                    <div className="text-caption text-tertiary">Nom commercial, téléphone, adresse & NIF/RCCM</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Horaires d'ouverture */}
+              <button
+                onClick={handleOpenEditWorkshop}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Building size={18} className="text-[#7C3AED]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Horaires d'ouverture</div>
+                    <div className="text-caption text-tertiary">{workshop.openingHours || 'Lun - Sam : 08h00 - 19h00'}</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Équipe / employés */}
+              <button
+                onClick={() => showToast('Gestion des employés disponible avec Taylaxis Multi-Atelier')}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Users size={18} className="text-[#10B981]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Équipe / employés</div>
+                    <div className="text-caption text-tertiary">Gestion des apprentis, ouvriers & couturiers</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Catalogue */}
+              <button
+                onClick={() => showToast('Catalogue de modèles & créations disponible dans votre atelier')}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <BookOpen size={18} className="text-[#D97B1F]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Catalogue</div>
+                    <div className="text-caption text-tertiary">Catalogue de modèles & tissus de création</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* SECTION 2: ABONNEMENT ET PAIEMENTS */}
-      <div className="space-y-3">
-        <label className="text-micro font-bold text-secondary tracking-wider block px-1">
-          Abonnement & Facturation Taylaxis
-        </label>
-
-        <div className="bg-surface rounded-[20px] border border-subtle divide-y divide-subtle overflow-hidden shadow-xs">
-          {/* Formule actuelle */}
+        {/* ACCORDION 2: ABONNEMENT & PAIEMENT */}
+        <div className="bg-surface rounded-[24px] border border-subtle overflow-hidden shadow-xs transition-all duration-300">
           <button
-            onClick={() => setShowSubscriptionModal(true)}
+            onClick={() => toggleSection('abonnement')}
             className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#10B981]/10 text-[#10B981] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#10B981]/10 text-[#10B981] flex items-center justify-center flex-shrink-0">
                 <CreditCard size={20} />
               </div>
               <div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-body font-semibold text-primary">{subscription.name}</span>
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#10B981]/20 text-[#10B981]">
-                    {subscription.status === 'active' ? 'Actif' : 'Essai'}
-                  </span>
-                </div>
-                <div className="text-caption text-tertiary">
-                  {subscription.priceFCFA === 0
-                    ? 'Formule Gratuite'
-                    : `${subscription.priceFCFA.toLocaleString('fr-FR')} FCFA / mois`}
-                </div>
+                <h3 className="text-body-strong font-bold text-primary">Abonnement & paiement</h3>
+                <p className="text-caption text-tertiary">Formules, facturation & historique des règlements</p>
               </div>
             </div>
-            <div className="flex items-center space-x-1 text-caption text-[#7C3AED] font-bold">
-              <span>Gérer</span>
-              <ChevronRight size={18} />
+            <div className="text-tertiary p-1">
+              {openSection === 'abonnement' ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
             </div>
           </button>
 
-          {/* Historique des paiements */}
-          <button
-            onClick={() => setShowPaymentsModal(true)}
-            className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#D97B1F]/10 text-[#D97B1F] flex items-center justify-center">
-                <Receipt size={20} />
-              </div>
-              <div>
-                <div className="text-body font-semibold text-primary">Historique des paiements</div>
-                <div className="text-caption text-tertiary">Consulter les reçus et factures Taylaxis</div>
-              </div>
-            </div>
-            <ChevronRight size={18} className="text-tertiary" />
-          </button>
-        </div>
-      </div>
-
-      {/* SECTION 3: APPARENCE & PERSONNALISATION */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <label className="text-micro font-bold text-secondary tracking-wider block">
-            Apparence & Personnalisation
-          </label>
-        </div>
-
-        <div className="bg-surface rounded-[24px] p-4 border border-subtle space-y-4 shadow-xs">
-
-          {/* Text Scale Selector */}
-          <div className="pt-2 border-t border-subtle flex items-center justify-between">
-            <span className="text-body font-semibold text-primary">Taille du texte</span>
-            <div className="flex space-x-1 bg-surface-alt p-1 rounded-[12px] border border-subtle">
-              {(['small', 'medium', 'large'] as TextScale[]).map((scale) => {
-                const labels = { small: 'Petit', medium: 'Moyen', large: 'Grand' };
-                const isSelected = textScale === scale;
-                return (
-                  <button
-                    key={scale}
-                    onClick={() => setTextScale(scale)}
-                    className={`px-3 py-1 text-xs font-bold rounded-[8px] transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#7C3AED] text-white shadow-xs'
-                        : 'text-secondary hover:text-primary'
-                    }`}
-                  >
-                    {labels[scale]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Accent Color Palette Picker */}
-          <div className="pt-2 border-t border-subtle space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-body font-semibold text-primary">Couleur d'accentuation</span>
-              <span className="text-caption text-[#7C3AED] font-mono font-bold">{brandColor}</span>
-            </div>
-            <div className="flex items-center space-x-3 overflow-x-auto pb-1 no-scrollbar">
-              {accentColors.map((c) => (
-                <button
-                  key={c.hex}
-                  onClick={() => setBrandColor(c.hex)}
-                  className="relative w-9 h-9 rounded-full transition-transform active:scale-90 flex-shrink-0 cursor-pointer shadow-xs"
-                  style={{ backgroundColor: c.hex }}
-                  title={c.name}
-                  aria-label={`Couleur ${c.name}`}
-                >
-                  {brandColor.toLowerCase() === c.hex.toLowerCase() && (
-                    <div className="absolute inset-0 flex items-center justify-center text-white">
-                      <Check size={16} />
-                    </div>
-                  )}
-                </button>
-              ))}
-              <label
-                className="relative w-9 h-9 rounded-full border border-subtle bg-surface-alt flex items-center justify-center cursor-pointer hover:border-[#7C3AED] transition-colors flex-shrink-0"
-                title="Choisir une couleur sur mesure"
+          {openSection === 'abonnement' && (
+            <div className="border-t border-subtle divide-y divide-subtle bg-surface-alt/30 animate-fadeIn">
+              {/* Mon abonnement */}
+              <button
+                onClick={() => setShowSubscriptionModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
               >
-                <Palette size={16} className="text-secondary" />
-                <input
-                  type="color"
-                  value={brandColor}
-                  onChange={(e) => setBrandColor(e.target.value)}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-              </label>
+                <div className="flex items-center space-x-3">
+                  <CreditCard size={18} className="text-[#10B981]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Mon abonnement</div>
+                    <div className="text-caption text-tertiary">Statut du compte & renouvellement</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Offre actuelle avec Taylaxis Pro — 5 000 FCFA / mois */}
+              <button
+                onClick={() => setShowSubscriptionModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Sparkles size={18} className="text-[#7C3AED]" />
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-body font-bold text-primary">Offre actuelle :</span>
+                      <span className="px-2 py-0.5 text-[11px] font-extrabold uppercase rounded-full bg-[#7C3AED]/20 text-[#7C3AED]">
+                        {subscription.name}
+                      </span>
+                    </div>
+                    <div className="text-caption text-tertiary">Taylaxis Pro — 5 000 FCFA / mois</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Changer d'offre */}
+              <button
+                onClick={() => setShowSubscriptionModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <CreditCard size={18} className="text-[#2563EB]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Changer d'offre</div>
+                    <div className="text-caption text-tertiary">Passer à Taylaxis Pro ou Premium Multi-Atelier</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Historique des paiements */}
+              <button
+                onClick={() => setShowPaymentsModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Receipt size={18} className="text-[#D97B1F]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Historique des paiements</div>
+                    <div className="text-caption text-tertiary">Consulter les factures et reçus d'abonnement</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Mode de paiement */}
+              <button
+                onClick={() => setShowPaymentsModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <CreditCard size={18} className="text-[#7C3AED]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Mode de paiement</div>
+                    <div className="text-caption text-tertiary">Paiement sécurisé FedaPay (TMoney, Flooz, Wave, Carte)</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
             </div>
-          </div>
+          )}
         </div>
-      </div>
 
-      {/* SECTION 4: NOTIFICATIONS & PRÉFÉRENCES */}
-      <div className="space-y-3">
-        <label className="text-micro font-bold text-secondary tracking-wider block px-1">
-          Préférences de notifications
-        </label>
-
-        <div className="bg-surface rounded-[24px] p-4 border border-subtle space-y-3.5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Bell size={18} className="text-[#7C3AED]" />
-              <div>
-                <div className="text-body font-semibold text-primary">Rappels de livraisons proches</div>
-                <div className="text-caption text-tertiary">Alertes avant les échéances clients</div>
-              </div>
-            </div>
-            <button
-              onClick={() => handleToggleNotification('ordersDeliveryNear')}
-              className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
-                notifications.ordersDeliveryNear ? 'bg-[#7C3AED] justify-end' : 'bg-subtle justify-start'
-              }`}
-            >
-              <div className="w-5 h-5 bg-white rounded-full shadow-md" />
-            </button>
-          </div>
-
-          <div className="pt-2 border-t border-subtle flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Bell size={18} className="text-[#2563EB]" />
-              <div>
-                <div className="text-body font-semibold text-primary">Rendez-vous & Essayages</div>
-                <div className="text-caption text-tertiary">Rappels pour les rendez-vous du jour</div>
-              </div>
-            </div>
-            <button
-              onClick={() => handleToggleNotification('appointmentsFitting')}
-              className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
-                notifications.appointmentsFitting ? 'bg-[#7C3AED] justify-end' : 'bg-subtle justify-start'
-              }`}
-            >
-              <div className="w-5 h-5 bg-white rounded-full shadow-md" />
-            </button>
-          </div>
-
-          <div className="pt-2 border-t border-subtle flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Bell size={18} className="text-[#10B981]" />
-              <div>
-                <div className="text-body font-semibold text-primary">Paiements & Nouveaux soldes</div>
-                <div className="text-caption text-tertiary">Notifications de règlements clients</div>
-              </div>
-            </div>
-            <button
-              onClick={() => handleToggleNotification('paymentsReceived')}
-              className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
-                notifications.paymentsReceived ? 'bg-[#7C3AED] justify-end' : 'bg-subtle justify-start'
-              }`}
-            >
-              <div className="w-5 h-5 bg-[#FFFFFF] rounded-full shadow-md" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 5: SÉCURITÉ & CONFIDENTIALITÉ */}
-      <div className="space-y-3">
-        <label className="text-micro font-bold text-secondary tracking-wider block px-1">
-          Sécurité & Confidentialité
-        </label>
-
-        <div className="bg-surface rounded-[20px] border border-subtle divide-y divide-subtle overflow-hidden shadow-xs">
-          {/* Sécurité et mot de passe */}
+        {/* ACCORDION 3: NOTIFICATIONS */}
+        <div className="bg-surface rounded-[24px] border border-subtle overflow-hidden shadow-xs transition-all duration-300">
           <button
-            onClick={() => setShowSecurityModal(true)}
+            onClick={() => toggleSection('notifications')}
             className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#EF4444]/10 text-[#EF4444] flex items-center justify-center">
-                <Shield size={20} />
+              <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center flex-shrink-0">
+                <Bell size={20} />
               </div>
               <div>
-                <div className="text-body font-semibold text-primary">Sécurité du compte</div>
-                <div className="text-caption text-tertiary">Mot de passe & Sessions actives</div>
+                <h3 className="text-body-strong font-bold text-primary">Notifications</h3>
+                <p className="text-caption text-tertiary">Alertes clients, rappels de livraison & rendez-vous</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-tertiary" />
+            <div className="text-tertiary p-1">
+              {openSection === 'notifications' ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </div>
           </button>
 
-          {/* Confidentialité & Données */}
-          <button
-            onClick={() => setShowPrivacyModal(true)}
-            className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center">
-                <FileText size={20} />
+          {openSection === 'notifications' && (
+            <div className="border-t border-subtle divide-y divide-subtle bg-surface-alt/30 animate-fadeIn">
+              {/* Notifications clients */}
+              <div className="p-4 flex items-center justify-between pl-6">
+                <div className="flex items-center space-x-3">
+                  <Bell size={18} className="text-[#7C3AED]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Notifications clients</div>
+                    <div className="text-caption text-tertiary">Alertes de création de compte & nouveaux règlements</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleToggleNotification('ordersCreated')}
+                  className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
+                    notifications.ordersCreated ? 'bg-[#7C3AED] justify-end' : 'bg-subtle justify-start'
+                  }`}
+                >
+                  <div className="w-5 h-5 bg-white rounded-full shadow-md" />
+                </button>
               </div>
-              <div>
-                <div className="text-body font-semibold text-primary">Confidentialité & Données</div>
-                <div className="text-caption text-tertiary">Politique de confidentialité & RGPD</div>
+
+              {/* Rappels de livraison */}
+              <div className="p-4 flex items-center justify-between pl-6">
+                <div className="flex items-center space-x-3">
+                  <Bell size={18} className="text-[#EF4444]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Rappels de livraison</div>
+                    <div className="text-caption text-tertiary">Rappels automatiques avant les dates de livraison</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleToggleNotification('ordersDeliveryNear')}
+                  className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
+                    notifications.ordersDeliveryNear ? 'bg-[#7C3AED] justify-end' : 'bg-subtle justify-start'
+                  }`}
+                >
+                  <div className="w-5 h-5 bg-white rounded-full shadow-md" />
+                </button>
+              </div>
+
+              {/* Rappels de rendez-vous */}
+              <div className="p-4 flex items-center justify-between pl-6">
+                <div className="flex items-center space-x-3">
+                  <Bell size={18} className="text-[#2563EB]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Rappels de rendez-vous</div>
+                    <div className="text-caption text-tertiary">Rappels d'essayages & prises de mesures du jour</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleToggleNotification('appointmentsFitting')}
+                  className={`w-11 h-6 rounded-full p-0.5 transition-colors cursor-pointer flex items-center ${
+                    notifications.appointmentsFitting ? 'bg-[#7C3AED] justify-end' : 'bg-subtle justify-start'
+                  }`}
+                >
+                  <div className="w-5 h-5 bg-white rounded-full shadow-md" />
+                </button>
               </div>
             </div>
-            <ChevronRight size={18} className="text-tertiary" />
-          </button>
+          )}
         </div>
-      </div>
 
-      {/* SECTION 6: AIDE, SUPPORT ET À PROPOS */}
-      <div className="space-y-3">
-        <label className="text-micro font-bold text-secondary tracking-wider block px-1">
-          Support & Informations
-        </label>
-
-        <div className="bg-surface rounded-[20px] border border-subtle divide-y divide-subtle overflow-hidden shadow-xs">
-          {/* Aide et assistance */}
+        {/* ACCORDION 4: PARAMÈTRES */}
+        <div className="bg-surface rounded-[24px] border border-subtle overflow-hidden shadow-xs transition-all duration-300">
           <button
-            onClick={() => setShowHelpModal(true)}
+            onClick={() => toggleSection('parametres')}
             className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
           >
             <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 text-[#2563EB] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-[#06B6D4]/10 text-[#06B6D4] flex items-center justify-center flex-shrink-0">
+                <Sliders size={20} />
+              </div>
+              <div>
+                <h3 className="text-body-strong font-bold text-primary">Paramètres</h3>
+                <p className="text-caption text-tertiary">Thème, langue, sécurité & synchronisation</p>
+              </div>
+            </div>
+            <div className="text-tertiary p-1">
+              {openSection === 'parametres' ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </div>
+          </button>
+
+          {openSection === 'parametres' && (
+            <div className="border-t border-subtle divide-y divide-subtle bg-surface-alt/30 animate-fadeIn">
+              {/* Paramètres généraux (Apparence, Taille texte, Couleur) */}
+              <div className="p-4 space-y-4 pl-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-body font-bold text-primary">Paramètres généraux</span>
+                </div>
+
+                {/* Text Scale */}
+                <div className="flex items-center justify-between">
+                  <span className="text-caption font-semibold text-secondary">Taille du texte</span>
+                  <div className="flex space-x-1 bg-surface-alt p-1 rounded-[12px] border border-subtle">
+                    {(['small', 'medium', 'large'] as TextScale[]).map((scale) => {
+                      const labels = { small: 'Petit', medium: 'Moyen', large: 'Grand' };
+                      const isSelected = textScale === scale;
+                      return (
+                        <button
+                          key={scale}
+                          onClick={() => setTextScale(scale)}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-[8px] transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#7C3AED] text-white shadow-xs'
+                              : 'text-secondary hover:text-primary'
+                          }`}
+                        >
+                          {labels[scale]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Accent Color Palette */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-caption font-semibold text-secondary">Couleur d'accentuation</span>
+                    <span className="text-caption text-[#7C3AED] font-mono font-bold">{brandColor}</span>
+                  </div>
+                  <div className="flex items-center space-x-3 overflow-x-auto pb-1 no-scrollbar">
+                    {accentColors.map((c) => (
+                      <button
+                        key={c.hex}
+                        onClick={() => setBrandColor(c.hex)}
+                        className="relative w-8 h-8 rounded-full transition-transform active:scale-90 flex-shrink-0 cursor-pointer shadow-xs"
+                        style={{ backgroundColor: c.hex }}
+                        title={c.name}
+                      >
+                        {brandColor.toLowerCase() === c.hex.toLowerCase() && (
+                          <div className="absolute inset-0 flex items-center justify-center text-white">
+                            <Check size={14} />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Langue */}
+              <button
+                onClick={handleOpenEditProfile}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Globe size={18} className="text-[#2563EB]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Langue</div>
+                    <div className="text-caption text-tertiary">{userProfile.language || 'Français (FR)'}</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Sécurité */}
+              <button
+                onClick={() => setShowSecurityModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Shield size={18} className="text-[#EF4444]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Sécurité</div>
+                    <div className="text-caption text-tertiary">Mot de passe, authentification & sessions</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Confidentialité */}
+              <button
+                onClick={() => setShowPrivacyModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <FileText size={18} className="text-[#7C3AED]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Confidentialité</div>
+                    <div className="text-caption text-tertiary">Protection des données & paramètres de confidentialité</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Synchronisation */}
+              <button
+                onClick={() => showToast('Synchronisation Cloud Supabase 24/7 active')}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <RefreshCw size={18} className="text-[#10B981]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Synchronisation</div>
+                    <div className="text-caption text-tertiary">Sauvegarde Cloud automatique active 24h/24</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-[#10B981] bg-[#10B981]/20 px-2 py-0.5 rounded-full">
+                  En ligne
+                </span>
+              </button>
+
+              {/* Mode hors connexion */}
+              <button
+                onClick={() => showToast('Mode hors ligne PWA actif. Données sauvegardées localement.')}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <WifiOff size={18} className="text-[#D97B1F]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Mode hors connexion</div>
+                    <div className="text-caption text-tertiary">Permet de travailler sans internet sur cet appareil</div>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-[#D97B1F] bg-[#D97B1F]/20 px-2 py-0.5 rounded-full">
+                  Disponible
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ACCORDION 5: AIDE */}
+        <div className="bg-surface rounded-[24px] border border-subtle overflow-hidden shadow-xs transition-all duration-300">
+          <button
+            onClick={() => toggleSection('aide')}
+            className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
+          >
+            <div className="flex items-center space-x-3.5">
+              <div className="w-10 h-10 rounded-full bg-[#D97B1F]/10 text-[#D97B1F] flex items-center justify-center flex-shrink-0">
                 <HelpCircle size={20} />
               </div>
               <div>
-                <div className="text-body font-semibold text-primary">Aide & FAQ</div>
-                <div className="text-caption text-tertiary">Tutoriels, questions fréquentes & assistance</div>
+                <h3 className="text-body-strong font-bold text-primary">Aide</h3>
+                <p className="text-caption text-tertiary">Support, tutoriels & assistance Taylaxis</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-tertiary" />
+            <div className="text-tertiary p-1">
+              {openSection === 'aide' ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+            </div>
           </button>
 
-          {/* Signaler un problème */}
-          <button
-            onClick={() => setShowReportBugModal(true)}
-            className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#D97B1F]/10 text-[#D97B1F] flex items-center justify-center">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <div className="text-body font-semibold text-primary">Signaler un problème</div>
-                <div className="text-caption text-tertiary">Proposer une amélioration ou signaler un bug</div>
-              </div>
-            </div>
-            <ChevronRight size={18} className="text-tertiary" />
-          </button>
+          {openSection === 'aide' && (
+            <div className="border-t border-subtle divide-y divide-subtle bg-surface-alt/30 animate-fadeIn">
+              {/* Centre d'aide */}
+              <button
+                onClick={() => setShowHelpModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <LifeBuoy size={18} className="text-[#2563EB]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Centre d'aide</div>
+                    <div className="text-caption text-tertiary">Guide de prise en main & questions fréquentes</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
 
-          {/* À propos de Taylaxis */}
-          <button
-            onClick={() => setShowAboutModal(true)}
-            className="w-full p-4 flex items-center justify-between hover:bg-surface-alt/50 transition-colors text-left cursor-pointer"
-          >
-            <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-full bg-[#7C3AED]/10 text-[#7C3AED] flex items-center justify-center">
-                <Info size={20} />
-              </div>
-              <div>
-                <div className="text-body font-semibold text-primary">À propos de Taylaxis</div>
-                <div className="text-caption text-tertiary">Version v1.0.0 • Mentions légales</div>
-              </div>
+              {/* Tutoriels */}
+              <button
+                onClick={() => setShowHelpModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <Tv size={18} className="text-[#7C3AED]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Tutoriels</div>
+                    <div className="text-caption text-tertiary">Vidéos et guides pas à pas d'utilisation</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Contacter Taylaxis */}
+              <button
+                onClick={() => window.open('https://wa.me/22890000000', '_blank')}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <MessageCircle size={18} className="text-[#25D366]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Contacter Taylaxis</div>
+                    <div className="text-caption text-tertiary">Assistance en direct par WhatsApp & Téléphone</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
+
+              {/* Signaler un problème */}
+              <button
+                onClick={() => setShowReportBugModal(true)}
+                className="w-full p-4 flex items-center justify-between hover:bg-surface-alt transition-colors text-left cursor-pointer pl-6"
+              >
+                <div className="flex items-center space-x-3">
+                  <AlertTriangle size={18} className="text-[#D97B1F]" />
+                  <div>
+                    <div className="text-body font-semibold text-primary">Signaler un problème</div>
+                    <div className="text-caption text-tertiary">Proposer une amélioration ou signaler un bug</div>
+                  </div>
+                </div>
+                <ChevronRight size={16} className="text-tertiary" />
+              </button>
             </div>
-            <ChevronRight size={18} className="text-tertiary" />
-          </button>
+          )}
         </div>
+
       </div>
 
-      {/* SECTION 7: DÉCONNEXION & DESTRUCTION */}
+      {/* ACCOUNT ACTIONS & SIGN OUT */}
       <div className="pt-2 space-y-3">
         <button
           onClick={() => setShowSignOutModal(true)}
@@ -835,8 +1035,10 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
       </div>
 
       {/* ========================================================================= */}
-      {/* MODAL 1: MODIFIER LE PROFIL */}
+      {/* MODALS (Preserved 100% intact & fully functional) */}
       {/* ========================================================================= */}
+
+      {/* MODAL 1: MODIFIER LE PROFIL */}
       {showEditProfileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -860,7 +1062,6 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
             )}
 
             <form onSubmit={handleSaveProfile} className="space-y-3.5">
-              {/* Photo de profil URL / Preview */}
               <div>
                 <label className="text-caption text-secondary font-semibold block mb-1">
                   Photo de profil (URL ou image)
@@ -969,9 +1170,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 2: MODIFIER L'ATELIER */}
-      {/* ========================================================================= */}
       {showEditWorkshopModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1102,9 +1301,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 3: ABONNEMENT TAYLAXIS */}
-      {/* ========================================================================= */}
       {showSubscriptionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1142,7 +1339,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
                   ) : (
                     <button
                       onClick={() => handleChangeSubscription('FREE')}
-                      className="px-3 py-1.5 rounded-[12px] bg-surface text-primary border border-subtle text-caption font-bold hover:bg-surface-alt"
+                      className="px-3 py-1.5 rounded-[12px] bg-surface text-primary border border-subtle text-caption font-bold hover:bg-surface-alt cursor-pointer"
                     >
                       Choisir
                     </button>
@@ -1175,14 +1372,14 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
                   ) : (
                     <button
                       onClick={() => handleChangeSubscription('PRO')}
-                      className="px-3 py-1.5 rounded-[12px] bg-[#7C3AED] text-white text-caption font-bold hover:bg-[#6D28D9]"
+                      className="px-3 py-1.5 rounded-[12px] bg-[#7C3AED] text-white text-caption font-bold hover:bg-[#6D28D9] cursor-pointer"
                     >
                       Choisir PRO
                     </button>
                   )}
                 </div>
                 <ul className="mt-3 text-caption text-secondary space-y-1">
-                  <li>✓ Clients & Commandes illimités</li>
+                  <li>✓ Clients, commandes & rendez-vous illimités</li>
                   <li>✓ Reçus PDF avec votre logo</li>
                   <li>✓ Rappels clients WhatsApp & SMS</li>
                 </ul>
@@ -1208,7 +1405,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
                   ) : (
                     <button
                       onClick={() => handleChangeSubscription('PREMIUM')}
-                      className="px-3 py-1.5 rounded-[12px] bg-[#2563EB] text-white text-caption font-bold hover:bg-[#1D4ED8]"
+                      className="px-3 py-1.5 rounded-[12px] bg-[#2563EB] text-white text-caption font-bold hover:bg-[#1D4ED8] cursor-pointer"
                     >
                       Choisir Premium
                     </button>
@@ -1224,9 +1421,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 4: PAIEMENTS ET REÇUS */}
-      {/* ========================================================================= */}
       {showPaymentsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1271,15 +1466,13 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 5: SÉCURITÉ & MOT DE PASSE */}
-      {/* ========================================================================= */}
       {showSecurityModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-subtle">
               <h3 className="text-h2 font-bold text-primary flex items-center space-x-2">
-                <Lock size={20} className="text-[#EF4444]" />
+                <Shield size={20} className="text-[#EF4444]" />
                 <span>Sécurité du Compte</span>
               </h3>
               <button
@@ -1372,9 +1565,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 6: CONFIDENTIALITÉ */}
-      {/* ========================================================================= */}
       {showPrivacyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1407,9 +1598,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 7: AIDE & FAQ */}
-      {/* ========================================================================= */}
       {showHelpModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1469,9 +1658,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 8: SIGNALER UN PROBLÈME */}
-      {/* ========================================================================= */}
       {showReportBugModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-md shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
@@ -1537,9 +1724,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 9: À PROPOS */}
-      {/* ========================================================================= */}
       {showAboutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-md shadow-2xl space-y-4 text-center">
@@ -1563,9 +1748,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* MODAL 10: DÉCONNEXION */}
-      {/* ========================================================================= */}
       {showSignOutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-subtle p-5 w-full max-w-sm shadow-2xl space-y-4 text-center">
@@ -1596,9 +1779,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL 11: SUPPRESSION COMPTE (DANGER ZONE) */}
-      {/* ========================================================================= */}
+      {/* MODAL 11: SUPPRESSION COMPTE */}
       {showDeleteAccountModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-surface rounded-[24px] border border-red-500/40 p-5 w-full max-w-md shadow-2xl space-y-4">

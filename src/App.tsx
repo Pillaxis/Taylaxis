@@ -800,7 +800,13 @@ export const AppContent: React.FC = () => {
           onSearchChange: setSearchQuery,
         };
       case 'moi':
-        return { title: 'Mon Profil' };
+        return {
+          title: 'Moi',
+          showSearchIcon: true,
+          searchPlaceholder: 'Rechercher...',
+          searchValue: searchQuery,
+          onSearchChange: setSearchQuery,
+        };
     }
   };
 

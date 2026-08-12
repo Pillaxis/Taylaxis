@@ -77,37 +77,37 @@ export const ProUpgradeModal: React.FC<ProUpgradeModalProps> = ({
 
           {/* Features Comparison Checklist */}
           <div className="space-y-2.5">
-            <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wider block">Ce que contient TAYLAXIS Pro :</span>
+            <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wider block">Fonctionnalités incluses dans Taylaxis Pro :</span>
             <ul className="space-y-2 text-xs font-semibold text-gray-700">
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Relances clients (WhatsApp & SMS)</span>
+                <span>Ajouter et gérer des clients</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Statistiques avancées & Chiffre d'Affaires</span>
+                <span>Enregistrer et consulter les mensurations</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Commandes illimitées</span>
+                <span>Ajouter et gérer les commandes</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Clients & mensurations illimités</span>
+                <span>Planifier et gérer les rendez-vous</span>
               </li>
               <li className="flex items-center space-x-2.5">
                 <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
                   <Check size={13} className="stroke-[3]" />
                 </div>
-                <span>Rendez-vous illimités</span>
+                <span>Relancer les clients</span>
               </li>
             </ul>
           </div>

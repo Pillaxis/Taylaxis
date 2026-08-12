@@ -104,11 +104,13 @@ export interface Appointment {
   time: string;
   duration?: string;
   clientName: string;
+  clientId?: string;
   type: 'Essayage' | 'Livraison' | 'Rendez-vous' | 'Prise de mesures';
   badgeLabel?: string;
   garment?: string;
   colorCategory: 'purple' | 'orange' | 'red' | 'blue';
   date: string; // e.g. "2024-05-14"
+  notes?: string;
 }
 
 export interface UserProfile {
@@ -137,7 +139,7 @@ export interface WorkshopProfile {
   nifRccm?: string;
 }
 
-export type SubscriptionPlanType = 'FREE' | 'PRO' | 'PREMIUM';
+export type SubscriptionPlanType = 'FREE' | 'PRO';
 
 export interface SubscriptionPlan {
   id: SubscriptionPlanType;

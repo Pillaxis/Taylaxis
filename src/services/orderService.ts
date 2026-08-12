@@ -7,6 +7,7 @@ import type {
   Measurement,
 } from '../types';
 import { OrderEngine } from './orderEngine';
+import { SupabaseService } from './supabaseService';
 import { MOCK_ORDERS, MOCK_MEASUREMENTS_COSTUME } from '../data/mockData';
 
 const ORDERS_KEY = 'taylaxis_orders_v2';
@@ -131,9 +132,12 @@ export class OrderService {
   static saveOrders(orders: Order[]) {
     try {
       localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+      orders.forEach((o) => {
+        SupabaseService.saveOrder(o).catch(console.error);
+      });
       this.notify();
     } catch (e) {
-      console.error('Failed to save orders to localStorage:', e);
+      console.error('Failed to save orders:', e);
     }
   }
 

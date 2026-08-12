@@ -22,6 +22,7 @@ import { OrderEngine } from './services/orderEngine';
 import { OrderService } from './services/orderService';
 import { userService } from './services/userService';
 import { SupabaseService } from './services/supabaseService';
+import { SyncEngine } from './services/syncEngine';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import { X, Ruler, Plus, Trash2, Shirt, UserPlus } from 'lucide-react';
 
@@ -334,6 +335,7 @@ export const AppContent: React.FC = () => {
 
   const handleOpenNewOrderModalWithLimit = () => {
     if (clients.length === 0) {
+      alert('Pour créer une commande, vous devez d\'abord enregistrer au moins un client.');
       handleOpenNewClientModalWithLimit();
     } else {
       handleAttemptAction('orders', orders.length, () => {
@@ -342,7 +344,26 @@ export const AppContent: React.FC = () => {
     }
   };
 
+  const handleSelectTab = (tab: TabType) => {
+    setSelectedClientId(null);
+    setViewingMensurations(false);
+    setSearchQuery('');
+
+    if (tab === 'commandes') {
+      handleAttemptAction('orders', orders.length, () => setActiveTab('commandes'));
+      return;
+    }
+
+    if (tab === 'agenda') {
+      handleAttemptAction('appointments', 0, () => setActiveTab('agenda'));
+      return;
+    }
+
+    setActiveTab(tab);
+  };
+
   React.useEffect(() => {
+    SyncEngine.init(user?.id);
     if (user && localStorage.getItem('taylaxis_pending_plan_v1') === 'PRO') {
       setShowPendingPlanModal(true);
     }
@@ -646,9 +667,9 @@ export const AppContent: React.FC = () => {
           <AccueilView
             orders={orders}
             clients={clients}
-            onNavigateToClients={() => setActiveTab('clients')}
-            onNavigateToCommandes={() => setActiveTab('commandes')}
-            onNavigateToAgenda={() => setActiveTab('agenda')}
+            onNavigateToClients={() => handleSelectTab('clients')}
+            onNavigateToCommandes={() => handleSelectTab('commandes')}
+            onNavigateToAgenda={() => handleSelectTab('agenda')}
             onSelectClient={handleSelectClient}
             onOpenNewClientModal={handleOpenNewClientModalWithLimit}
             onOpenNewOrderModal={handleOpenNewOrderModalWithLimit}
@@ -829,12 +850,7 @@ export const AppContent: React.FC = () => {
         {/* Bottom Nav */}
         <BottomNav
           activeTab={activeTab}
-          onSelectTab={(tab) => {
-            setSelectedClientId(null);
-            setViewingMensurations(false);
-            setSearchQuery('');
-            setActiveTab(tab);
-          }}
+          onSelectTab={handleSelectTab}
         />
       </div>
 

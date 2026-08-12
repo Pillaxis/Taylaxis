@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Bell, ChevronLeft, Search, X } from 'lucide-react';
+import { SyncStatusBadge } from '../common/SyncStatusBadge';
 
 interface HeaderProps {
   title?: string;
@@ -59,8 +60,9 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Action Icons: 1. Cloche Notification, 2. Loupe de Recherche 🔍 */}
+        {/* Action Icons: Sync status, Notification bell, Search */}
         <div className="flex items-center space-x-1.5 flex-shrink-0">
+          <SyncStatusBadge />
 
           {/* 1. Cloche Notification */}
           <button

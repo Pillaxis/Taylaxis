@@ -5,6 +5,7 @@ import type {
   TaylaxisPayment,
   NotificationSettings,
 } from '../types';
+import { taylaxisDb, queueOutboxOperation } from '../db/taylaxisDb';
 
 export const DEFAULT_USER_PROFILE: UserProfile = {
   id: 'usr_new',
@@ -34,20 +35,16 @@ export const DEFAULT_WORKSHOP_PROFILE: WorkshopProfile = {
 
 export const DEFAULT_SUBSCRIPTION_PLAN: SubscriptionPlan = {
   id: 'FREE',
-  name: 'Plan Démarrage Gratuit',
+  name: 'Forfait Gratuit',
   priceFCFA: 0,
   status: 'active',
   period: 'mensuel',
   startDate: "Aujourd'hui",
   nextBillingDate: 'Dans 30 jours',
   features: [
-    'Clients illimités',
-    'Catalogues de mensurations personnalisés',
-    'Suivi des commandes & versements',
-    'Sauvegarde automatique Cloud',
+    'Ajouter et gérer des clients',
+    'Enregistrer et consulter les mensurations des clients',
   ],
-  maxClients: 999,
-  maxOrdersMonth: 999,
 };
 
 export const MOCK_PAYMENTS: TaylaxisPayment[] = [];
@@ -83,6 +80,28 @@ export const userService = {
 
   saveUserProfile(profile: UserProfile): UserProfile {
     localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(profile));
+    taylaxisDb.user_profiles
+      .put({ ...profile, updated_at: new Date().toISOString() })
+      .then(() => {
+        queueOutboxOperation({
+          user_id: profile.id,
+          entity_type: 'user_profile',
+          entity_id: profile.id || 'usr_self',
+          operation_type: 'UPDATE',
+          payload: {
+            id: profile.id,
+            first_name: profile.firstName,
+            last_name: profile.lastName,
+            full_name: profile.fullName,
+            phone: profile.phone,
+            email: profile.email,
+            avatar_url: profile.avatarUrl,
+            role: profile.role,
+            language: profile.language,
+          },
+        }).catch(console.error);
+      })
+      .catch(console.error);
     return profile;
   },
 
@@ -98,6 +117,28 @@ export const userService = {
 
   saveWorkshopProfile(workshop: WorkshopProfile): WorkshopProfile {
     localStorage.setItem(STORAGE_KEY_WORKSHOP, JSON.stringify(workshop));
+    taylaxisDb.workshop_profiles
+      .put({ ...workshop, updated_at: new Date().toISOString() })
+      .then(() => {
+        queueOutboxOperation({
+          user_id: workshop.id,
+          entity_type: 'workshop_profile',
+          entity_id: workshop.id || 'wks_self',
+          operation_type: 'UPDATE',
+          payload: {
+            id: workshop.id,
+            name: workshop.name,
+            phone: workshop.phone,
+            address: workshop.address,
+            city: workshop.city,
+            country: workshop.country,
+            opening_hours: workshop.openingHours,
+            description: workshop.description,
+            nif_rccm: workshop.nifRccm,
+          },
+        }).catch(console.error);
+      })
+      .catch(console.error);
     return workshop;
   },
 

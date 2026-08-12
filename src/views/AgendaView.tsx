@@ -117,8 +117,15 @@ export const AgendaView: React.FC<AgendaViewProps> = ({
   const [showNewModal, setShowNewModal] = useState<boolean>(false);
 
   const handleOpenNewAppointment = () => {
-    if (appointments.length >= 5 && onRequirePro) {
-      onRequirePro('appointments', 'Vous avez atteint la limite de 5 rendez-vous par mois du forfait gratuit.');
+    if (clients.length === 0) {
+      if (onOpenNewClientModal) {
+        alert('Pour planifier un rendez-vous, vous devez d\'abord enregistrer au moins un client.');
+        onOpenNewClientModal();
+      }
+      return;
+    }
+    if (onRequirePro) {
+      onRequirePro('appointments', 'La planification des rendez-vous nécessite le forfait Taylaxis Pro (5 000 FCFA/mois).');
       return;
     }
     setShowNewModal(true);

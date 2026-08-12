@@ -475,29 +475,21 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
           {/* Plan 1: Gratuit */}
           <div className="p-8 rounded-[28px] bg-white border border-gray-200/80 shadow-xs flex flex-col justify-between space-y-6">
             <div className="space-y-4">
-              <h3 className="text-xl font-extrabold text-gray-900">Découverte</h3>
+              <h3 className="text-xl font-extrabold text-gray-900">Forfait Gratuit</h3>
               <div className="flex items-baseline space-x-1">
                 <span className="text-4xl font-black text-gray-900">0 FCFA</span>
                 <span className="text-sm text-gray-500 font-medium">/mois</span>
               </div>
-              <p className="text-xs text-gray-500 font-medium">Pour découvrir Taylaxis</p>
+              <p className="text-xs text-gray-500 font-medium">Pour démarrer la gestion de votre atelier</p>
 
               <ul className="space-y-3 pt-2 text-xs sm:text-sm text-gray-700 font-medium">
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Jusqu'à 10 clients</span>
+                  <span>Ajouter et gérer des clients</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
                   <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Fiches de mensurations basiques</span>
-                </li>
-                <li className="flex items-center space-x-2.5">
-                  <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Gestion des commandes</span>
-                </li>
-                <li className="flex items-center space-x-2.5">
-                  <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Support communautaire</span>
+                  <span>Enregistrer et consulter les mensurations des clients</span>
                 </li>
               </ul>
             </div>
@@ -511,48 +503,48 @@ export const LandingPageView: React.FC<LandingPageViewProps> = ({ onGetStarted, 
           </div>
 
           {/* Plan 2: Pro (Featured) */}
-          <div className="p-8 rounded-[28px] bg-[#0C0A27] text-white border-2 border-[#06B6D4] shadow-2xl flex flex-col justify-between space-y-6 relative overflow-hidden">
-            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#06B6D4] text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md">
-              Le plus populaire
+          <div className="p-8 rounded-[28px] bg-[#0C0A27] text-white border-2 border-[#7C3AED] shadow-2xl flex flex-col justify-between space-y-6 relative overflow-hidden">
+            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#7C3AED] text-white text-[11px] font-extrabold uppercase tracking-wider shadow-md">
+              Recommandé
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-xl font-extrabold text-white">Atelier Pro</h3>
+              <h3 className="text-xl font-extrabold text-white">Taylaxis Pro</h3>
               <div className="flex items-baseline space-x-1">
                 <span className="text-4xl font-black text-white">5 000 FCFA</span>
                 <span className="text-sm text-white/70 font-medium">/mois</span>
               </div>
-              <p className="text-xs text-[#06B6D4] font-medium">Pour les tailleurs & ateliers sérieux</p>
+              <p className="text-xs text-[#7C3AED] font-bold">Inclut toutes les fonctionnalités du forfait Gratuit +</p>
 
               <ul className="space-y-3 pt-2 text-xs sm:text-sm text-white/90 font-medium">
                 <li className="flex items-center space-x-2.5">
-                  <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Clients & mensurations illimités</span>
+                  <Check size={16} className="text-[#7C3AED] flex-shrink-0" />
+                  <span>Ajouter et gérer des clients</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
-                  <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Instantanés 3D de coupe congelés</span>
+                  <Check size={16} className="text-[#7C3AED] flex-shrink-0" />
+                  <span>Enregistrer et consulter les mensurations</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
-                  <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Relances WhatsApp & SMS 1-Clic</span>
+                  <Check size={16} className="text-[#7C3AED] flex-shrink-0" />
+                  <span>Ajouter et gérer les commandes</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
-                  <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Rapports financiers CA du jour/mois</span>
+                  <Check size={16} className="text-[#7C3AED] flex-shrink-0" />
+                  <span>Planifier et gérer les rendez-vous</span>
                 </li>
                 <li className="flex items-center space-x-2.5">
-                  <Check size={16} className="text-[#06B6D4] flex-shrink-0" />
-                  <span>Support prioritaire 7j/7</span>
+                  <Check size={16} className="text-[#7C3AED] flex-shrink-0" />
+                  <span>Relancer les clients</span>
                 </li>
               </ul>
             </div>
 
             <button
               onClick={handleSelectProPlan}
-              className="w-full py-3.5 rounded-xl bg-[#06B6D4] hover:bg-[#0891B2] text-white font-extrabold text-sm transition-all cursor-pointer shadow-lg shadow-[#06B6D4]/40 text-center"
+              className="w-full py-3.5 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-extrabold text-sm transition-all cursor-pointer shadow-lg shadow-[#7C3AED]/40 text-center"
             >
-              Essayer Pro gratuitement
+              Passer à Taylaxis Pro
             </button>
           </div>
         </div>

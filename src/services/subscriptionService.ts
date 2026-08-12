@@ -1,7 +1,7 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export interface UserSubscription {
-  plan: 'free' | 'pro' | 'business' | 'enterprise';
+  plan: 'free' | 'pro';
   status: 'active' | 'inactive' | 'pending' | 'expired' | 'canceled';
   isPro: boolean;
   transactionId?: string;
@@ -17,16 +17,6 @@ export interface LimitCheckResult {
   message?: string;
   featureName?: string;
 }
-
-export const FREE_LIMITS = {
-  maxClients: 5,
-  maxMeasurements: 5,
-  maxOrdersMonthly: 10,
-  maxAppointmentsMonthly: 10,
-  advancedRelances: false,
-  advancedStats: false,
-  advancedSearch: false,
-};
 
 export class SubscriptionService {
   private static localCache: Record<string, UserSubscription> = {};
@@ -105,12 +95,10 @@ export class SubscriptionService {
       }
 
       const isExpired = data.expires_at ? new Date(data.expires_at) < new Date() : false;
-      const isActivePro = (data.plan === 'pro' || data.plan === 'business' || data.plan === 'enterprise') &&
-        data.status === 'active' &&
-        !isExpired;
+      const isActivePro = data.plan === 'pro' && data.status === 'active' && !isExpired;
 
       const subResult: UserSubscription = {
-        plan: isActivePro ? (data.plan as any) : 'free',
+        plan: isActivePro ? 'pro' : 'free',
         status: isExpired ? 'expired' : (data.status as any) || 'inactive',
         isPro: isActivePro,
         transactionId: data.transaction_id,
@@ -138,7 +126,7 @@ export class SubscriptionService {
   static checkLimit(
     userId: string | null | undefined,
     resourceType: 'clients' | 'measurements' | 'orders' | 'appointments' | 'relances' | 'stats' | 'search',
-    currentCount: number
+    _currentCount: number = 0
   ): LimitCheckResult {
     const sub = this.getCachedSubscription(userId || undefined);
     if (sub.isPro) {
@@ -147,73 +135,39 @@ export class SubscriptionService {
 
     switch (resourceType) {
       case 'clients':
-        if (currentCount >= FREE_LIMITS.maxClients) {
-          return {
-            allowed: false,
-            limit: FREE_LIMITS.maxClients,
-            current: currentCount,
-            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxClients} clients du forfait gratuit.`,
-            featureName: 'Clients Illimités',
-          };
-        }
-        return { allowed: true };
-
       case 'measurements':
-        if (currentCount >= FREE_LIMITS.maxMeasurements) {
-          return {
-            allowed: false,
-            limit: FREE_LIMITS.maxMeasurements,
-            current: currentCount,
-            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxMeasurements} fiches de mensuration du forfait gratuit.`,
-            featureName: 'Mensurations Illimitées',
-          };
-        }
         return { allowed: true };
 
       case 'orders':
-        if (currentCount >= FREE_LIMITS.maxOrdersMonthly) {
-          return {
-            allowed: false,
-            limit: FREE_LIMITS.maxOrdersMonthly,
-            current: currentCount,
-            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxOrdersMonthly} commandes par mois du forfait gratuit.`,
-            featureName: 'Commandes Illimitées',
-          };
-        }
-        return { allowed: true };
+        return {
+          allowed: false,
+          message: 'La gestion des commandes nécessite le forfait Taylaxis Pro (5 000 FCFA/mois).',
+          featureName: 'Commandes',
+        };
 
       case 'appointments':
-        if (currentCount >= FREE_LIMITS.maxAppointmentsMonthly) {
-          return {
-            allowed: false,
-            limit: FREE_LIMITS.maxAppointmentsMonthly,
-            current: currentCount,
-            message: `Vous avez atteint la limite de ${FREE_LIMITS.maxAppointmentsMonthly} rendez-vous par mois du forfait gratuit.`,
-            featureName: 'Agenda Illimité',
-          };
-        }
-        return { allowed: true };
+        return {
+          allowed: false,
+          message: 'La planification des rendez-vous nécessite le forfait Taylaxis Pro (5 000 FCFA/mois).',
+          featureName: 'Agenda & Rendez-vous',
+        };
 
       case 'relances':
         return {
           allowed: false,
-          message: 'La fonctionnalité de relances clients est disponible avec TAYLAXIS Pro.',
-          featureName: 'Relances Clients Automatiques',
+          message: 'Les relances clients sont disponibles avec le forfait Taylaxis Pro (5 000 FCFA/mois).',
+          featureName: 'Relances Clients',
         };
 
       case 'stats':
         return {
           allowed: false,
-          message: 'Les statistiques financières et rapports de CA sont disponibles avec TAYLAXIS Pro.',
-          featureName: 'Statistiques & CA Avancés',
+          message: 'Les statistiques financières sont disponibles avec le forfait Taylaxis Pro (5 000 FCFA/mois).',
+          featureName: 'Statistiques & CA',
         };
 
       case 'search':
-        return {
-          allowed: false,
-          message: 'La recherche et les filtres avancés sont disponibles avec TAYLAXIS Pro.',
-          featureName: 'Recherche & Filtres Avancés',
-        };
+        return { allowed: true };
 
       default:
         return { allowed: true };

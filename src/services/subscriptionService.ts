@@ -24,12 +24,16 @@ export class SubscriptionService {
   private static async getAuthHeaders(): Promise<Record<string, string>> {
     if (!isSupabaseConfigured || !supabase) return {};
     try {
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.access_token) {
-        return { Authorization: `Bearer ${data.session.access_token}` };
+      // Race against a 2s timeout to prevent hanging offline
+      const result = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000)),
+      ]);
+      if (result && 'data' in result && result.data.session?.access_token) {
+        return { Authorization: `Bearer ${result.data.session.access_token}` };
       }
     } catch (e) {
-      console.warn('Could not get auth session token:', e);
+      console.warn('Could not get auth session token (offline?):', e);
     }
     return {};
   }
@@ -72,47 +76,53 @@ export class SubscriptionService {
   }
 
   /**
-   * Fetch active subscription from Supabase DB
+   * Fetch active subscription — OFFLINE-FIRST: returns cached data immediately.
+   * If online, refreshes from Supabase in the background and updates cache.
    */
   static async fetchUserSubscription(userId?: string): Promise<UserSubscription> {
     if (!userId) return { plan: 'free', status: 'inactive', isPro: false };
 
-    if (!isSupabaseConfigured || !supabase) {
-      return this.getCachedSubscription(userId);
+    // 1. Always return cached data immediately
+    const cached = this.getCachedSubscription(userId);
+
+    // 2. If online and Supabase is configured, refresh in background (non-blocking)
+    if (isSupabaseConfigured && supabase && typeof navigator !== 'undefined' && navigator.onLine) {
+      // Fire-and-forget background refresh
+      (async () => {
+        try {
+          const { data, error } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          if (error || !data) {
+            // No subscription found remotely — cache as free
+            this.cacheSub(userId, { plan: 'free', status: 'inactive', isPro: false });
+            return;
+          }
+
+          const isExpired = data.expires_at ? new Date(data.expires_at) < new Date() : false;
+          const isActivePro = data.plan === 'pro' && data.status === 'active' && !isExpired;
+
+          const subResult: UserSubscription = {
+            plan: isActivePro ? 'pro' : 'free',
+            status: isExpired ? 'expired' : (data.status as any) || 'inactive',
+            isPro: isActivePro,
+            transactionId: data.transaction_id,
+            featureIntent: data.feature_intent,
+            startedAt: data.started_at,
+            expiresAt: data.expires_at,
+          };
+
+          this.cacheSub(userId, subResult);
+        } catch (e) {
+          console.warn('Background subscription refresh failed (offline?):', e);
+        }
+      })();
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error || !data) {
-        const fallback: UserSubscription = { plan: 'free', status: 'inactive', isPro: false };
-        this.cacheSub(userId, fallback);
-        return fallback;
-      }
-
-      const isExpired = data.expires_at ? new Date(data.expires_at) < new Date() : false;
-      const isActivePro = data.plan === 'pro' && data.status === 'active' && !isExpired;
-
-      const subResult: UserSubscription = {
-        plan: isActivePro ? 'pro' : 'free',
-        status: isExpired ? 'expired' : (data.status as any) || 'inactive',
-        isPro: isActivePro,
-        transactionId: data.transaction_id,
-        featureIntent: data.feature_intent,
-        startedAt: data.started_at,
-        expiresAt: data.expires_at,
-      };
-
-      this.cacheSub(userId, subResult);
-      return subResult;
-    } catch (e) {
-      console.warn('fetchUserSubscription exception:', e);
-      return this.getCachedSubscription(userId);
-    }
+    return cached;
   }
 
   private static cacheSub(userId: string, sub: UserSubscription) {

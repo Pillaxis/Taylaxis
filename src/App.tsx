@@ -101,7 +101,13 @@ export const AppContent: React.FC = () => {
     }
     return null;
   });
-  const [loadingAuth, setLoadingAuth] = useState<boolean>(true);
+  // OFFLINE-FIRST: If a cached session exists, DO NOT block rendering.
+  // loadingAuth = false immediately so the app renders with local data.
+  // Supabase auth check runs in the background to silently refresh.
+  const [loadingAuth, setLoadingAuth] = useState<boolean>(() => {
+    const hasCachedSession = Boolean(localStorage.getItem('taylaxis_active_session_v1'));
+    return !hasCachedSession; // Only show loading spinner if NO local session exists
+  });
 
   const handleSetUser = (u: any) => {
     setUser(u);
@@ -160,9 +166,17 @@ export const AppContent: React.FC = () => {
     return unsubscribe;
   }, []);
 
-  // Track Supabase Auth state with Offline Session Persistence
+  // Track Supabase Auth state — BACKGROUND-ONLY, never blocks rendering
   React.useEffect(() => {
-    async function checkAuth() {
+    // Helper: race a promise against a timeout
+    function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+      return Promise.race([
+        promise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+      ]);
+    }
+
+    async function backgroundAuthRefresh() {
       const cachedUserRaw = localStorage.getItem('taylaxis_active_session_v1');
       let cachedUser = null;
       if (cachedUserRaw) {
@@ -173,24 +187,26 @@ export const AppContent: React.FC = () => {
 
       if (isSupabaseConfigured && supabase) {
         try {
-          // 1. Synchronous local session check from Supabase SDK storage
-          const { data: sessionData } = await supabase.auth.getSession();
-          if (sessionData?.session?.user) {
-            handleSetUser(sessionData.session.user);
+          // 1. Try Supabase SDK local session (reads from SDK's localStorage, fast)
+          //    With 3s timeout in case it tries a network refresh
+          const sessionResult = await withTimeout(supabase.auth.getSession(), 3000);
+          if (sessionResult && sessionResult.data?.session?.user) {
+            handleSetUser(sessionResult.data.session.user);
           } else if (cachedUser) {
-            // Restore local session when offline or local token exists
+            // SDK had no session or timed out — use our cached user
             handleSetUser(cachedUser);
           }
 
-          // 2. If online, verify live user with Supabase Auth server silently
+          // 2. If online, silently verify with Supabase Auth server (non-blocking)
           if (typeof navigator !== 'undefined' && navigator.onLine) {
-            const { data: userData } = await supabase.auth.getUser();
-            if (userData?.user) {
-              handleSetUser(userData.user);
-            }
+            withTimeout(supabase.auth.getUser(), 5000).then((result) => {
+              if (result && result.data?.user) {
+                handleSetUser(result.data.user);
+              }
+            }).catch(() => {});
           }
         } catch (e) {
-          console.warn('Auth check notice (offline mode active):', e);
+          console.warn('Auth background refresh (offline mode active):', e);
           if (cachedUser) {
             handleSetUser(cachedUser);
           }
@@ -199,9 +215,10 @@ export const AppContent: React.FC = () => {
         handleSetUser(cachedUser);
       }
 
+      // Always ensure loading spinner is dismissed
       setLoadingAuth(false);
     }
-    checkAuth();
+    backgroundAuthRefresh();
 
     if (isSupabaseConfigured && supabase) {
       const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {

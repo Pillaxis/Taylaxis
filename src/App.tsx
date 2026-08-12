@@ -160,26 +160,55 @@ export const AppContent: React.FC = () => {
     return unsubscribe;
   }, []);
 
-  // Track Supabase Auth state
+  // Track Supabase Auth state with Offline Session Persistence
   React.useEffect(() => {
     async function checkAuth() {
+      const cachedUserRaw = localStorage.getItem('taylaxis_active_session_v1');
+      let cachedUser = null;
+      if (cachedUserRaw) {
+        try {
+          cachedUser = JSON.parse(cachedUserRaw);
+        } catch {}
+      }
+
       if (isSupabaseConfigured && supabase) {
         try {
-          const { data } = await supabase.auth.getUser();
-          if (data.user) {
-            handleSetUser(data.user);
+          // 1. Synchronous local session check from Supabase SDK storage
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData?.session?.user) {
+            handleSetUser(sessionData.session.user);
+          } else if (cachedUser) {
+            // Restore local session when offline or local token exists
+            handleSetUser(cachedUser);
+          }
+
+          // 2. If online, verify live user with Supabase Auth server silently
+          if (typeof navigator !== 'undefined' && navigator.onLine) {
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData?.user) {
+              handleSetUser(userData.user);
+            }
           }
         } catch (e) {
-          console.error('Auth check error:', e);
+          console.warn('Auth check notice (offline mode active):', e);
+          if (cachedUser) {
+            handleSetUser(cachedUser);
+          }
         }
+      } else if (cachedUser) {
+        handleSetUser(cachedUser);
       }
+
       setLoadingAuth(false);
     }
     checkAuth();
 
     if (isSupabaseConfigured && supabase) {
-      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
+      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+          // Only clear user on explicit SIGNED_OUT event
+          handleSetUser(null);
+        } else if (session?.user) {
           handleSetUser(session.user);
         }
         setLoadingAuth(false);
@@ -193,18 +222,15 @@ export const AppContent: React.FC = () => {
     }
   }, []);
 
-  // Load Full-Stack Supabase Data on startup (Isolated per user)
+  // Load Full-Stack Data on startup from Dexie DB (Offline-First)
   React.useEffect(() => {
     async function loadCloudData() {
-      if (user && SupabaseService.isReady()) {
+      if (user) {
         const cloudClients = await SupabaseService.fetchClients(user.id);
         setClients(cloudClients);
 
         const cloudOrders = await SupabaseService.fetchOrders(user.id);
         setOrders(cloudOrders);
-      } else if (!user) {
-        setClients([]);
-        setOrders([]);
       }
     }
     loadCloudData();

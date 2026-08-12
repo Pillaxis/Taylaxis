@@ -768,7 +768,7 @@ export const MoiView: React.FC<MoiViewProps> = ({ onSignOut }) => {
               <button
                 onClick={async () => {
                   showToast('Synchronisation en cours...');
-                  const res = await SyncEngine.sync(userProfile.id);
+                  const res = await SyncEngine.sync();
                   if (res.success) {
                     showToast(`Synchronisation terminée (${res.pushed} envoyés, ${res.pulled} reçus)`);
                   } else {

@@ -111,6 +111,7 @@ export const AppContent: React.FC = () => {
 
   const handleSetUser = (u: any) => {
     setUser(u);
+    SyncEngine.setUserId(u?.id);
     if (u) {
       localStorage.setItem('taylaxis_active_session_v1', JSON.stringify(u));
     } else {

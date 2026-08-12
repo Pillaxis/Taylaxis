@@ -13,6 +13,7 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ userId, showTe
   const [isManualSyncing, setIsManualSyncing] = useState<boolean>(false);
 
   useEffect(() => {
+    // Update the userId in SyncEngine (init handles dedup internally)
     SyncEngine.init(userId);
     const unsubscribe = SyncEngine.subscribe((state, count) => {
       setSyncState(state);
@@ -24,7 +25,7 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = ({ userId, showTe
   const handleManualSync = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsManualSyncing(true);
-    await SyncEngine.sync(userId);
+    await SyncEngine.sync();
     setTimeout(() => {
       setIsManualSyncing(false);
     }, 600);

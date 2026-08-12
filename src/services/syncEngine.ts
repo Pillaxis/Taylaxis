@@ -19,47 +19,91 @@ export class SyncEngine {
   private static syncInProgress: boolean = false;
   private static initialized: boolean = false;
 
+  // FIXED: Store userId as mutable class property, not in closure
+  private static currentUserId?: string;
+
+  // Retry configuration
+  private static readonly MAX_RETRY_COUNT = 5;
+  private static readonly RETRY_INTERVAL_MS = 10000; // 10s between retries
+  private static retryTimerId: ReturnType<typeof setTimeout> | null = null;
+
   /**
-   * Initialize Sync Engine listeners and background triggers
+   * Initialize Sync Engine listeners and background triggers.
+   * Can be called multiple times — only event listeners are registered once,
+   * but userId is ALWAYS updated.
    */
   static init(userId?: string) {
-    if (this.initialized) return;
+    // ALWAYS update the userId (fixes the stale closure bug)
+    this.currentUserId = userId;
+
+    if (this.initialized) {
+      // Already initialized — just trigger a sync with the new userId if online
+      if (this.isOnlineStatus && userId) {
+        this.sync().catch(console.error);
+      }
+      return;
+    }
     this.initialized = true;
 
     if (typeof window !== 'undefined') {
       window.addEventListener('online', () => {
         this.isOnlineStatus = true;
-        this.updateState(this.pendingCount > 0 ? 'pending_sync' : 'synced');
-        this.sync(userId);
+        // Immediately trigger sync on reconnection
+        this.checkPendingCount().then(() => {
+          if (this.pendingCount > 0) {
+            this.updateState('pending_sync');
+          }
+          // Always attempt sync when coming back online
+          this.sync().catch(console.error);
+        });
       });
 
       window.addEventListener('offline', () => {
         this.isOnlineStatus = false;
         this.updateState('offline');
+        this.cancelRetryTimer();
       });
 
       window.addEventListener('focus', () => {
         if (this.isOnlineStatus) {
-          this.sync(userId);
+          this.sync().catch(console.error);
+        }
+      });
+
+      // Listen for visibility change (app returning to foreground)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.isOnlineStatus) {
+          this.sync().catch(console.error);
         }
       });
     }
 
-    // Periodic sync attempt every 30s if online
+    // Periodic sync every 30s if online and has pending items
     setInterval(() => {
       if (this.isOnlineStatus && !this.syncInProgress) {
-        this.sync(userId);
+        this.checkPendingCount().then(() => {
+          if (this.pendingCount > 0) {
+            this.sync().catch(console.error);
+          }
+        });
       }
     }, 30000);
 
     // Initial check
     this.checkPendingCount().then(() => {
       if (this.isOnlineStatus) {
-        this.sync(userId);
+        this.sync().catch(console.error);
       } else {
         this.updateState('offline');
       }
     });
+  }
+
+  /**
+   * Update the user ID (called when auth state changes)
+   */
+  static setUserId(userId?: string) {
+    this.currentUserId = userId;
   }
 
   static subscribe(listener: SyncStateListener): () => void {
@@ -75,13 +119,16 @@ export class SyncEngine {
     if (errorMsg !== undefined) {
       this.lastErrorMessage = errorMsg;
     }
+    if (state !== 'error') {
+      this.lastErrorMessage = undefined;
+    }
     this.listeners.forEach((fn) => fn(this.currentSyncState, this.pendingCount, this.lastErrorMessage));
   }
 
   private static async checkPendingCount(): Promise<number> {
     try {
       const count = await taylaxisDb.outbox
-        .filter((item) => item.sync_status === 'pending' || item.sync_status === 'failed')
+        .filter((item) => item.sync_status === 'pending' || item.sync_status === 'failed' || item.sync_status === 'syncing')
         .count();
       this.pendingCount = count;
       return count;
@@ -90,10 +137,32 @@ export class SyncEngine {
     }
   }
 
+  private static cancelRetryTimer() {
+    if (this.retryTimerId !== null) {
+      clearTimeout(this.retryTimerId);
+      this.retryTimerId = null;
+    }
+  }
+
+  private static scheduleRetry() {
+    this.cancelRetryTimer();
+    if (this.isOnlineStatus && this.pendingCount > 0) {
+      this.retryTimerId = setTimeout(() => {
+        this.retryTimerId = null;
+        if (this.isOnlineStatus && !this.syncInProgress) {
+          this.sync().catch(console.error);
+        }
+      }, this.RETRY_INTERVAL_MS);
+    }
+  }
+
   /**
    * Main synchronization trigger (Push outbox + Pull remote changes)
+   * Uses the stored currentUserId — no parameter needed.
    */
-  static async sync(userId?: string): Promise<{ success: boolean; pushed: number; pulled: number }> {
+  static async sync(userIdOverride?: string): Promise<{ success: boolean; pushed: number; pulled: number }> {
+    const userId = userIdOverride || this.currentUserId;
+
     if (this.syncInProgress) {
       return { success: false, pushed: 0, pulled: 0 };
     }
@@ -123,12 +192,16 @@ export class SyncEngine {
       // 2. Pull remote updates from Supabase to Dexie DB
       pulled = await this.pullRemoteChanges(userId);
 
+      // 3. Re-check pending count AFTER push to get accurate state
       await this.checkPendingCount();
 
       if (this.pendingCount > 0) {
         this.updateState('pending_sync');
+        // Schedule automatic retry for remaining items
+        this.scheduleRetry();
       } else {
         this.updateState('synced');
+        this.cancelRetryTimer();
       }
 
       this.syncInProgress = false;
@@ -138,6 +211,8 @@ export class SyncEngine {
       await this.checkPendingCount();
       this.updateState('error', e.message || 'Erreur de synchronisation réseau');
       this.syncInProgress = false;
+      // Schedule retry on error
+      this.scheduleRetry();
       return { success: false, pushed, pulled };
     }
   }
@@ -148,6 +223,14 @@ export class SyncEngine {
   private static async pushLocalChanges(userId?: string): Promise<number> {
     if (!supabase) return 0;
 
+    // Reset any items stuck in 'syncing' state (from previous failed attempts)
+    const stuckItems = await taylaxisDb.outbox
+      .filter((item) => item.sync_status === 'syncing')
+      .toArray();
+    for (const stuck of stuckItems) {
+      await taylaxisDb.outbox.update(stuck.id, { sync_status: 'pending' });
+    }
+
     const pendingItems = await taylaxisDb.outbox
       .filter((item) => item.sync_status === 'pending' || item.sync_status === 'failed')
       .sortBy('created_at');
@@ -157,10 +240,24 @@ export class SyncEngine {
     let successCount = 0;
 
     for (const item of pendingItems) {
+      // Skip items that have exceeded max retry count
+      if ((item.retry_count || 0) >= this.MAX_RETRY_COUNT) {
+        console.warn(`Outbox item ${item.id} exceeded max retries (${this.MAX_RETRY_COUNT}), skipping`);
+        continue;
+      }
+
       try {
         await taylaxisDb.outbox.update(item.id, { sync_status: 'syncing' });
 
+        // Use the item's own user_id first, then the provided userId
         const effectiveUserId = item.user_id || userId;
+        
+        if (!effectiveUserId) {
+          console.warn(`Outbox item ${item.id} has no user_id, skipping (will retry when userId is available)`);
+          await taylaxisDb.outbox.update(item.id, { sync_status: 'pending' });
+          continue;
+        }
+
         let queryError: any = null;
 
         if (item.operation_type === 'DELETE') {
@@ -172,8 +269,8 @@ export class SyncEngine {
           const tableName = this.mapEntityTypeToTable(item.entity_type);
           const payloadWithUser = {
             ...item.payload,
-            user_id: effectiveUserId || item.payload?.user_id,
-            updated_at: item.updated_at || new Date().toISOString(),
+            user_id: effectiveUserId,
+            updated_at: new Date().toISOString(),
           };
 
           const { error } = await supabase.from(tableName).upsert(payloadWithUser, { onConflict: 'id' });
@@ -190,9 +287,17 @@ export class SyncEngine {
             updated_at: new Date().toISOString(),
           });
         } else {
-          // Successfully synced -> Remove from outbox
+          // ✅ Successfully synced -> Remove from outbox IMMEDIATELY
           await taylaxisDb.outbox.delete(item.id);
           successCount++;
+          
+          // Update pending count live after each successful operation
+          this.pendingCount = Math.max(0, this.pendingCount - 1);
+          this.listeners.forEach((fn) => fn(
+            this.pendingCount > 0 ? 'syncing' : 'syncing',
+            this.pendingCount,
+            this.lastErrorMessage
+          ));
         }
       } catch (err: any) {
         console.error(`Outbox item ${item.id} exception:`, err);
